@@ -16,8 +16,10 @@ NEO4J_IMPORT_DIR="/var/lib/neo4j/import"
 # Load environment variables (for credentials) from the project root
 ENV_FILE="../.env"
 if [ -f "${ENV_FILE}" ]; then
-  # Export variables from .env file, ignoring comments
-  export $(cat ${ENV_FILE} | sed 's/#.*//g' | xargs)
+  # Export variables from .env file safely
+  set -a
+  source "${ENV_FILE}"
+  set +a
 else
   echo "Error: .env file not found at ${ENV_FILE}."
   exit 1
