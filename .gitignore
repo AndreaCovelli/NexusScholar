@@ -31,7 +31,13 @@ build/
 # ide files
 .idea/
 .vscode/
+**mix**
 
 # sensitive configuration
 .env
 application-local.yml
+
+# database files
+data-pipeline/scripts/dblp_ai_ml_2015_2025.jsonl
+data-pipeline/scripts/dblp.dtd
+data-pipeline/scripts/dblp.xml.gz
