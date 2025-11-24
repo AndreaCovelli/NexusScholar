@@ -11,7 +11,7 @@ ENV_FILE="${SCRIPT_DIR}/../../.env"
 if [ -f "${ENV_FILE}" ]; then
   # Automatically export all variables defined in the sourced file
   set -a
-  # shellcheck source=../.env
+  # shellcheck source=../../.env
   source "${ENV_FILE}"
   set +a
 else

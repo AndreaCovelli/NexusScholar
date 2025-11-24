@@ -20,7 +20,6 @@ Ensure the `.env` file in the project root is configured. The pipeline requires:
 *   `MY_API_KEY`: Your Semantic Scholar API Key (for Phase 2).
 *   `MONGO_...`: MongoDB credentials.
 *   `NEO4J_...`: Neo4j credentials.
-    **"1.5. MongoDB Keyfile"**
 
 The MongoDB replica set requires a keyfile for authentication. Generate it by running one of the following commands from the `deployment/` directory:
 
