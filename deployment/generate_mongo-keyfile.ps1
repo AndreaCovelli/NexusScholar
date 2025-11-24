@@ -1,0 +1,2 @@
+# command to run in powershell to create a mongo-key file for MongoDB replica set authentication
+[Convert]::ToBase64String((1..756|%{[byte](Get-Random -Max 256)})) | Out-File -Encoding ascii -NoNewline mongo-keyfile
