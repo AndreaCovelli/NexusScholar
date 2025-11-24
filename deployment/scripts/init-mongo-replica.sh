@@ -19,7 +19,7 @@ else
   exit 1
 fi
 
-echo "Waiting for MongoDB nodes to be ready (approx 15s)..."
+echo "Waiting for MongoDB nodes to be ready (approx 5s)..."
 # Give the containers time to start up and initialize authentication
 sleep 5
 

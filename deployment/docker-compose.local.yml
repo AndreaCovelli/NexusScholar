@@ -1,3 +1,9 @@
+x-mongo-command: &mongo-command >
+  bash -c "cp /opt/keyfile/mongo-keyfile /etc/mongo-keyfile && 
+  chmod 400 /etc/mongo-keyfile && 
+  chown 999:999 /etc/mongo-keyfile && 
+  docker-entrypoint.sh mongod --replSet rs0 --keyFile /etc/mongo-keyfile --bind_ip_all"
+
 services:
 
   backend:
@@ -32,11 +38,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     # Fix: Copy keyfile, set permissions (chmod 400), set owner (999), and start with --keyFile
-    command: >
-      bash -c "cp /opt/keyfile/mongo-keyfile /etc/mongo-keyfile && 
-      chmod 400 /etc/mongo-keyfile && 
-      chown 999:999 /etc/mongo-keyfile && 
-      docker-entrypoint.sh mongod --replSet rs0 --keyFile /etc/mongo-keyfile --bind_ip_all"
+    command: *mongo-command
     volumes:
       - mongo1_data:/data/db
       - ./mongo-keyfile:/opt/keyfile/mongo-keyfile
@@ -52,11 +54,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     # Fix: Copy keyfile, set permissions, start with --keyFile
-    command: >
-      bash -c "cp /opt/keyfile/mongo-keyfile /etc/mongo-keyfile && 
-      chmod 400 /etc/mongo-keyfile && 
-      chown 999:999 /etc/mongo-keyfile && 
-      docker-entrypoint.sh mongod --replSet rs0 --keyFile /etc/mongo-keyfile --bind_ip_all"
+    command: *mongo-command
     volumes:
       - mongo2_data:/data/db
       - ./mongo-keyfile:/opt/keyfile/mongo-keyfile
@@ -72,11 +70,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     # Fix: Copy keyfile, set permissions, start with --keyFile
-    command: >
-      bash -c "cp /opt/keyfile/mongo-keyfile /etc/mongo-keyfile && 
-      chmod 400 /etc/mongo-keyfile && 
-      chown 999:999 /etc/mongo-keyfile && 
-      docker-entrypoint.sh mongod --replSet rs0 --keyFile /etc/mongo-keyfile --bind_ip_all"
+    command: *mongo-command
     volumes:
       - mongo3_data:/data/db
       - ./mongo-keyfile:/opt/keyfile/mongo-keyfile

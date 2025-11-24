@@ -20,6 +20,18 @@ Ensure the `.env` file in the project root is configured. The pipeline requires:
 *   `MY_API_KEY`: Your Semantic Scholar API Key (for Phase 2).
 *   `MONGO_...`: MongoDB credentials.
 *   `NEO4J_...`: Neo4j credentials.
+    **"1.5. MongoDB Keyfile"**
+
+The MongoDB replica set requires a keyfile for authentication. Generate it by running one of the following commands from the `deployment/` directory:
+
+- **Linux/macOS:**
+  ```bash
+  openssl rand -base64 756 > mongo-keyfile
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  ./generate_mongo-keyfile.ps1
+  ```
 
 ### 2. Python Dependencies
 Navigate to this directory and install the required libraries:
@@ -29,7 +41,7 @@ pip install lxml requests tenacity python-dotenv pandas pymongo neo4j
 ```
 
 ### 3. Infrastructure
-Before loading data (Phase 4) or analyzing it (Phase 5), the Docker infrastructure must be running.
+Before loading data (Phase 4), the Docker infrastructure must be running.
 
 **Start the infrastructure:**
 ```bash

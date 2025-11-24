@@ -1,5 +1,5 @@
 #!/bin/bash
-# etl/4_load_data.sh
+# data-pipeline/scripts/4_load_data.sh
 
 export MSYS_NO_PATHCONV=1
 
