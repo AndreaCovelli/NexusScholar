@@ -22,6 +22,8 @@ services:
       SPRING_NEO4J_AUTHENTICATION_PASSWORD: ${NEO4J_PASSWORD}
     depends_on:
       - mongo1
+      - mongo2
+      - mongo3
       - neo4j
     networks:
       - nexusscholar-net
@@ -37,7 +39,6 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    # Fix: Copy keyfile, set permissions (chmod 400), set owner (999), and start with --keyFile
     command: *mongo-command
     volumes:
       - mongo1_data:/data/db
@@ -53,7 +54,6 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    # Fix: Copy keyfile, set permissions, start with --keyFile
     command: *mongo-command
     volumes:
       - mongo2_data:/data/db
@@ -69,7 +69,6 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    # Fix: Copy keyfile, set permissions, start with --keyFile
     command: *mongo-command
     volumes:
       - mongo3_data:/data/db
