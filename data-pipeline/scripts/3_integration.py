@@ -162,8 +162,9 @@ def process_records():
             }
 
             # 4. Process Venue (From DBLP)
+            venue_name = clean_text(dblp_record['venue'])
             venue_id = get_venue_id(dblp_record['venue'])
-            paper['venue_id'] = venue_id
+            paper['venue'] = venue_name
             if venue_id:
                 relationships['PUBLISHED_IN'].append((pid, venue_id))
 
@@ -268,11 +269,6 @@ def write_mongodb_files():
     with open(os.path.join(MONGO_DIR, 'authors.jsonl'), 'w', encoding='utf-8') as f:
         for author in authors.values():
             f.write(json.dumps(author, ensure_ascii=False) + '\n')
-
-    # Venues
-    with open(os.path.join(MONGO_DIR, 'venues.jsonl'), 'w', encoding='utf-8') as f:
-        for venue in venues.values():
-            f.write(json.dumps(venue, ensure_ascii=False) + '\n')
 
 def write_neo4j_files():
     print("Writing Neo4j CSV files (Optimized for neo4j-admin import)...")

@@ -54,9 +54,6 @@ echo "   Importing Authors..."
 # Use --drop to clear the collection before importing.
 docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection authors --file /import/authors.jsonl --drop
 
-echo "   Importing Venues..."
-docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection venues --file /import/venues.jsonl --drop
-
 echo "   Importing Papers (This might take a while)..."
 docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection papers --file /import/papers.jsonl --drop
 
