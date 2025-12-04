@@ -157,7 +157,7 @@ def process_records():
                 'fields_of_study': [], # Store names for MongoDB analytics
                 'citation_count': 0,
                 'author_ids': [],
-                'venue_id': None,
+                'venue': None,
                 '_s2_citations_raw': [] # Temporary storage for Phase 3.2
             }
 
