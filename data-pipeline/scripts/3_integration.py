@@ -163,7 +163,7 @@ def process_records():
 
             # 4. Process Venue (From DBLP)
             venue_name = clean_text(dblp_record['venue'])
-            venue_id = get_venue_id(dblp_record['venue'])
+            venue_id = get_venue_id(venue_name)
             paper['venue'] = venue_name
             if venue_id:
                 relationships['PUBLISHED_IN'].append((pid, venue_id))
