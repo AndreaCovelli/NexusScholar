@@ -52,7 +52,7 @@ class IntegrationPipeline:
         os.makedirs(self.mongo_dir, exist_ok=True)
         os.makedirs(self.neo4j_dir, exist_ok=True)
 
-        # Global ID Maps and Entity Storage
+        # Instance ID Maps and Entity Storage
         # We use (Name, S2_AuthorId) as the key for better disambiguation
         self.author_map_by_s2id = {}  # S2_ID -> Internal_ID (Primary)
         self.author_map_by_name = {}  # Name -> Internal_ID (Fallback for DBLP-only)
