@@ -384,7 +384,8 @@ class IntegrationPipeline:
         )
 
 
-if __name__ == "__main__":
+def main():
+    """Runs the main integration pipeline."""
     print("--- Phase 3: Integration and Formatting ---")
     pipeline = IntegrationPipeline()
     pipeline.process_records()
@@ -392,3 +393,6 @@ if __name__ == "__main__":
     pipeline.write_mongodb_files()
     pipeline.write_neo4j_files()
     print("Phase 3 Complete. Import files are ready in the 'import_files' directory.")
+
+if __name__ == "__main__":
+    main()
