@@ -248,10 +248,14 @@ class IntegrationPipeline:
 
             # 2. Update Author Metrics (MongoDB)
             # Iterate over the author objects stored in the paper
+
+            # Handle None titles gracefully
+            safe_title = paper['title'] if paper['title'] is not None else "Untitled"
+
             summary_entry = {
                 "paper_id": pid,
                 "year": paper['year'],
-                "title": paper['title']
+                "title": safe_title
             }
 
             for author_obj in paper.get('authors', []):
@@ -285,7 +289,7 @@ class IntegrationPipeline:
             try:
                 with open(filepath, 'w', encoding='utf-8', newline='') as f:
                     # Use QUOTE_MINIMAL for efficiency
-                    writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+                    writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL) # type: ignore
                     writer.writerow(header)
                     for row in data_generator:
                         writer.writerow(row)
