@@ -129,6 +129,18 @@ class IntegrationPipeline:
 
         return aid
 
+    def _add_author_to_paper(self, pid, paper, name, s2_author_id=None):
+        """Helper to link an author to a paper (Neo4j & MongoDB)."""
+        aid = self.get_author_id(name, s2_author_id)
+        if aid:
+            # Neo4j Relationship
+            self.relationships['AUTHORED'].append((aid, pid))
+            # Mongo Embedded Object
+            paper['authors'].append({
+                "id": aid,
+                "name": self.authors[aid]['name']
+            })
+
     # --- PROCESSING ---
 
     def process_records(self):
@@ -166,7 +178,7 @@ class IntegrationPipeline:
                     'fields_of_study': [],
                     'authors': [],
                     'venue': [],
-                    '_s2_citations_raw': [] # Temp
+                    '_s2_citations_raw': [] # Temporary storage for S2 citations
                 }
 
                 # 4. Process Venue (Array of strings in Mongo, no Node in Neo4j)
@@ -200,37 +212,18 @@ class IntegrationPipeline:
                     s2_authors = s2_data.get('authors') or []
                     if s2_authors:
                         for author in s2_authors:
-                            aid = self.get_author_id(author.get('name'), author.get('authorId'))
-                            if aid:
-                                # Neo4j Relationship
-                                self.relationships['AUTHORED'].append((aid, pid))
-                                # Mongo Embedded Object
-                                paper['authors'].append({
-                                    "id": aid,
-                                    "name": self.authors[aid]['name']
-                                })
+                            self._add_author_to_paper(pid, paper, author.get('name'), author.get('authorId'))
 
                     # Fallback Authors
                     elif dblp_record.get('authors'):
                         for author_name in dblp_record['authors']:
-                            aid = self.get_author_id(author_name, None)
-                            if aid:
-                                self.relationships['AUTHORED'].append((aid, pid))
-                                paper['authors'].append({
-                                    "id": aid,
-                                    "name": self.authors[aid]['name']
-                                })
+                            self._add_author_to_paper(pid, paper, author_name)
 
                 # 6. No Enrichment Fallback
                 else:
                     for author_name in dblp_record.get('authors', []):
-                        aid = self.get_author_id(author_name, None)
-                        if aid:
-                            self.relationships['AUTHORED'].append((aid, pid))
-                            paper['authors'].append({
-                                "id": aid,
-                                "name": self.authors[aid]['name']
-                            })
+                        self._add_author_to_paper(pid, paper, author_name)
+
 
                 self.papers[pid] = paper
 
@@ -265,8 +258,8 @@ class IntegrationPipeline:
                 aid = author_obj['id']
                 if aid in self.authors:
                     self.authors[aid]['total_publications'] += 1
-                    # Append the summary object for the author
-                    self.authors[aid]['publications_summary'].append(summary_entry)
+                    # Append a COPY of the summary object to avoid shared reference aliasing
+                    self.authors[aid]['publications_summary'].append(summary_entry.copy())
 
     # --- OUTPUT ---
 
