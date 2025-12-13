@@ -78,11 +78,9 @@ docker compose -f $COMPOSE_FILE run --rm --user neo4j neo4j neo4j-admin database
   --overwrite-destination=true \
   --nodes=Paper=$NEO4J_IMPORT_DIR/nodes_papers.csv \
   --nodes=Author=$NEO4J_IMPORT_DIR/nodes_authors.csv \
-  --nodes=Venue=$NEO4J_IMPORT_DIR/nodes_venues.csv \
   --nodes=Topic=$NEO4J_IMPORT_DIR/nodes_topics.csv \
   --relationships=AUTHORED=$NEO4J_IMPORT_DIR/rels_authored.csv \
   --relationships=CITES=$NEO4J_IMPORT_DIR/rels_cites.csv \
-  --relationships=PUBLISHED_IN=$NEO4J_IMPORT_DIR/rels_published_in.csv \
   --relationships=HAS_TOPIC=$NEO4J_IMPORT_DIR/rels_has_topic.csv
 
 if [ $? -eq 0 ]; then
