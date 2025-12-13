@@ -169,7 +169,7 @@ class IntegrationPipeline:
                     '_s2_citations_raw': [] # Temp
                 }
 
-                # 4. Process Venue (Flat string in Mongo, no Node in Neo4j)
+                # 4. Process Venue (Array of strings in Mongo, no Node in Neo4j)
                 venue_name = clean_text(dblp_record.get('venue'))
                 if venue_name:
                     paper['venue'] = [venue_name]
