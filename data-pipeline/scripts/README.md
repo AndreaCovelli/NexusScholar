@@ -65,7 +65,8 @@ docker compose --env-file .env -f deployment/docker-compose.local.yml up -d
 ```
 
 **Initialize MongoDB Replica Set:**
-(Only required the first time you bring the containers up)<br>
+(Only required the first time you bring the containers up)
+
 From `data-pipeline/scripts` run:
 ```bash
 bash ../../deployment/scripts/init-mongo-replica.sh
