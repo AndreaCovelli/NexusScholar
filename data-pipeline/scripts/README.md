@@ -82,7 +82,7 @@ bash ../../deployment/scripts/init-mongo-replica.sh
 
 1.  Download `dblp.xml.gz` and `dblp.dtd` from [dblp.org](https://dblp.org/xml/) and place them in `data-pipeline/scripts/`.
 2.  Change directory to `data-pipeline/scripts`.
-3. Run the parser:
+3.  Run the parser:
     ```bash
     python 1_parse_and_filter_dblp.py
     ```
