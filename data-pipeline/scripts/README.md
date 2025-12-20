@@ -33,9 +33,25 @@ The MongoDB replica set requires a keyfile for authentication. Generate it by ru
   ```
 
 ### 2. Python Dependencies
-Navigate to this directory and install the required libraries:
+Navigate to the project root directory and create the virtual environment:
 ```bash
-cd data-pipeline/scripts
+python -m venv .venv
+```
+
+After creating the virtual environment, activate it.
+
+**On Windows (PowerShell):**
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+**On Linux/macOS:**
+```bash
+source .venv/bin/activate
+```
+
+Once activated, install the required libraries:
+```bash
 pip install lxml requests tenacity python-dotenv pandas pymongo neo4j
 ```
 
@@ -50,6 +66,8 @@ docker compose --env-file .env -f deployment/docker-compose.local.yml up -d
 
 **Initialize MongoDB Replica Set:**
 (Only required the first time you bring the containers up)
+
+From `data-pipeline/scripts` run:
 ```bash
 bash ../../deployment/scripts/init-mongo-replica.sh
 ```
@@ -63,7 +81,8 @@ bash ../../deployment/scripts/init-mongo-replica.sh
 *   **Action:** Uses `dblp.xml.gz` and filters for venues like NeurIPS, ICML, CVPR, etc.
 
 1.  Download `dblp.xml.gz` and `dblp.dtd` from [dblp.org](https://dblp.org/xml/) and place them in `data-pipeline/scripts/`.
-2.  Run the parser:
+2.  Change directory to `data-pipeline/scripts`.
+3.  Run the parser:
     ```bash
     python 1_parse_and_filter_dblp.py
     ```
