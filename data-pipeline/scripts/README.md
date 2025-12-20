@@ -33,7 +33,7 @@ The MongoDB replica set requires a keyfile for authentication. Generate it by ru
   ```
 
 ### 2. Python Dependencies
-Navigate to root folder and create the virtual environment:
+Navigate to the project root directory and create the virtual environment:
 ```bash
 python -m venv .venv
 ```
