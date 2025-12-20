@@ -33,9 +33,22 @@ The MongoDB replica set requires a keyfile for authentication. Generate it by ru
   ```
 
 ### 2. Python Dependencies
-Navigate to this directory and install the required libraries:
+Navigate to this directory and create the virtual environment:
 ```bash
 cd data-pipeline/scripts
+python -m venv .venv
+```
+If on Windows, run, from `data-pipeline`:
+```bash
+.venv/Scripts/Activate.ps1
+```
+
+else if on Linux:
+```bash
+source .venv/bin/activate
+```
+then install the required libraries
+```bash
 pip install lxml requests tenacity python-dotenv pandas pymongo neo4j
 ```
 
