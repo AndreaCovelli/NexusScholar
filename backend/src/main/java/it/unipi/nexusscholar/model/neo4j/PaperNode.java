@@ -1,4 +1,4 @@
-// This class is used to model the instance of Topic as a node in neo4j graphDb
+// This class is used to model the instance of Paper as a node in neo4j graphDb
 // with properties name and paperId
 
 package it.unipi.nexusscholar.model.neo4j;
