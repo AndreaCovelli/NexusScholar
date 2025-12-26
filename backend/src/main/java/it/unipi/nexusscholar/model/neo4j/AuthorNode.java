@@ -10,7 +10,6 @@ import java.util.List;
 @org.springframework.data.neo4j.core.schema.Node
 public class AuthorNode {
 
-    //attributes
     @Id private String authorId;
 
     private String name;

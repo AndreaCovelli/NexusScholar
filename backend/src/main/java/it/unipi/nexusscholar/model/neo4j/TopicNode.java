@@ -8,10 +8,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 @org.springframework.data.neo4j.core.schema.Node
 public class TopicNode {
 
-    //attributes
-
-    @Id
-    private String  topicId;
+    @Id private String  topicId;
 
     private String name;
 

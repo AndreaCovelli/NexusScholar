@@ -21,11 +21,11 @@ public class PaperNode {
 
     private String title;
 
-    //relationship of the cites between papers
+    // relationship of the cites between papers
     @Relationship(type = "CITES", direction = Relationship.Direction.OUTGOING)
     private List<PaperNode> citedPapers;
 
-    //relationship between paper and its topics
+    // relationship between paper and its topics
     @Relationship(type = "HAS_TOPIC", direction = Relationship.Direction.OUTGOING)
     private List<TopicNode> topics;
 
