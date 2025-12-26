@@ -51,7 +51,7 @@ public class PaperNode {
     }
 
     public void setPaperID(String paperID) {
-        paperID = paperID;
+        this.paperID = paperID;
     }
 
     public String getTitle() {

@@ -76,12 +76,7 @@
 			<scope>test</scope>
 		</dependency>
 
-        <!-- Dependency to obtain stuff for NEO4j -->
-        <dependency>
-            <groupId>org.neo4j.driver</groupId>
-            <artifactId>neo4j-java-driver</artifactId>
-            <version>6.0.2</version>
-        </dependency>
+
 
 	</dependencies>
 
