@@ -12,7 +12,7 @@ import java.util.List;
 @org.springframework.data.neo4j.core.schema.Node
 public class PaperNode {
 
-    //attributes
+    // attributes
 
     // ID of papers is structured as PXXXXXX
     // where sequence of X are numbers
