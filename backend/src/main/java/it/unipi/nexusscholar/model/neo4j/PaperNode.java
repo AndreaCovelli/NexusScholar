@@ -16,8 +16,7 @@ public class PaperNode {
 
     // ID of papers is structured as PXXXXXX
     // where sequence of X are numbers
-    @Id
-    private String paperID;
+    @Id private String paperID;
 
     private String title;
 
