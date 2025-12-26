@@ -44,3 +44,20 @@ data-pipeline/scripts/dblp_ai_ml_*.jsonl
 data-pipeline/scripts/dblp.dtd
 data-pipeline/scripts/dblp.xml.gz
 data-pipeline/scripts/enrichment_cache.db
+
+### Python ###
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+### Jupyter Notebooks ###
+.ipynb_checkpoints/
+
+### OS & IDE ###
+.DS_Store
+Thumbs.db
+*.iml
+
+### Archives ###
+*.7z
