@@ -13,12 +13,12 @@ public class PageRankEntry {
     }
 
     public PageRankEntry(Record r){
-        this.rank = Double.parseDouble(r.get("rank").toString());
+        this.rank = r.get("rank").asDouble();
         this.paperTitle = r.get("paperTitle").toString();
     }
 
     public String toJson(){
-        return "{\"title\":"+this.paperTitle+",\"rank\":"+this.rank+"}";
+        return "{\"title\":\""+this.paperTitle+"\",\"rank\":"+this.rank+"}";
     }
 
     public String getPaperTitle() {

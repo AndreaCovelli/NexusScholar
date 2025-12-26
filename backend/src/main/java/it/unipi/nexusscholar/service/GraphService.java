@@ -13,7 +13,7 @@ import it.unipi.nexusscholar.model.neo4j.AuthorNode;
 import it.unipi.nexusscholar.model.neo4j.PaperNode;
 import it.unipi.nexusscholar.model.neo4j.TopicNode;
 import it.unipi.nexusscholar.utils.PageRankEntry;
-import it.unipi.nexusscholar.utils.shortestPathAuthors;
+import it.unipi.nexusscholar.utils.ShortestPathAuthors;
 import it.unipi.nexusscholar.utils.NSConstants;
 
 public class GraphService {
@@ -44,7 +44,6 @@ public class GraphService {
 
         try (Session session = driver.session()){
             session.run("RETURN 1").consume();
-            System.out.println("Successfully connected to graph database");
             return true;
         }
         catch   (AuthenticationException e){
@@ -59,6 +58,9 @@ public class GraphService {
 
 
     public List<PageRankEntry> pagerank(){
+        if(driver == null)
+            return null;
+
         try (Session session = driver.session()){
             //here it follows the query for the graph projection
             boolean ex = session.executeRead( tx ->{
@@ -84,7 +86,7 @@ public class GraphService {
                                                 Result res = tx.run("""
                                                                       CALL gds.pageRank.stream('paperCitations')
                                                                       YIELD nodeId,score
-                                                                      RETURN gds.util.asNode(nodeId).title, round(score,4)
+                                                                      RETURN gds.util.asNode(nodeId).title as title, round(score,4) as rank
                                                                       ORDER BY score DESC;""");
                                                 return res.list();
                                             });
@@ -103,7 +105,7 @@ public class GraphService {
         }
     }
 
-    public shortestPathAuthors collabPath(String author1, String author2){
+    public ShortestPathAuthors collabPath(String author1, String author2){
         //verify user input
         if(author1==null || author1.isEmpty() || author2==null || author2.isEmpty())
             return null;
@@ -124,7 +126,7 @@ public class GraphService {
                         """, Map.of("a1Name", author1, "a2Name", author2));
             });
 
-            return (new shortestPathAuthors(res.single()));
+            return (new ShortestPathAuthors(res.single()));
         }
         catch(Exception e){
             System.err.println(e.getMessage());
