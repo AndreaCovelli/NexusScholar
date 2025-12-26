@@ -17,6 +17,10 @@ public class PageRankEntry {
         this.paperTitle = r.get("paperTitle").toString();
     }
 
+    public String toJson(){
+        return "{\"title\":"+this.paperTitle+",\"rank\":"+this.rank+"}";
+    }
+
     public String getPaperTitle() {
         return paperTitle;
     }
