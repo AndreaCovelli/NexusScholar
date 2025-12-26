@@ -1,7 +1,9 @@
-//This class is used to model the instance of Paper as a node in neo4j graphDb
-//with properties name and paperId
+// This class is used to model the instance of Topic as a node in neo4j graphDb
+// with properties name and paperId
 
 package it.unipi.nexusscholar.model.neo4j;
+
+import java.util.List;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
@@ -51,7 +53,7 @@ public class PaperNode {
     }
 
     public void setPaperID(String paperID) {
-        this.paperID = paperID;
+        paperID = paperID;
     }
 
     public String getTitle() {

@@ -1,5 +1,5 @@
-//This class is used to model the instance of Author as a node in neo4j graphDb
-//with properties name and authorId
+// This class is used to model the instance of Topic as a node in neo4j graphDb
+// with properties name and AuthorId
 
 package it.unipi.nexusscholar.model.neo4j;
 
@@ -11,8 +11,7 @@ import java.util.List;
 public class AuthorNode {
 
     //attributes
-    @Id
-    private String authorId;
+    @Id private String authorId;
 
     private String name;
 
