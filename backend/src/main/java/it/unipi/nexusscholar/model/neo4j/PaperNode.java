@@ -7,7 +7,6 @@ import java.util.List;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import java.util.List;
 
 @org.springframework.data.neo4j.core.schema.Node
 public class PaperNode {
@@ -52,7 +51,7 @@ public class PaperNode {
     }
 
     public void setPaperID(String paperID) {
-        paperID = paperID;
+        this.paperID = paperID;
     }
 
     public String getTitle() {
