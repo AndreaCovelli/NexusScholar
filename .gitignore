@@ -61,3 +61,4 @@ Thumbs.db
 
 ### Archives ###
 *.7z
+/backend/src/test/resources/docker-java.properties
