@@ -33,7 +33,7 @@ services:
     image: mongo:noble
     container_name: mongo1
     ports:
-      - "27018:27017"
+      - "27017:27017"
     env_file:
       - ../.env
     environment:
