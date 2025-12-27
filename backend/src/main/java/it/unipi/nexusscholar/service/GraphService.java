@@ -111,8 +111,9 @@ public class GraphService {
       Record r =
           session.executeRead(
               tx -> {
-                Result res = tx.run(
-                    """
+                Result res =
+                    tx.run(
+                        """
                         MATCH (a1:Author{name:$a1Name}),
                               (a2:Author{name:$a2Name}),
                               path=shortestPath(
@@ -123,12 +124,11 @@ public class GraphService {
                         ORDER BY DegreeSeparation ASC
                         LIMIT 1
                         """,
-                    Map.of("a1Name", author1, "a2Name", author2));
+                        Map.of("a1Name", author1, "a2Name", author2));
                 return res.single();
               });
 
-      if(r!=null)
-          return new ShortestPathAuthors(r);
+      if (r != null) return new ShortestPathAuthors(r);
 
       return null;
 
