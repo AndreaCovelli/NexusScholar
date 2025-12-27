@@ -108,10 +108,10 @@ public class GraphService {
 
     // find the shortest path using cypher
     try (Session session = driver.session()) {
-      Result res =
+      Record r =
           session.executeRead(
               tx -> {
-                return tx.run(
+                Result res = tx.run(
                     """
                         MATCH (a1:Author{name:$a1Name}),
                               (a2:Author{name:$a2Name}),
@@ -124,9 +124,14 @@ public class GraphService {
                         LIMIT 1
                         """,
                     Map.of("a1Name", author1, "a2Name", author2));
+                return res.single();
               });
 
-      return (new ShortestPathAuthors(res.single()));
+      if(r!=null)
+          return new ShortestPathAuthors(r);
+
+      return null;
+
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return null;

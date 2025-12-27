@@ -12,7 +12,7 @@ public class GraphServiceTest {
   public void TestGraphService() {
     GraphService graphService = new GraphService();
     // Test method connect to verify connection to neo4j istance
-    assertTrue(graphService.connect("admin", "secretpassword"));
+    assertTrue(graphService.connect("neo4j", "secretpassword"));
     // Pagerank test
     assertNotNull(graphService.pagerank());
     // shortestPath test

@@ -15,7 +15,7 @@ public class ShortestPathAuthors {
 
   public ShortestPathAuthors(Record r) {
     this.shortestPath = r.get("path").asPath();
-    this.degreeSeparation = r.get("degreeSeparation").asInt();
+    this.degreeSeparation = r.get("DegreeSeparation").asInt();
   }
 
   public String toJson() {
