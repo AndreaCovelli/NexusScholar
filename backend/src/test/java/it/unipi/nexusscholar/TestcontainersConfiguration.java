@@ -5,20 +5,23 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.Neo4jContainer;
+import org.testcontainers.containers.Neo4jLabsPlugin;
 import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
   @Bean
   @ServiceConnection
-  MongoDBContainer mongoDbContainer() {
+  public MongoDBContainer mongoDbContainer() {
     return new MongoDBContainer(DockerImageName.parse("mongo:latest"));
   }
 
   @Bean
   @ServiceConnection
-  Neo4jContainer<?> neo4jContainer() {
-    return new Neo4jContainer<>(DockerImageName.parse("neo4j:latest"));
+  public Neo4jContainer<?> neo4jContainer() {
+    // Add GDS plugin required for PageRank
+    return new Neo4jContainer<>(DockerImageName.parse("neo4j:5.15.0"))
+        .withLabsPlugins(Neo4jLabsPlugin.GRAPH_DATA_SCIENCE);
   }
 }
