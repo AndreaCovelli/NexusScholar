@@ -4,36 +4,36 @@ import org.neo4j.driver.Record;
 
 public class PageRankEntry {
 
-    private String paperTitle;
-    private double rank;
+  private String paperTitle;
+  private double rank;
 
-    public PageRankEntry(double rank, String paperTitle) {
-        this.rank = rank;
-        this.paperTitle = paperTitle;
-    }
+  public PageRankEntry(double rank, String paperTitle) {
+    this.rank = rank;
+    this.paperTitle = paperTitle;
+  }
 
-    public PageRankEntry(Record r){
-        this.rank = r.get("rank").asDouble();
-        this.paperTitle = r.get("paperTitle").asString();
-    }
+  public PageRankEntry(Record r) {
+    this.rank = r.get("rank").asDouble();
+    this.paperTitle = r.get("paperTitle").asString();
+  }
 
-    public String toJson(){
-        return "{\"title\":\""+this.paperTitle+"\",\"rank\":"+this.rank+"}";
-    }
+  public String toJson() {
+    return "{\"title\":\"" + this.paperTitle + "\",\"rank\":" + this.rank + "}";
+  }
 
-    public String getPaperTitle() {
-        return paperTitle;
-    }
+  public String getPaperTitle() {
+    return paperTitle;
+  }
 
-    public void setPaperTitle(String paperTitle) {
-        this.paperTitle = paperTitle;
-    }
+  public void setPaperTitle(String paperTitle) {
+    this.paperTitle = paperTitle;
+  }
 
-    public double getRank() {
-        return rank;
-    }
+  public double getRank() {
+    return rank;
+  }
 
-    public void setRank(double rank) {
-        this.rank = rank;
-    }
+  public void setRank(double rank) {
+    this.rank = rank;
+  }
 }

@@ -1,4 +1,3 @@
 package it.unipi.nexusscholar.dao;
 
-public interface PaperDAO {
-}
+public interface PaperDAO {}

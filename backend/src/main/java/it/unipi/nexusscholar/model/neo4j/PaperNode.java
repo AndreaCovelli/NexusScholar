@@ -7,66 +7,65 @@ import java.util.List;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-
 @org.springframework.data.neo4j.core.schema.Node
 public class PaperNode {
 
-    // attributes
+  // attributes
 
-    // ID of papers is structured as PXXXXXX
-    // where sequence of X are numbers
-    @Id private String paperID;
+  // ID of papers is structured as PXXXXXX
+  // where sequence of X are numbers
+  @Id private String paperID;
 
-    private String title;
+  private String title;
 
-    // relationship of the cites between papers
-    @Relationship(type = "CITES", direction = Relationship.Direction.OUTGOING)
-    private List<PaperNode> citedPapers;
+  // relationship of the cites between papers
+  @Relationship(type = "CITES", direction = Relationship.Direction.OUTGOING)
+  private List<PaperNode> citedPapers;
 
-    // relationship between paper and its topics
-    @Relationship(type = "HAS_TOPIC", direction = Relationship.Direction.OUTGOING)
-    private List<TopicNode> topics;
+  // relationship between paper and its topics
+  @Relationship(type = "HAS_TOPIC", direction = Relationship.Direction.OUTGOING)
+  private List<TopicNode> topics;
 
-    @Relationship(type = "AUTHORED", direction = Relationship.Direction.INCOMING)
-    private List<AuthorNode> authors;
+  @Relationship(type = "AUTHORED", direction = Relationship.Direction.INCOMING)
+  private List<AuthorNode> authors;
 
-    public List<AuthorNode> getAuthors() {
-        return authors;
-    }
+  public List<AuthorNode> getAuthors() {
+    return authors;
+  }
 
-    public void setAuthors(List<AuthorNode> authors) {
-        this.authors = authors;
-    }
+  public void setAuthors(List<AuthorNode> authors) {
+    this.authors = authors;
+  }
 
-    public List<TopicNode> getTopics() {
-        return topics;
-    }
+  public List<TopicNode> getTopics() {
+    return topics;
+  }
 
-    public void setTopics(List<TopicNode> topics) {
-        this.topics = topics;
-    }
+  public void setTopics(List<TopicNode> topics) {
+    this.topics = topics;
+  }
 
-    public String getPaperID() {
-        return paperID;
-    }
+  public String getPaperID() {
+    return paperID;
+  }
 
-    public void setPaperID(String paperID) {
-        this.paperID = paperID;
-    }
+  public void setPaperID(String paperID) {
+    this.paperID = paperID;
+  }
 
-    public String getTitle() {
-        return title;
-    }
+  public String getTitle() {
+    return title;
+  }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+  public void setTitle(String title) {
+    this.title = title;
+  }
 
-    public List<PaperNode> getCitedPapers() {
-        return citedPapers;
-    }
+  public List<PaperNode> getCitedPapers() {
+    return citedPapers;
+  }
 
-    public void setCitedPapers(List<PaperNode> citedPapers) {
-        this.citedPapers = citedPapers;
-    }
+  public void setCitedPapers(List<PaperNode> citedPapers) {
+    this.citedPapers = citedPapers;
+  }
 }

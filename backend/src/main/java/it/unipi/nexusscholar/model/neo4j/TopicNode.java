@@ -8,23 +8,23 @@ import org.springframework.data.neo4j.core.schema.Id;
 @org.springframework.data.neo4j.core.schema.Node
 public class TopicNode {
 
-    @Id private String  topicId;
+  @Id private String topicId;
 
-    private String name;
+  private String name;
 
-    public String getTopicId() {
-        return topicId;
-    }
+  public String getTopicId() {
+    return topicId;
+  }
 
-    public void setTopicId(String topicId) {
-        this.topicId = topicId;
-    }
+  public void setTopicId(String topicId) {
+    this.topicId = topicId;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 }

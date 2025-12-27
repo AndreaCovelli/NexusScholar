@@ -7,38 +7,37 @@ import java.util.List;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-
 @org.springframework.data.neo4j.core.schema.Node
 public class AuthorNode {
 
-    @Id private String authorId;
+  @Id private String authorId;
 
-    private String name;
+  private String name;
 
-    @Relationship(type = "AUTHORED", direction = Relationship.Direction.OUTGOING)
-    private List<PaperNode> authPapers;
+  @Relationship(type = "AUTHORED", direction = Relationship.Direction.OUTGOING)
+  private List<PaperNode> authPapers;
 
-    public String getAuthorId() {
-        return authorId;
-    }
+  public String getAuthorId() {
+    return authorId;
+  }
 
-    public void setAuthorId(String authorId) {
-        this.authorId = authorId;
-    }
+  public void setAuthorId(String authorId) {
+    this.authorId = authorId;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public List<PaperNode> getAuthPapers() {
-        return authPapers;
-    }
+  public List<PaperNode> getAuthPapers() {
+    return authPapers;
+  }
 
-    public void setAuthPapers(List<PaperNode> authPapers) {
-        this.authPapers = authPapers;
-    }
+  public void setAuthPapers(List<PaperNode> authPapers) {
+    this.authPapers = authPapers;
+  }
 }

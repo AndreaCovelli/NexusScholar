@@ -1,4 +1,3 @@
 package it.unipi.nexusscholar.dao;
 
-public interface AuthorDao {
-}
+public interface AuthorDao {}
