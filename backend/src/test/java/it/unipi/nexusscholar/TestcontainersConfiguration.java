@@ -14,14 +14,17 @@ public class TestcontainersConfiguration {
   @Bean
   @ServiceConnection
   public MongoDBContainer mongoDbContainer() {
-    return new MongoDBContainer(DockerImageName.parse("mongo:latest"));
+    return new MongoDBContainer(DockerImageName.parse("mongo:8.2.3-noble"));
   }
 
   @Bean
   @ServiceConnection
   public Neo4jContainer<?> neo4jContainer() {
     // Add GDS plugin required for PageRank
-    return new Neo4jContainer<>(DockerImageName.parse("neo4j:5.15.0"))
-        .withLabsPlugins(Neo4jLabsPlugin.GRAPH_DATA_SCIENCE);
+    return new Neo4jContainer<>(DockerImageName.parse("neo4j:2025.11.2-enterprise-bullseye"))
+        .withLabsPlugins(Neo4jLabsPlugin.GRAPH_DATA_SCIENCE)
+        // You must accept the license for Enterprise Edition:
+        // Use "yes" for Commercial or "eval" for Evaluation
+        .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes");
   }
 }
