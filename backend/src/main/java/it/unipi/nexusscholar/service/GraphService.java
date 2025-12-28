@@ -1,10 +1,13 @@
 package it.unipi.nexusscholar.service;
 
+import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
@@ -120,6 +123,67 @@ public class GraphService {
 
       return null;
 
+    } catch (Exception e) {
+      System.err.println(e.getMessage());
+      return null;
+    }
+  }
+
+  public List<LeidenCommunity> hiddenCommunities() {
+    try (Session session = driver.session()) {
+      // check if projection exists
+      boolean ex =
+          session.executeRead(
+              tx -> {
+                Result r = tx.run("CALL gds.graph.exists('coAuthors') YIELD exists RETURN exists");
+                return r.single().get("exists").asBoolean();
+              });
+
+      if (!ex) {
+        session.executeWriteWithoutResult(
+            tx -> {
+              tx.run(
+                  """
+                        CALL gds.graph.project.cypher(
+                                                  'coAuthors',
+                                                  '
+                                                  MATCH (a:Author)
+                                                  RETURN id(a) as id
+                                                  ',
+                                                  '
+                                                  MATCH (a1:Author) - [:AUTHORED] -> (p:Paper) <- [:AUTHORED] - (a2:Author)
+                                                  WHERE id(a1) < id(a2)
+                                                  RETURN id(a1) as source,
+                                                         id(a2) as target,
+                                                         count(p) as noP
+                                                  '
+                                              )""");
+            });
+      }
+
+      // Leiden computation
+      List<Record> lr = session.executeRead(tx -> {
+                                        Result r = tx.run("""
+                                            CALL gds.leiden.stream(
+                                            'coAuthors',
+                                                {
+                                                    randomSeed:42
+                                                }
+                                            )
+                                            YIELD nodeId,communityId
+                                            RETURN communityId,
+                                                   gds.util.asNode(nodeId).name as name
+                                            """);
+                                        return r.list();
+                                        });
+      List<LeidenCommunity> resultLeiden = new ArrayList<>();
+      for (Record r : lr) {
+          Optional<LeidenCommunity> rlc = resultLeiden.stream()
+                  .filter(obj -> obj.getCommunityId() == r.get("communityId").asInt())
+                  .findFirst();
+
+      }
+      return null;
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return null;
