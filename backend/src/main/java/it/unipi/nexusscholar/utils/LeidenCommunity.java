@@ -31,10 +31,10 @@ public class LeidenCommunity {
   }
 
   public String toJson() {
-          String authorsJson = authors.stream()
-                  .map(author -> "\"" + author + "\"")
-                  .collect(java.util.stream.Collectors.joining(","));
-          return "{\"communityId\":" + communityId + ",\"authors\":[" + authorsJson + "]}";
-      }
+    String authorsJson =
+        authors.stream()
+            .map(author -> "\"" + author + "\"")
+            .collect(java.util.stream.Collectors.joining(","));
+    return "{\"communityId\":" + communityId + ",\"authors\":[" + authorsJson + "]}";
   }
 }

@@ -3,11 +3,7 @@ package it.unipi.nexusscholar.service;
 import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+import java.util.*;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
@@ -131,59 +127,60 @@ public class GraphService {
 
   public List<LeidenCommunity> hiddenCommunities() {
     try (Session session = driver.session()) {
-      // check if projection exists
-      boolean ex =
+      // 1. Project the graph using Native Projection with UNDIRECTED orientation.
+      // We drop the graph first to ensure we don't use an existing directed version from previous
+      // failed runs.
+      session.executeWriteWithoutResult(
+          tx -> {
+            tx.run("CALL gds.graph.drop('coAuthors', false)");
+            tx.run(
+                """
+                              CALL gds.graph.project(
+                                  'coAuthors',
+                                  ['Author', 'Paper'],
+                                  {
+                                      AUTHORED: {
+                                          orientation: 'UNDIRECTED'
+                                      }
+                                  }
+                              )
+                              """);
+          });
+
+      // 2. Stream Leiden results
+      // Since the projection is bipartite (Author-Paper), we filter WHERE node:Author
+      List<Record> lr =
           session.executeRead(
               tx -> {
-                Result r = tx.run("CALL gds.graph.exists('coAuthors') YIELD exists RETURN exists");
-                return r.single().get("exists").asBoolean();
+                Result r =
+                    tx.run(
+                        """
+                                              CALL gds.leiden.stream(
+                                                  'coAuthors',
+                                                  {
+                                                      randomSeed: 42
+                                                  }
+                                              )
+                                              YIELD nodeId, communityId
+                                              WITH communityId, gds.util.asNode(nodeId) as node
+                                              WHERE node:Author
+                                              RETURN communityId,
+                                                     node.name as name
+                                              """);
+                return r.list();
               });
 
-      if (!ex) {
-        session.executeWriteWithoutResult(
-            tx -> {
-              tx.run(
-                  """
-                        CALL gds.graph.project.cypher(
-                                                  'coAuthors',
-                                                  '
-                                                  MATCH (a:Author)
-                                                  RETURN id(a) as id
-                                                  ',
-                                                  '
-                                                  MATCH (a1:Author) - [:AUTHORED] -> (p:Paper) <- [:AUTHORED] - (a2:Author)
-                                                  WHERE id(a1) < id(a2)
-                                                  RETURN id(a1) as source,
-                                                         id(a2) as target,
-                                                         count(p) as noP
-                                                  '
-                                              )""");
-            });
-      }
-
-      // Leiden computation
-      List<Record> lr = session.executeRead(tx -> {
-                                        Result r = tx.run("""
-                                            CALL gds.leiden.stream(
-                                            'coAuthors',
-                                                {
-                                                    randomSeed:42
-                                                }
-                                            )
-                                            YIELD nodeId,communityId
-                                            RETURN communityId,
-                                                   gds.util.asNode(nodeId).name as name
-                                            """);
-                                        return r.list();
-                                        });
-      List<LeidenCommunity> resultLeiden = new ArrayList<>();
+      // 3. Aggregate results into communities
+      Map<Integer, LeidenCommunity> communities = new HashMap<>();
       for (Record r : lr) {
-          Optional<LeidenCommunity> rlc = resultLeiden.stream()
-                  .filter(obj -> obj.getCommunityId() == r.get("communityId").asInt())
-                  .findFirst();
+        int communityId = r.get("communityId").asInt();
+        String name = r.get("name").asString();
 
+        communities.computeIfAbsent(communityId, LeidenCommunity::new).addAuthor(name);
       }
-      return null;
+
+      return new ArrayList<>(communities.values());
+
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return null;
