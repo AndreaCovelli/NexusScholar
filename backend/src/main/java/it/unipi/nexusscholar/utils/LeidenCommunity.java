@@ -31,16 +31,10 @@ public class LeidenCommunity {
   }
 
   public String toJson() {
-    String json = "{\"communityId\":" + communityId + ",\"authors\":[";
-    int countAuthors = 0, sizeAuthors = authors.size();
-    for (String author : authors) {
-      json += "\"" + author + "\"";
-      if (countAuthors != sizeAuthors) {
-        json += ",";
-        countAuthors++;
+          String authorsJson = authors.stream()
+                  .map(author -> "\"" + author + "\"")
+                  .collect(java.util.stream.Collectors.joining(","));
+          return "{\"communityId\":" + communityId + ",\"authors\":[" + authorsJson + "]}";
       }
-    }
-    json += "]}";
-    return json;
   }
 }
