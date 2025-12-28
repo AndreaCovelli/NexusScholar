@@ -13,8 +13,8 @@ public class LeidenCommunity {
     this.authors = authors;
   }
 
-  public LeidenCommunity(int i) {
-    this.communityId = i;
+  public LeidenCommunity(int communityId) {
+    this.communityId = communityId;
     this.authors = new ArrayList<>();
   }
 
