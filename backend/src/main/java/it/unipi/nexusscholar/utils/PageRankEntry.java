@@ -1,5 +1,6 @@
 package it.unipi.nexusscholar.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.neo4j.driver.Record;
 
 public class PageRankEntry {
@@ -18,7 +19,12 @@ public class PageRankEntry {
   }
 
   public String toJson() {
-    return "{\"title\":\"" + this.paperTitle + "\",\"rank\":" + this.rank + "}";
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      return mapper.writeValueAsString(this);
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public String getPaperTitle() {

@@ -1,5 +1,6 @@
 package it.unipi.nexusscholar.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,10 +32,11 @@ public class LeidenCommunity {
   }
 
   public String toJson() {
-    String authorsJson =
-        authors.stream()
-            .map(author -> "\"" + author + "\"")
-            .collect(java.util.stream.Collectors.joining(","));
-    return "{\"communityId\":" + communityId + ",\"authors\":[" + authorsJson + "]}";
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      return mapper.writeValueAsString(this);
+    } catch (Exception e) {
+      return null;
+    }
   }
 }
