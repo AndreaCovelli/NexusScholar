@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PublicationSummaryDTO {
 
-    private String paperId;
+  private String paperId;
 
-    private Integer year;
-    private String title;
+  private Integer year;
+  private String title;
 }
