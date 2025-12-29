@@ -30,7 +30,7 @@ public class ShortestPathAuthors {
       mapper.registerModule(module);
       return mapper.writeValueAsString(this);
     } catch (Exception e) {
-      return null;
+      throw new RuntimeException("Failed to serialize ShortestPathAuthors to JSON", e);
     }
   }
 
