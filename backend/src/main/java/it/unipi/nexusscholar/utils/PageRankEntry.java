@@ -23,7 +23,7 @@ public class PageRankEntry {
       ObjectMapper mapper = new ObjectMapper();
       return mapper.writeValueAsString(this);
     } catch (Exception e) {
-      return null;
+      throw new RuntimeException("Failed to serialize PageRankEntry to JSON", e);
     }
   }
 
