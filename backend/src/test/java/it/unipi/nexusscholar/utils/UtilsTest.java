@@ -4,9 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
@@ -99,5 +102,29 @@ class UtilsTest {
     assertTrue(Modifier.isPrivate(constructor.getModifiers()));
     constructor.setAccessible(true);
     constructor.newInstance();
+  }
+
+  @Test
+  void testLeidenCommunity() throws IOException {
+
+    // Test for constructor
+    LeidenCommunity lc = new LeidenCommunity(3);
+    assertEquals(3, lc.getCommunityId());
+
+    ArrayList<String> ls = new ArrayList<>();
+    ls.add("Daniele");
+    ls.add("Andrea");
+    LeidenCommunity lc1 = new LeidenCommunity(2, ls);
+    assertEquals(2, lc1.getCommunityId());
+    assertNotNull(lc1.getAuthors());
+
+    // Attempt for author
+    lc1.addAuthor("Luca");
+    assertEquals("Luca", lc1.getAuthors().getLast());
+
+    // Attempt for json convert
+    String json_lc1 = lc1.toJson();
+    assertTrue(json_lc1.contains("\"communityId\":2"));
+    assertTrue(json_lc1.contains("\"authors\":[\"Daniele\",\"Andrea\",\"Luca\"]"));
   }
 }
