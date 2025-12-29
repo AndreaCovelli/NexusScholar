@@ -22,7 +22,7 @@ public class ShortestPathSerializer extends StdSerializer<ShortestPathAuthors> {
     jsonGenerator.writeStringField("path_nodes", spa.getShortestPath().nodes().toString());
     jsonGenerator.writeStringField(
         "relationships", spa.getShortestPath().relationships().toString());
-    jsonGenerator.writeNumberField("degreeSeparation",spa.getDegreeSeparation());
+    jsonGenerator.writeNumberField("degreeSeparation", spa.getDegreeSeparation());
     jsonGenerator.writeEndObject();
   }
 }
