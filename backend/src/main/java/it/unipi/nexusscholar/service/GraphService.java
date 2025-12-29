@@ -110,13 +110,11 @@ public class GraphService {
                     LIMIT 1
                     """,
                         Map.of("a1Name", author1, "a2Name", author2));
-                return res.single();
+                return res.hasNext() ? res.single() : null;
               });
 
-      if (!r.keys().isEmpty()) return new ShortestPathAuthors(r);
-
+      if (r != null) return new ShortestPathAuthors(r);
       return null;
-
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return null;

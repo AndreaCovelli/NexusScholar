@@ -36,7 +36,7 @@ public class LeidenCommunity {
       ObjectMapper mapper = new ObjectMapper();
       return mapper.writeValueAsString(this);
     } catch (Exception e) {
-      return null;
+      return "{}";
     }
   }
 }

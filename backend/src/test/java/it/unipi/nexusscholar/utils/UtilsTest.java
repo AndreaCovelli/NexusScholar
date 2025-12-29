@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -104,7 +103,7 @@ class UtilsTest {
   }
 
   @Test
-  void testLeidenCommunity() throws IOException {
+  void testLeidenCommunity() {
 
     // Test for constructor
     LeidenCommunity lc = new LeidenCommunity(3);
