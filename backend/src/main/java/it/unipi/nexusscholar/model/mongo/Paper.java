@@ -23,7 +23,7 @@ public class Paper {
 
   private String doi;
 
-  @Field("abstact")
+  @Field("abstract")
   private String abstractText;
 
   @Field("fields_of_study")

@@ -4,4 +4,4 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://myUserAdmin:hello@localhost:27017/dbname
+      uri: ${MONGODB_URI}
