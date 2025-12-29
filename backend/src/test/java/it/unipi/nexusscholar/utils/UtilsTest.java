@@ -29,7 +29,7 @@ class UtilsTest {
 
     // JSON
     String json = entry.toJson();
-    assertTrue(json.contains("\"title\":\"New Title\""));
+    assertTrue(json.contains("\"paperTitle\":\"New Title\""));
     assertTrue(json.contains("\"rank\":0.99"));
 
     // Record Constructor
@@ -66,7 +66,7 @@ class UtilsTest {
 
     // JSON
     String json = spa.toJson();
-    assertTrue(json.contains("\"DegreeSeparation\":3"));
+    assertTrue(json.contains("\"degreeSeparation\":3"));
 
     // Record Constructor
     Record mockRecord = mock(Record.class);

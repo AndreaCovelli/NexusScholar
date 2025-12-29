@@ -1,5 +1,8 @@
 package it.unipi.nexusscholar.utils;
 
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.types.Path;
 
@@ -19,11 +22,16 @@ public class ShortestPathAuthors {
   }
 
   public String toJson() {
-    return "{\"DegreeSeparation\":"
-        + this.degreeSeparation
-        + "\",path\":\""
-        + this.shortestPath.toString()
-        + "\"}";
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      SimpleModule module =
+          new SimpleModule("ShortestPathSerializer", new Version(1, 0, 0, null, null, null));
+      module.addSerializer(ShortestPathAuthors.class, new ShortestPathSerializer());
+      mapper.registerModule(module);
+      return mapper.writeValueAsString(this);
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public Path getShortestPath() {

@@ -51,18 +51,16 @@ public class GraphService {
               });
 
       if (!ex) {
-        session.executeWrite(
+        session.executeWriteWithoutResult(
             tx -> {
-              Result res =
-                  tx.run(
-                      """
+              tx.run(
+                  """
                         CALL gds.graph.project(
                         'paperCitations',
                         'Paper',
                         'CITES'
                         );
                         """);
-              return null;
             });
       }
 
