@@ -46,7 +46,7 @@ public class GraphServiceTest {
     assertTrue(graphService.connect());
     assertNotNull(graphService.pagerank());
     assertNotNull(graphService.collabPath("Jennifer Dean", "B. Rappazzo"));
-    assertNull(graphService.collabPath("Chunhong Pan", "Barzan Mozafari"));
+    assertNull(graphService.collabPath("Chunhong Pan", "DanieleCong"));
     assertNotNull(graphService.hiddenCommunities());
   }
 }
