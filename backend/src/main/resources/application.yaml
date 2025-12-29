@@ -2,6 +2,3 @@ spring:
   application:
     name: NexusScholarBackend
 
-  data:
-    mongodb:
-      uri: ${MONGODB_URI}
