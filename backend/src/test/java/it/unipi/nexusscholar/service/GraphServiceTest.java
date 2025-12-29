@@ -1,7 +1,6 @@
 package it.unipi.nexusscholar.service;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import it.unipi.nexusscholar.TestcontainersConfiguration;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,5 +46,7 @@ public class GraphServiceTest {
     assertTrue(graphService.connect());
     assertNotNull(graphService.pagerank());
     assertNotNull(graphService.collabPath("Jennifer Dean", "B. Rappazzo"));
+    assertNull(graphService.collabPath("Chunhong Pan", "DanieleCong"));
+    assertNotNull(graphService.hiddenCommunities());
   }
 }
