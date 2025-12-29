@@ -113,7 +113,7 @@ public class GraphService {
                 return res.single();
               });
 
-      if (r.size() != 0) return new ShortestPathAuthors(r);
+      if (!r.keys().isEmpty()) return new ShortestPathAuthors(r);
 
       return null;
 
