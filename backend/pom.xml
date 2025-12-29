@@ -75,9 +75,10 @@
 			<artifactId>neo4j</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-
-
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+        </dependency>
 	</dependencies>
 
 	<build>
