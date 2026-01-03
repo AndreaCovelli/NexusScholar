@@ -15,7 +15,7 @@ public class PageRankEntry {
 
   public PageRankEntry(Record r) {
     this.rank = r.get("rank").asDouble();
-    this.paperTitle = r.get("paperTitle").asString();
+    this.paperTitle = r.get("title").asString();
   }
 
   public String toJson() {

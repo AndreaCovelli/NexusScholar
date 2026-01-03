@@ -39,7 +39,7 @@ class UtilsTest {
     Value mockTitle = mock(Value.class);
 
     when(mockRecord.get("rank")).thenReturn(mockRank);
-    when(mockRecord.get("paperTitle")).thenReturn(mockTitle);
+    when(mockRecord.get("title")).thenReturn(mockTitle);
     when(mockRank.asDouble()).thenReturn(0.55);
     when(mockTitle.asString()).thenReturn("Record Title");
 
