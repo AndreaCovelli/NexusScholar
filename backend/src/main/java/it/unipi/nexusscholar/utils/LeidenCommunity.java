@@ -31,6 +31,10 @@ public class LeidenCommunity {
     authors.add(author);
   }
 
+  public boolean findAuthor(String author) {
+    return authors.contains(author);
+  }
+
   public String toJson() {
     try {
       ObjectMapper mapper = new ObjectMapper();

@@ -1,5 +1,6 @@
 package it.unipi.nexusscholar.service;
 
+import it.unipi.nexusscholar.model.neo4j.AuthorNode;
 import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
@@ -182,4 +183,5 @@ public class GraphService {
       return null;
     }
   }
+
 }
