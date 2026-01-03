@@ -251,7 +251,6 @@ public class GraphService {
 
     } catch (Exception e) {
       System.err.println("Betweenness centrality calculation failed: " + e.getMessage());
-      e.printStackTrace(); // Log full stack trace for debugging
       return null;
     }
   }
