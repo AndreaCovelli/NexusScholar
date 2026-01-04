@@ -22,8 +22,8 @@ public class JaccardEntry {
   }
 
   public JaccardEntry(Record r) {
-    this.author1 = r.get("Author1").toString();
-    this.author2 = r.get("Author2").toString();
+    this.author1 = r.get("author1").asString();
+    this.author2 = r.get("author2").asString();
     this.similarity = r.get("similarity").asDouble();
   }
 
