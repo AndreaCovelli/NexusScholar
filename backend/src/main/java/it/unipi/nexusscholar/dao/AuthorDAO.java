@@ -1,22 +1,47 @@
 package it.unipi.nexusscholar.dao;
 
 import it.unipi.nexusscholar.model.mongo.Author;
-import java.util.Optional;
-import org.bson.Document;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface AuthorDAO extends MongoRepository<Author, String>, AuthorDAOCustom {
+import java.util.List;
+import java.util.Optional;
 
-  /**
-   * Show the history of papers published by an author. value = "{ '_id': ?0 }" is the filter of the
-   * query fields = "{ 'publications_summary': 1, '_id': 0 }" are the projections
-   *
-   * @param authorId Id of the desired author
-   * @return Document with the list of publication of the desired author
-   */
-  @Query(value = "{ '_id': ?0 }", fields = "{ 'publications_summary': 1, '_id': 0 }")
-  Optional<Document> findPublicationsHistory(String authorId);
+
+@Repository
+public interface AuthorDAO extends MongoRepository<Author, String> {
+
+    /**
+     * Finds an author using their external Semantic Scholar ID.
+     *
+     * @param s2AuthorId The unique identifier from Semantic Scholar.
+     * @return The author desired, if possible.
+     */
+    Optional<Author> findByS2AuthorId(String s2AuthorId);
+
+    /**
+     * Finds all authors whose name contains the specified string.
+     *
+     * @param name The part of the name to search for.
+     * @return A list of authors matching the search criteria.
+     */
+    List<Author> findByNameContainingIgnoreCase(String name);
+
+    /**
+     * Executes a native MongoDB query to find authors with a number of publications
+     * greater than the specified value.
+     *
+     * @param minPublications The minimum number of publications required.
+     * @return A list of authors satisfying the requirement.
+     */
+    @Query("{ 'total_publications' : { $gt: ?0 } }")
+    List<Author> findAuthorsWithMoreThan(Integer minPublications);
+
+    /**
+     * Deletes an author based on their external Semantic Scholar ID.
+     *
+     * @param s2AuthorId The external ID of the author to remove.
+     */
+    void deleteByS2AuthorId(String s2AuthorId);
 }

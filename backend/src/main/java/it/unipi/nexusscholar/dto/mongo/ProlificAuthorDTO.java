@@ -1,16 +1,15 @@
-package it.unipi.nexusscholar.model.mongo;
+package it.unipi.nexusscholar.dto.mongo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.web.bind.annotation.Mapping;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PublicationSummary {
-    @Field("paper_id")
-  private String paperId;
-  private Integer year;
-  private String title;
+public class ProlificAuthorDTO {
+    private String authorId;
+    private String authorName;
 }

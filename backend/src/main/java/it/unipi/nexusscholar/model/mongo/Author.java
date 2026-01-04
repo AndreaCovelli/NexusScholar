@@ -23,6 +23,6 @@ public class Author {
   @Field("total_publications")
   private Integer totalPublications;
 
-  @Field("publication_summary")
+  @Field("publications_summary")
   private List<PublicationSummary> publicationsSummary;
 }

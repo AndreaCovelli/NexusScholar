@@ -1,13 +1,12 @@
 package it.unipi.nexusscholar.dao.mongo;
 
-import it.unipi.nexusscholar.dao.PaperDAOCustom;
+import it.unipi.nexusscholar.dao.PaperAnalysisDAO;
 import java.util.List;
 
 import it.unipi.nexusscholar.model.mongo.CollaborationEvolution;
 import it.unipi.nexusscholar.model.mongo.TrendAnalysis;
 import it.unipi.nexusscholar.model.mongo.VenueAnalysis;
 import lombok.RequiredArgsConstructor;
-import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class PaperDAOImpl implements PaperDAOCustom {
+public class PaperAnalysisDAOImpl implements PaperAnalysisDAO {
   private final MongoTemplate mongoTemplate;
 
 
