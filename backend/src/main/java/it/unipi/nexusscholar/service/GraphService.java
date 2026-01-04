@@ -1,7 +1,6 @@
 package it.unipi.nexusscholar.service;
 
 import it.unipi.nexusscholar.utils.*;
-
 import java.util.*;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
@@ -244,36 +243,38 @@ public class GraphService {
     }
   }
 
-public List<JaccardEntry> collabMatchmaker(double m){
-      if(m <= 0)
-          return null;
+  public List<JaccardEntry> collabMatchmaker(double m) {
+    if (m <= 0) return null;
 
-      try (Session session = driver.session()) {
-          boolean ex =
-                  session.executeRead(
-                          tx -> {
-                              Result res =
-                                      tx.run("CALL gds.graph.exists('coAuthorsDirected') YIELD exists RETURN exists");
-                              return res.single().get("exists").asBoolean();
-                          });
+    try (Session session = driver.session()) {
+      boolean ex =
+          session.executeRead(
+              tx -> {
+                Result res =
+                    tx.run("CALL gds.graph.exists('coAuthorsDirected') YIELD exists RETURN exists");
+                return res.single().get("exists").asBoolean();
+              });
 
-          if (!ex) {
-              session.executeWriteWithoutResult(
-                      tx -> {
-                          tx.run(
-                                  """
+      if (!ex) {
+        session.executeWriteWithoutResult(
+            tx -> {
+              tx.run(
+                  """
                                           CALL gds.graph.project(
                                              'coAuthorsDirected',
                                               ['Author', 'Paper'],
                                               'AUTHORED'
                                               )
                                         """);
-                      });
-          }
+            });
+      }
 
-
-          List<Record> lr = session.executeRead( tx -> {
-                Result res = tx.run("""
+      List<Record> lr =
+          session.executeRead(
+              tx -> {
+                Result res =
+                    tx.run(
+                        """
                       CALL gds.nodeSimilarity.stream('coAuthors')
                       YIELD node1, node2, similarity
                       WHERE node1 < node2
@@ -285,23 +286,17 @@ public List<JaccardEntry> collabMatchmaker(double m){
                       AND sim > $s
                       RETURN Author1.name as author1, Author2.name as author2, sim as similarity
                       ORDER BY similarity
-                      """,Map.of("s",m));
+                      """,
+                        Map.of("s", m));
                 return res.list();
-                });
+              });
 
-
-          List<JaccardEntry> results = new ArrayList<>();
-          for(Record r : lr){
-            results.add(new JaccardEntry(r));
-          }
-
-          return results;
+      List<JaccardEntry> results = new ArrayList<>();
+      for (Record r : lr) {
+        results.add(new JaccardEntry(r));
       }
 
-
-
-
-
-}
-
+      return results;
+    }
+  }
 }
