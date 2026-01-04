@@ -197,6 +197,7 @@ public class GraphService {
       // 1. Ensure Graph Projection Exists
       session.executeWriteWithoutResult(
           tx -> {
+            tx.run("CALL gds.graph.drop('coAuthors', false)");
             tx.run(
                 """
                                   CALL gds.graph.project(
