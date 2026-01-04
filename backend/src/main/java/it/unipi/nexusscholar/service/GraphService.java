@@ -189,7 +189,8 @@ public class GraphService {
    * centrality identifies "gatekeeper" authors who control information flow by sitting on the
    * shortest paths between the highest number of author pairs.
    *
-   * @return List of top 10 authors ranked by betweenness centrality score, or an empty list on error
+   * @return List of top 10 authors ranked by betweenness centrality score, or an empty list on
+   *     error
    */
   public List<BetweennessEntry> betweenness() {
     try (Session session = driver.session()) {
