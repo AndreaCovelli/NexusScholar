@@ -275,7 +275,7 @@ public class GraphService {
                 Result res =
                     tx.run(
                         """
-                      CALL gds.nodeSimilarity.stream('coAuthors')
+                      CALL gds.nodeSimilarity.stream('coAuthorsDirected')
                       YIELD node1, node2, similarity
                       WHERE node1 < node2
                       WITH gds.util.asNode(node1) AS Author1, gds.util.asNode(node2) AS Author2, similarity as sim
