@@ -55,6 +55,6 @@ public class GraphServiceBetweennessTest {
     // Verify Bob (the bridge) has the highest score
     BetweennessEntry topAuthor = results.get(0);
     assertEquals("Bob", topAuthor.getAuthorName(), "Bob should be the top bridge author");
-    assertEquals(4.0, topAuthor.getScore(), "Bridge author's betweenness score should be 1.0");
+    assertEquals(4.0, topAuthor.getScore(), "Bridge author's betweenness score should be 4.0");
   }
 }
