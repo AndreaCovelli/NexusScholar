@@ -1,5 +1,6 @@
 package it.unipi.nexusscholar.service;
 
+import it.unipi.nexusscholar.utils.BetweennessEntry;
 import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
@@ -180,6 +181,68 @@ public class GraphService {
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return null;
+    }
+  }
+
+  /**
+   * Calculates betweenness centrality for authors in the collaboration network. Betweenness
+   * centrality identifies "gatekeeper" authors who control information flow by sitting on the
+   * shortest paths between the highest number of author pairs.
+   *
+   * @return List of top 10 authors ranked by betweenness centrality score, or an empty list on
+   *     error
+   */
+  public List<BetweennessEntry> betweenness() {
+    try (Session session = driver.session()) {
+
+      // 1. Ensure Graph Projection Exists
+      session.executeWriteWithoutResult(
+          tx -> {
+            tx.run("CALL gds.graph.drop('coAuthors', false)");
+            tx.run(
+                """
+                                  CALL gds.graph.project(
+                                      'coAuthors',
+                                      ['Author', 'Paper'],
+                                      {
+                                          AUTHORED: {
+                                              orientation: 'UNDIRECTED'
+                                          }
+                                      }
+                                  )
+                                  """);
+          });
+
+      // 2. Run Betweenness Centrality Algorithm
+      // Stream results and filter for Author nodes only (excludes Paper nodes)
+      List<Record> records =
+          session.executeRead(
+              tx -> {
+                Result res =
+                    tx.run(
+                        """
+                                                CALL gds.betweenness.stream('coAuthors')
+                                                YIELD nodeId, score
+                                                WITH gds.util.asNode(nodeId) as node, score
+                                                WHERE node:Author
+                                                RETURN node.name as name, score
+                                                ORDER BY score DESC
+                                                LIMIT 10
+                                                """);
+                return res.list();
+              });
+
+      // 3. Transform to DTOs
+      List<BetweennessEntry> results = new ArrayList<>();
+      for (Record r : records) {
+        results.add(new BetweennessEntry(r));
+      }
+
+      return results;
+
+    } catch (Exception e) {
+      System.err.println("Betweenness centrality calculation failed: " + e.getMessage());
+      return java.util.Collections.emptyList();
     }
   }
 }
