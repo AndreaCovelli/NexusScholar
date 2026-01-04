@@ -125,4 +125,30 @@ class UtilsTest {
     assertTrue(json_lc1.contains("\"communityId\":2"));
     assertTrue(json_lc1.contains("\"authors\":[\"Daniele\",\"Andrea\",\"Luca\"]"));
   }
+
+  void testJaccardEntry() {
+    // Test constructor without parameters
+    JaccardEntry jaccardEntry = new JaccardEntry();
+    assertEquals(0, jaccardEntry.getSimilarity());
+    assertNull(jaccardEntry.getAuthor1());
+    assertNull(jaccardEntry.getAuthor2());
+
+    // Test for constructor
+    JaccardEntry jaccardEntry1 = new JaccardEntry("Pippo", "Caio", 5);
+    assertEquals(5, jaccardEntry.getSimilarity());
+    assertNotNull(jaccardEntry.getAuthor1());
+    assertNotNull(jaccardEntry.getAuthor2());
+
+    // Test for toJson() method
+    String je_json = jaccardEntry1.toJson();
+    assertTrue(je_json.contains("\"Author1\":\"Pippo\",\"Author2\":\"Caio\",\"Similarity\":5"));
+
+    // Test for setters
+    jaccardEntry1.setSimilarity(15);
+    jaccardEntry1.setAuthor1("Pippone");
+    jaccardEntry1.setAuthor2("Caione");
+    assertEquals(15, jaccardEntry1.getSimilarity());
+    assertEquals("Pippone", jaccardEntry1.getAuthor1());
+    assertEquals("Caione", jaccardEntry1.getAuthor2());
+  }
 }
