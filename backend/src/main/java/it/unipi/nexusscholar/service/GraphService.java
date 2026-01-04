@@ -285,7 +285,7 @@ public class GraphService {
                       }
                       AND sim > $s
                       RETURN Author1.name as Author1, Author2.name as Author2, sim as similarity
-                      ORDER BY similarity
+                      ORDER BY similarity DESC
                       """,
                         Map.of("s", m));
                 return res.list();
