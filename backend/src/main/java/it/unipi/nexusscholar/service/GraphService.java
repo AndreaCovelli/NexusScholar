@@ -288,8 +288,10 @@ public class GraphService {
                       ORDER BY similarity DESC
                       """,
                         Map.of("s", m));
-                return res.list();
+                return res == null ? java.util.Collections.emptyList() : res.list();
               });
+
+      if (lr.isEmpty()) return null;
 
       List<JaccardEntry> results = new ArrayList<>();
       for (Record r : lr) {
