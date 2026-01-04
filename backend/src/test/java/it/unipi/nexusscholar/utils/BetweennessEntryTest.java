@@ -48,7 +48,6 @@ class BetweennessEntryTest {
     BetweennessEntry entry = new BetweennessEntry("David Kim", 15.75);
     String json = entry.toJson();
 
-    assertTrue(json.contains("\"authorName\":\"David Kim\""));
-    assertTrue(json.contains("\"score\":15.75"));
+    assertEquals("{\"authorName\":\"David Kim\",\"score\":15.75}", json);
   }
 }

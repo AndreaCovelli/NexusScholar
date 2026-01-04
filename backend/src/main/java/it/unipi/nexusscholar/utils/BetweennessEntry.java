@@ -24,8 +24,8 @@ public class BetweennessEntry {
     try {
       ObjectMapper mapper = new ObjectMapper();
       return mapper.writeValueAsString(this);
-    } catch (Exception e) {
-      return "{}";
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      throw new RuntimeException("Failed to serialize BetweennessEntry to JSON", e);
     }
   }
 

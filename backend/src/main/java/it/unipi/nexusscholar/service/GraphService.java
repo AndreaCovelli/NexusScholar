@@ -195,32 +195,21 @@ public class GraphService {
     try (Session session = driver.session()) {
 
       // 1. Ensure Graph Projection Exists
-      // Reuses 'coAuthors' projection (shared with hiddenCommunities for efficiency)
-      boolean graphExists =
-          session.executeRead(
-              tx -> {
-                Result res =
-                    tx.run("CALL gds.graph.exists('coAuthors') YIELD exists RETURN exists");
-                return res.single().get("exists").asBoolean();
-              });
-
-      if (!graphExists) {
-        session.executeWriteWithoutResult(
-            tx -> {
-              tx.run(
-                  """
-                                    CALL gds.graph.project(
-                                        'coAuthors',
-                                        ['Author', 'Paper'],
-                                        {
-                                            AUTHORED: {
-                                                orientation: 'UNDIRECTED'
-                                            }
-                                        }
-                                    )
-                                    """);
-            });
-      }
+      session.executeWriteWithoutResult(
+          tx -> {
+            tx.run(
+                """
+                                  CALL gds.graph.project(
+                                      'coAuthors',
+                                      ['Author', 'Paper'],
+                                      {
+                                          AUTHORED: {
+                                              orientation: 'UNDIRECTED'
+                                          }
+                                      }
+                                  )
+                                  """);
+          });
 
       // 2. Run Betweenness Centrality Algorithm
       // Stream results and filter for Author nodes only (excludes Paper nodes)
@@ -251,7 +240,7 @@ public class GraphService {
 
     } catch (Exception e) {
       System.err.println("Betweenness centrality calculation failed: " + e.getMessage());
-      return null;
+      return java.util.Collections.emptyList();
     }
   }
 }
