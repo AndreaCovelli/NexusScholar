@@ -284,7 +284,7 @@ public class GraphService {
                       MATCH (Author1) - [:AUTHORED] -> (:Paper) <- [:AUTHORED] - (Author2)
                       }
                       AND sim > $s
-                      RETURN Author1.name as author1, Author2.name as author2, sim as similarity
+                      RETURN Author1.name as Author1, Author2.name as Author2, sim as similarity
                       ORDER BY similarity
                       """,
                         Map.of("s", m));
@@ -297,6 +297,10 @@ public class GraphService {
       }
 
       return results;
+    }
+    catch(Exception e){
+        System.err.println(e.getMessage());
+        return null;
     }
   }
 }

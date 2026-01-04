@@ -8,6 +8,7 @@ public class JaccardEntry {
   private String author1;
   private String author2;
   private double similarity;
+  private final ObjectMapper mapper = new ObjectMapper();
 
   public JaccardEntry(String author1, String author2, double similarity) {
     this.author1 = author1;
@@ -52,7 +53,6 @@ public class JaccardEntry {
   }
 
   public String toJson() {
-    ObjectMapper mapper = new ObjectMapper();
     try {
       return mapper.writeValueAsString(this);
     } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
