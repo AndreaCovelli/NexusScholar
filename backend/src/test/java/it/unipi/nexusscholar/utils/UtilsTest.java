@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
@@ -29,7 +30,7 @@ class UtilsTest {
 
     // JSON
     String json = entry.toJson();
-    assertTrue(json.contains("\"title\":\"New Title\""));
+    assertTrue(json.contains("\"paperTitle\":\"New Title\""));
     assertTrue(json.contains("\"rank\":0.99"));
 
     // Record Constructor
@@ -38,7 +39,7 @@ class UtilsTest {
     Value mockTitle = mock(Value.class);
 
     when(mockRecord.get("rank")).thenReturn(mockRank);
-    when(mockRecord.get("paperTitle")).thenReturn(mockTitle);
+    when(mockRecord.get("title")).thenReturn(mockTitle);
     when(mockRank.asDouble()).thenReturn(0.55);
     when(mockTitle.asString()).thenReturn("Record Title");
 
@@ -66,7 +67,7 @@ class UtilsTest {
 
     // JSON
     String json = spa.toJson();
-    assertTrue(json.contains("\"DegreeSeparation\":3"));
+    assertTrue(json.contains("\"degreeSeparation\":3"));
 
     // Record Constructor
     Record mockRecord = mock(Record.class);
@@ -99,5 +100,29 @@ class UtilsTest {
     assertTrue(Modifier.isPrivate(constructor.getModifiers()));
     constructor.setAccessible(true);
     constructor.newInstance();
+  }
+
+  @Test
+  void testLeidenCommunity() {
+
+    // Test for constructor
+    LeidenCommunity lc = new LeidenCommunity(3);
+    assertEquals(3, lc.getCommunityId());
+
+    ArrayList<String> ls = new ArrayList<>();
+    ls.add("Daniele");
+    ls.add("Andrea");
+    LeidenCommunity lc1 = new LeidenCommunity(2, ls);
+    assertEquals(2, lc1.getCommunityId());
+    assertNotNull(lc1.getAuthors());
+
+    // Attempt for author
+    lc1.addAuthor("Luca");
+    assertEquals("Luca", lc1.getAuthors().getLast());
+
+    // Attempt for json convert
+    String json_lc1 = lc1.toJson();
+    assertTrue(json_lc1.contains("\"communityId\":2"));
+    assertTrue(json_lc1.contains("\"authors\":[\"Daniele\",\"Andrea\",\"Luca\"]"));
   }
 }

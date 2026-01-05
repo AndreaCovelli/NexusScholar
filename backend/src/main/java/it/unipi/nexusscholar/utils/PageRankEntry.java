@@ -1,5 +1,6 @@
 package it.unipi.nexusscholar.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.neo4j.driver.Record;
 
 public class PageRankEntry {
@@ -14,11 +15,16 @@ public class PageRankEntry {
 
   public PageRankEntry(Record r) {
     this.rank = r.get("rank").asDouble();
-    this.paperTitle = r.get("paperTitle").asString();
+    this.paperTitle = r.get("title").asString();
   }
 
   public String toJson() {
-    return "{\"title\":\"" + this.paperTitle + "\",\"rank\":" + this.rank + "}";
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      return mapper.writeValueAsString(this);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to serialize PageRankEntry to JSON", e);
+    }
   }
 
   public String getPaperTitle() {

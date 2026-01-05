@@ -1,10 +1,10 @@
 package it.unipi.nexusscholar.service;
 
+import it.unipi.nexusscholar.utils.BetweennessEntry;
+import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
@@ -52,18 +52,16 @@ public class GraphService {
               });
 
       if (!ex) {
-        session.executeWrite(
+        session.executeWriteWithoutResult(
             tx -> {
-              Result res =
-                  tx.run(
-                      """
+              tx.run(
+                  """
                         CALL gds.graph.project(
                         'paperCitations',
                         'Paper',
                         'CITES'
                         );
                         """);
-              return null;
             });
       }
 
@@ -113,16 +111,138 @@ public class GraphService {
                     LIMIT 1
                     """,
                         Map.of("a1Name", author1, "a2Name", author2));
-                return res.single();
+                return res.hasNext() ? res.single() : null;
               });
 
       if (r != null) return new ShortestPathAuthors(r);
-
       return null;
+    } catch (Exception e) {
+      System.err.println(e.getMessage());
+      return null;
+    }
+  }
+
+  public List<LeidenCommunity> hiddenCommunities() {
+    try (Session session = driver.session()) {
+      // 1. Project the graph using Native Projection with UNDIRECTED orientation.
+      // We drop the graph first to ensure we don't use an existing directed version from previous
+      // failed runs.
+      session.executeWriteWithoutResult(
+          tx -> {
+            tx.run("CALL gds.graph.drop('coAuthors', false)");
+            tx.run(
+                """
+                              CALL gds.graph.project(
+                                  'coAuthors',
+                                  ['Author', 'Paper'],
+                                  {
+                                      AUTHORED: {
+                                          orientation: 'UNDIRECTED'
+                                      }
+                                  }
+                              )
+                              """);
+          });
+
+      // 2. Stream Leiden results
+      // Since the projection is bipartite (Author-Paper), we filter WHERE node:Author
+      List<Record> lr =
+          session.executeRead(
+              tx -> {
+                Result r =
+                    tx.run(
+                        """
+                                              CALL gds.leiden.stream(
+                                                  'coAuthors',
+                                                  {
+                                                      randomSeed: 42
+                                                  }
+                                              )
+                                              YIELD nodeId, communityId
+                                              WITH communityId, gds.util.asNode(nodeId) as node
+                                              WHERE node:Author
+                                              RETURN communityId,
+                                                     node.name as name
+                                              """);
+                return r.list();
+              });
+
+      // 3. Aggregate results into communities
+      Map<Integer, LeidenCommunity> communities = new HashMap<>();
+      for (Record r : lr) {
+        int communityId = r.get("communityId").asInt();
+        String name = r.get("name").asString();
+
+        communities.computeIfAbsent(communityId, LeidenCommunity::new).addAuthor(name);
+      }
+
+      return new ArrayList<>(communities.values());
 
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return null;
+    }
+  }
+
+  /**
+   * Calculates betweenness centrality for authors in the collaboration network. Betweenness
+   * centrality identifies "gatekeeper" authors who control information flow by sitting on the
+   * shortest paths between the highest number of author pairs.
+   *
+   * @return List of top 10 authors ranked by betweenness centrality score, or an empty list on
+   *     error
+   */
+  public List<BetweennessEntry> betweenness() {
+    try (Session session = driver.session()) {
+
+      // 1. Ensure Graph Projection Exists
+      session.executeWriteWithoutResult(
+          tx -> {
+            tx.run("CALL gds.graph.drop('coAuthors', false)");
+            tx.run(
+                """
+                                  CALL gds.graph.project(
+                                      'coAuthors',
+                                      ['Author', 'Paper'],
+                                      {
+                                          AUTHORED: {
+                                              orientation: 'UNDIRECTED'
+                                          }
+                                      }
+                                  )
+                                  """);
+          });
+
+      // 2. Run Betweenness Centrality Algorithm
+      // Stream results and filter for Author nodes only (excludes Paper nodes)
+      List<Record> records =
+          session.executeRead(
+              tx -> {
+                Result res =
+                    tx.run(
+                        """
+                                                CALL gds.betweenness.stream('coAuthors')
+                                                YIELD nodeId, score
+                                                WITH gds.util.asNode(nodeId) as node, score
+                                                WHERE node:Author
+                                                RETURN node.name as name, score
+                                                ORDER BY score DESC
+                                                LIMIT 10
+                                                """);
+                return res.list();
+              });
+
+      // 3. Transform to DTOs
+      List<BetweennessEntry> results = new ArrayList<>();
+      for (Record r : records) {
+        results.add(new BetweennessEntry(r));
+      }
+
+      return results;
+
+    } catch (Exception e) {
+      System.err.println("Betweenness centrality calculation failed: " + e.getMessage());
+      return java.util.Collections.emptyList();
     }
   }
 }

@@ -1,0 +1,15 @@
+coverage:
+  status:
+    project:
+      default:
+        # Hard minimum: Project must be at least 80% covered.
+        target: 80%
+        # Allow drops: Ignores drops unless they are massive (>10%).
+        # This prevents the annoying "Coverage decreased by 0.1%" failures.
+        threshold: 10%
+
+    patch:
+      default:
+        # Code Rule: 90% of lines changed in the PR must be covered.
+        # This ensures you don't add new technical debt.
+        target: 90%
