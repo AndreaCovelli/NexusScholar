@@ -43,7 +43,7 @@ public class GraphServiceTest {
 
   @Test
   public void TestGraphService() {
-    assertTrue(graphService.connect("neo4j","secretpassword"));
+    assertTrue(graphService.connect());
     assertNotNull(graphService.pagerank());
     assertNotNull(graphService.collabPath("Jennifer Dean", "B. Rappazzo"));
     assertNull(graphService.collabPath("Chunhong Pan", "DanieleCong"));

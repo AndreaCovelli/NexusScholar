@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import it.unipi.nexusscholar.TestcontainersConfiguration;
 import it.unipi.nexusscholar.dto.neo4j.BetweennesDTO;
-import it.unipi.nexusscholar.utils.BetweennessEntry;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -16,13 +16,13 @@ class GraphServiceAdditionalTest {
     // This unit test ensures the overloaded method delegates correctly
     Driver mockDriver = mock(Driver.class);
     doNothing().when(mockDriver).verifyConnectivity();
-    GraphDAO graphDAO =new  GraphDAO(mockDriver);
+    GraphDAO graphDAO = new GraphDAO(mockDriver);
 
     GraphService service = new GraphService(graphDAO);
 
     // Calls connect(user, pass) -> connects() -> driver.verifyConnectivity()
     // Since mock does nothing (success), connect returns true
-    assertTrue(service.connect("user", "pass"));
+    assertTrue(service.connect());
   }
 
   @Test
