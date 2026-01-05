@@ -40,19 +40,10 @@ public class GraphService {
 
   public List<PageRankDTO> pagerank() {
     try {
-      List<PageRankEntry> resultPageRank = graphDAO.pageRankAlg();
-
-      if (resultPageRank.isEmpty()) return Collections.emptyList();
-
-      List<PageRankDTO> resultPageRankDTO = new ArrayList<>();
-      for (PageRankEntry e : resultPageRank) {
-        resultPageRankDTO.add(toPageRankDTO(e));
-      }
-
-      return resultPageRankDTO;
+      return graphDAO.pageRankAlg().stream().map(this::toPageRankDTO).toList();
     } catch (Exception e) {
       log.error("Error executing PageRank algorithm", e);
-      return null;
+      return Collections.emptyList();
     }
   }
 
@@ -71,16 +62,7 @@ public class GraphService {
 
   public List<LeidenDTO> hiddenCommunities() {
     try {
-      List<LeidenCommunity> ls = graphDAO.leidenCommunityAlg();
-
-      if (ls.isEmpty()) return Collections.emptyList();
-
-      List<LeidenDTO> ldto = new ArrayList<>();
-      for (LeidenCommunity lc : ls) {
-        ldto.add(toLeidenDTO(lc));
-      }
-
-      return ldto;
+      return graphDAO.leidenCommunityAlg().stream().map(this::toLeidenDTO).toList();
     } catch (Exception e) {
       log.error("Error executing hidden communities algorithm (Leiden)", e);
       return Collections.emptyList();
@@ -89,17 +71,7 @@ public class GraphService {
 
   public List<BetweennessDTO> betweenness() {
     try {
-      List<BetweennessEntry> lbe = graphDAO.betweennessAlg();
-
-      if (lbe.isEmpty()) return Collections.emptyList();
-
-      List<BetweennessDTO> lbto = new ArrayList<>();
-      for (BetweennessEntry be : lbe) {
-        lbto.add(toBetweennessDTO(be));
-      }
-
-      return lbto;
-
+      return graphDAO.betweennessAlg().stream().map(this::toBetweennessDTO).toList();
     } catch (Exception e) {
       log.error("Betweenness calculation failed", e);
       return Collections.emptyList();
