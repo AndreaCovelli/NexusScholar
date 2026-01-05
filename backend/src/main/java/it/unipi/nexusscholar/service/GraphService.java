@@ -310,8 +310,8 @@ public class GraphService {
 
   private BetweennesDTO toBetweennesDTO(BetweennessEntry entry) {
       BetweennesDTO dto = new BetweennesDTO();
-      dto.setPaperTitle(entry.getPaperTitle());
-      dto.setScore(entry.getScore());
+      dto.setPaperTitle(entry.getTitle());
+      dto.setScore(entry.getBetweenness());
       return dto;
   }
 
