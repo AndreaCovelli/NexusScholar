@@ -5,6 +5,7 @@ import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
 import java.util.*;
+import java.util.stream.Collectors;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
@@ -185,64 +186,83 @@ public class GraphService {
   }
 
   /**
-   * Calculates betweenness centrality for authors in the collaboration network. Betweenness
-   * centrality identifies "gatekeeper" authors who control information flow by sitting on the
-   * shortest paths between the highest number of author pairs.
+   * Calculates betweenness papers in the collaboration network. Betweenness centrality identifies
+   * "gatekeeper" papers who sits on information flow by being on the shortest paths between the
+   * highest number of citation pairs.
    *
-   * @return List of top 10 authors ranked by betweenness centrality score, or an empty list on
+   * @return List of top 100 papers ranked by betweenness centrality score, or an empty list on
    *     error
    */
   public List<BetweennessEntry> betweenness() {
     try (Session session = driver.session()) {
+      // Step 1: Check if projection exists
+      boolean exists =
+          session.executeRead(
+              tx -> {
+                Result res =
+                    tx.run("CALL gds.graph.exists('paperCitations') YIELD exists RETURN exists");
+                return res.single().get("exists").asBoolean();
+              });
 
-      // 1. Ensure Graph Projection Exists
-      session.executeWriteWithoutResult(
-          tx -> {
-            tx.run("CALL gds.graph.drop('coAuthors', false)");
-            tx.run(
-                """
-                                  CALL gds.graph.project(
-                                      'coAuthors',
-                                      ['Author', 'Paper'],
-                                      {
-                                          AUTHORED: {
-                                              orientation: 'UNDIRECTED'
-                                          }
-                                      }
-                                  )
-                                  """);
-          });
+      // Step 2: Create projection if missing
+      if (!exists) {
+        session.executeWriteWithoutResult(
+            tx -> {
+              tx.run(
+                  """
+                    CALL gds.graph.project(
+                        'paperCitations',
+                        'Paper',
+                        'CITES'
+                    )
+                """);
+            });
+      }
 
-      // 2. Run Betweenness Centrality Algorithm
-      // Stream results and filter for Author nodes only (excludes Paper nodes)
+      // Step 3: Validate projection has data (CRITICAL DIAGNOSTIC)
+      Record stats =
+          session.executeRead(
+              tx -> {
+                Result res =
+                    tx.run(
+                        """
+                CALL gds.graph.list('paperCitations')
+                YIELD nodeCount, relationshipCount
+                RETURN nodeCount, relationshipCount
+            """);
+                return res.hasNext() ? res.single() : null;
+              });
+
+      if (stats == null || stats.get("relationshipCount").asLong() == 0) {
+        System.err.println("WARNING: Graph projection has 0 relationships");
+        return Collections.emptyList();
+      }
+
+      // Step 4: Run betweenness with sampling for performance
       List<Record> records =
           session.executeRead(
               tx -> {
                 Result res =
                     tx.run(
                         """
-                                                CALL gds.betweenness.stream('coAuthors')
-                                                YIELD nodeId, score
-                                                WITH gds.util.asNode(nodeId) as node, score
-                                                WHERE node:Author
-                                                RETURN node.name as name, score
-                                                ORDER BY score DESC
-                                                LIMIT 10
-                                                """);
+                CALL gds.betweenness.stream('paperCitations', {
+                    samplingSize: 1000,
+                    samplingSeed: 42
+                })
+                YIELD nodeId, score
+                RETURN gds.util.asNode(nodeId).title AS title,
+                       round(score, 4) AS betweenness
+                ORDER BY score DESC
+                LIMIT 100
+            """);
                 return res.list();
               });
 
-      // 3. Transform to DTOs
-      List<BetweennessEntry> results = new ArrayList<>();
-      for (Record r : records) {
-        results.add(new BetweennessEntry(r));
-      }
-
-      return results;
+      return records.stream().map(BetweennessEntry::new).collect(Collectors.toList());
 
     } catch (Exception e) {
-      System.err.println("Betweenness centrality calculation failed: " + e.getMessage());
-      return java.util.Collections.emptyList();
+      System.err.println("Betweenness calculation failed: " + e.getMessage());
+      return Collections.emptyList();
     }
   }
 }

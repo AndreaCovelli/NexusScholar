@@ -23,25 +23,24 @@ public class GraphServiceBetweennessTest {
   @BeforeEach
   void setup() {
     try (Session session = driver.session()) {
-      // Clean slate
-      session.run("CALL gds.graph.drop('coAuthors', false)");
+      session.run("CALL gds.graph.drop('paperCitations', false)");
       session.run("MATCH (n) DETACH DELETE n");
 
-      // Create a simple collaboration network:
-      //   A1 ---[Paper1]--- A2 ---[Paper2]--- A3
-      //   (A2 is the bridge between A1 and A3)
+      // Create a star topology: P1 is the hub
+      // P2, P3, P4 all cite P1; P1 cites P5
+      // P1 should have highest betweenness
       session.run(
           """
-                    CREATE (a1:Author {name: 'Alice'})
-                    CREATE (a2:Author {name: 'Bob'})
-                    CREATE (a3:Author {name: 'Carol'})
-                    CREATE (p1:Paper {title: 'Paper 1'})
-                    CREATE (p2:Paper {title: 'Paper 2'})
-                    MERGE (a1)-[:AUTHORED]->(p1)
-                    MERGE (a2)-[:AUTHORED]->(p1)
-                    MERGE (a2)-[:AUTHORED]->(p2)
-                    MERGE (a3)-[:AUTHORED]->(p2)
-                    """);
+            CREATE (p1:Paper {title: 'Hub Paper'})
+            CREATE (p2:Paper {title: 'Citing Paper 1'})
+            CREATE (p3:Paper {title: 'Citing Paper 2'})
+            CREATE (p4:Paper {title: 'Citing Paper 3'})
+            CREATE (p5:Paper {title: 'Foundation Paper'})
+            CREATE (p2)-[:CITES]->(p1)
+            CREATE (p3)-[:CITES]->(p1)
+            CREATE (p4)-[:CITES]->(p1)
+            CREATE (p1)-[:CITES]->(p5)
+        """);
     }
   }
 
@@ -50,11 +49,9 @@ public class GraphServiceBetweennessTest {
     List<BetweennessEntry> results = graphService.betweenness();
 
     assertNotNull(results, "Betweenness results should not be null");
-    assertFalse(results.isEmpty(), "Should return at least one author");
+    assertFalse(results.isEmpty(), "Should return at least one paper");
 
-    // Verify Bob (the bridge) has the highest score
-    BetweennessEntry topAuthor = results.get(0);
-    assertEquals("Bob", topAuthor.getAuthorName(), "Bob should be the top bridge author");
-    assertEquals(4.0, topAuthor.getScore(), "Bridge author's betweenness score should be 4.0");
+    assertEquals(
+        "Hub Paper", results.get(0).getTitle(), "Hub paper should have highest betweenness");
   }
 }
