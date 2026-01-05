@@ -4,13 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.web.bind.annotation.Mapping;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PublicationSummary {
-    @Field("paper_id")
-  private String paperId;
-  private Integer year;
-  private String title;
+public class TrendAnalysis {
+
+    @Field("field_of_study")
+    private String fieldOfStudy;
+    private Integer year;
+    @Field("paper_created")
+    private Integer paperCreated;
 }
