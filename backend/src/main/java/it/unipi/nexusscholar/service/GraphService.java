@@ -2,7 +2,6 @@ package it.unipi.nexusscholar.service;
 
 import it.unipi.nexusscholar.dao.neo4j.GraphDAO;
 import it.unipi.nexusscholar.dto.neo4j.BetweennessDTO;
-import it.unipi.nexusscholar.dto.neo4j.BetweennessDTO;
 import it.unipi.nexusscholar.dto.neo4j.LeidenDTO;
 import it.unipi.nexusscholar.dto.neo4j.PageRankDTO;
 import it.unipi.nexusscholar.dto.neo4j.ShortestPathDTO;
@@ -37,7 +36,7 @@ public class GraphService {
     try {
       List<PageRankEntry> resultPageRank = graphDAO.pageRankAlg();
 
-      if(resultPageRank.isEmpty()) return null;
+      if (resultPageRank.isEmpty()) return null;
 
       List<PageRankDTO> resultPageRankDTO = new ArrayList<>();
       for (PageRankEntry e : resultPageRank) {
@@ -65,7 +64,7 @@ public class GraphService {
     try {
       List<LeidenCommunity> ls = graphDAO.leidenCommunityAlg();
 
-      if(ls.isEmpty()) return null;
+      if (ls.isEmpty()) return null;
 
       List<LeidenDTO> ldto = new ArrayList<>();
       for (LeidenCommunity lc : ls) {
@@ -92,7 +91,7 @@ public class GraphService {
     try {
       List<BetweennessEntry> lbe = graphDAO.betweennessAlg();
 
-      if(lbe.isEmpty()) return null;
+      if (lbe.isEmpty()) return null;
 
       List<BetweennessDTO> lbto = new ArrayList<>();
       for (BetweennessEntry be : lbe) {
