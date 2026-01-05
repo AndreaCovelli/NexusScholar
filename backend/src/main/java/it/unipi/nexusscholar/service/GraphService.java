@@ -212,7 +212,7 @@ public class GraphService {
    * @return List of top 100 papers ranked by betweenness centrality score, or an empty list on
    *     error
    */
-  public List<BetweennessEntry> betweenness() {
+  public List<BetweennesDTO> betweenness() {
     try (Session session = driver.session()) {
       // Step 1: Check if projection exists
       boolean exists =
@@ -277,7 +277,14 @@ public class GraphService {
                 return res.list();
               });
 
-      return records.stream().map(BetweennessEntry::new).collect(Collectors.toList());
+      List<BetweennessEntry> lbe = records.stream().map(BetweennessEntry::new).collect(Collectors.toList());
+
+      List<BetweennesDTO> lbto = new ArrayList<>();
+      for (BetweennessEntry be : lbe) {
+            lbto.add(toBetweennesDTO(be));
+      }
+
+      return lbto;
 
     } catch (Exception e) {
       System.err.println("Betweenness calculation failed: " + e.getMessage());
@@ -311,7 +318,7 @@ public class GraphService {
   private BetweennesDTO toBetweennesDTO(BetweennessEntry entry) {
       BetweennesDTO dto = new BetweennesDTO();
       dto.setPaperTitle(entry.getTitle());
-      dto.setScore(entry.getBetweenness());
+      dto.setBetweenness(entry.getBetweenness());
       return dto;
   }
 

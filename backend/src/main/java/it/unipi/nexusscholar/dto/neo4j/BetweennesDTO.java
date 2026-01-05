@@ -5,7 +5,7 @@ import it.unipi.nexusscholar.utils.BetweennessEntry;
 public class BetweennesDTO {
 
     private String paperTitle;
-    private double score;
+    private double betweenness;
 
     public String getPaperTitle() {
         return paperTitle;
@@ -15,11 +15,11 @@ public class BetweennesDTO {
         this.paperTitle= paperTitle;
     }
 
-    public double getScore() {
-        return score;
+    public double getBetweenness() {
+        return betweenness;
     }
 
-    public void setScore(double score) {
-        this.score = score;
+    public void setBetweenness(double betweenness) {
+        this.betweenness = betweenness;
     }
 }
