@@ -4,8 +4,6 @@ import it.unipi.nexusscholar.utils.BetweennessEntry;
 import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
-
-import java.sql.DriverManager;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.neo4j.driver.Driver;
