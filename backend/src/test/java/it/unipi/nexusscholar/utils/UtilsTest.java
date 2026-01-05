@@ -151,5 +151,24 @@ class UtilsTest {
     assertEquals(15, jaccardEntry1.getSimilarity());
     assertEquals("Pippone", jaccardEntry1.getAuthor1());
     assertEquals("Caione", jaccardEntry1.getAuthor2());
+
+    // Test for constructor with Record
+    Record rr = mock(Record.class);
+    Value author1 = mock(Value.class);
+    Value author2 = mock(Value.class);
+    Value similarity = mock(Value.class);
+
+    when(rr.get("author1")).thenReturn(author1);
+    when(rr.get("author2")).thenReturn(author2);
+    when(rr.get("similarity")).thenReturn(similarity);
+
+    when(author1.asString()).thenReturn("Ciccio");
+    when(author2.asString()).thenReturn("Pasticcio");
+    when(similarity.asDouble()).thenReturn(2.0);
+
+    JaccardEntry j3 = new JaccardEntry(rr);
+    assertEquals(2.0, j3.getSimilarity());
+    assertEquals("Ciccio", j3.getAuthor1());
+    assertEquals("Pasticcio", j3.getAuthor2());
   }
 }
