@@ -3,8 +3,8 @@ package it.unipi.nexusscholar.utils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Objects;
 import java.util.Locale;
+import java.util.Objects;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
 
