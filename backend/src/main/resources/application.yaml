@@ -1,12 +1,3 @@
 spring:
   application:
     name: NexusScholarBackend
-  data:
-    mongodb:
-      host: localhost
-      port: 27017
-      database: dbname
-      username: admin
-      password: secretpassword
-      # Molto importante: specifica dove è stato creato l'utente (spesso è 'admin')
-      authentication-database: admin
