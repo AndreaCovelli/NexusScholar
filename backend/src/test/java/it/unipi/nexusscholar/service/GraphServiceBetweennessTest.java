@@ -3,7 +3,7 @@ package it.unipi.nexusscholar.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import it.unipi.nexusscholar.TestcontainersConfiguration;
-import it.unipi.nexusscholar.dto.neo4j.BetweennesDTO;
+import it.unipi.nexusscholar.dto.neo4j.BetweennessDTO;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ public class GraphServiceBetweennessTest {
 
   @Test
   void testBetweennessCalculation() {
-    List<BetweennesDTO> results = graphService.betweenness();
+    List<BetweennessDTO> results = graphService.betweenness();
 
     assertNotNull(results, "Betweenness results should not be null");
     assertFalse(results.isEmpty(), "Should return at least one paper");

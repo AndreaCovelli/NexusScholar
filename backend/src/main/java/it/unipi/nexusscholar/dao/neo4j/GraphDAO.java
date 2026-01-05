@@ -85,7 +85,7 @@ public class GraphDAO {
       return resultPageRank;
     } catch (Exception e) {
       System.err.println(e.getMessage());
-      return null;
+      return java.util.Collections.emptyList();
     }
   }
 
@@ -179,7 +179,7 @@ public class GraphDAO {
       return new ArrayList<>(communities.values());
     } catch (Exception e) {
       System.err.println(e.getMessage());
-      return null;
+      return java.util.Collections.emptyList();
     }
   }
 

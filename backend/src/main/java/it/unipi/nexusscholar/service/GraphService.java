@@ -1,7 +1,8 @@
 package it.unipi.nexusscholar.service;
 
 import it.unipi.nexusscholar.dao.neo4j.GraphDAO;
-import it.unipi.nexusscholar.dto.neo4j.BetweennesDTO;
+import it.unipi.nexusscholar.dto.neo4j.BetweennessDTO;
+import it.unipi.nexusscholar.dto.neo4j.BetweennessDTO;
 import it.unipi.nexusscholar.dto.neo4j.LeidenDTO;
 import it.unipi.nexusscholar.dto.neo4j.PageRankDTO;
 import it.unipi.nexusscholar.dto.neo4j.ShortestPathDTO;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class GraphService {
 
-  private GraphDAO graphDAO;
+  private final GraphDAO graphDAO;
 
   public GraphService(GraphDAO graphDAO) {
     this.graphDAO = graphDAO;
@@ -35,6 +36,8 @@ public class GraphService {
 
     try {
       List<PageRankEntry> resultPageRank = graphDAO.pageRankAlg();
+
+      if(resultPageRank.isEmpty()) return null;
 
       List<PageRankDTO> resultPageRankDTO = new ArrayList<>();
       for (PageRankEntry e : resultPageRank) {
@@ -62,6 +65,8 @@ public class GraphService {
     try {
       List<LeidenCommunity> ls = graphDAO.leidenCommunityAlg();
 
+      if(ls.isEmpty()) return null;
+
       List<LeidenDTO> ldto = new ArrayList<>();
       for (LeidenCommunity lc : ls) {
         ldto.add(toLeidenDTO(lc));
@@ -82,13 +87,16 @@ public class GraphService {
    * @return List of top 100 papers ranked by betweenness centrality score, or an empty list on
    *     error
    */
-  public List<BetweennesDTO> betweenness() {
+  public List<BetweennessDTO> betweenness() {
 
     try {
       List<BetweennessEntry> lbe = graphDAO.betweennessAlg();
-      List<BetweennesDTO> lbto = new ArrayList<>();
+
+      if(lbe.isEmpty()) return null;
+
+      List<BetweennessDTO> lbto = new ArrayList<>();
       for (BetweennessEntry be : lbe) {
-        lbto.add(toBetweennesDTO(be));
+        lbto.add(toBetweennessDTO(be));
       }
 
       return lbto;
@@ -121,8 +129,8 @@ public class GraphService {
     return dto;
   }
 
-  private BetweennesDTO toBetweennesDTO(BetweennessEntry entry) {
-    BetweennesDTO dto = new BetweennesDTO();
+  private BetweennessDTO toBetweennessDTO(BetweennessEntry entry) {
+    BetweennessDTO dto = new BetweennessDTO();
     dto.setPaperTitle(entry.getTitle());
     dto.setBetweenness(entry.getBetweenness());
     return dto;
