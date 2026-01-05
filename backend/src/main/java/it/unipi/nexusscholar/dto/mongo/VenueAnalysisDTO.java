@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VenueAnalysisDTO {
-    private String venue;
-    private Integer year;
-    private Integer paperCreated;
+  private String venue;
+  private Integer year;
+  private Integer paperCreated;
 }

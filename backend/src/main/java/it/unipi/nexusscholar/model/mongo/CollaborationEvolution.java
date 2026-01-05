@@ -9,7 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CollaborationEvolution {
-    @Field("avg_authors")
-    private double avgAuthors;
-    private int year;
+  @Field("avg_authors")
+  private double avgAuthors;
+
+  private int year;
 }

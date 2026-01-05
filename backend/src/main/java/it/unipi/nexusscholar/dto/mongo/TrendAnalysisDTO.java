@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TrendAnalysisDTO {
-    private String fieldOfStudy;
-    private Integer year;
-    private Integer paperCreated;
+  private String fieldOfStudy;
+  private Integer year;
+  private Integer paperCreated;
 }

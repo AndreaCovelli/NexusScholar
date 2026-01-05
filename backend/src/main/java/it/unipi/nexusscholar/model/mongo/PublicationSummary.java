@@ -9,8 +9,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PublicationSummary {
-    @Field("paper_id")
+  @Field("paper_id")
   private String paperId;
+
   private Integer year;
   private String title;
 }

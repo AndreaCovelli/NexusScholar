@@ -1,9 +1,8 @@
 package it.unipi.nexusscholar.dao.mongo;
 
 import it.unipi.nexusscholar.dao.AuthorAnalysisDAO;
-import java.util.List;
-
 import it.unipi.nexusscholar.model.mongo.ProlificAuthor;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class AuthorAnalysisDAOImpl implements AuthorAnalysisDAO {
   private final MongoTemplate mongoTemplate;
-
 
   @Override
   public List<ProlificAuthor> getProlificAuthors(int minPublications) {
@@ -30,10 +28,8 @@ public class AuthorAnalysisDAOImpl implements AuthorAnalysisDAO {
             Aggregation.match(Criteria.where("paper_created").gt(minPublications)),
             // 4. Group by to eliminate duplicate records
             Aggregation.group("_id._id").first("_id.name").as("author_name"),
-            //5. Project to correct assign name to the fields
-            Aggregation.project("author_name")
-                .and("_id").as("author_id"));
-      return mongoTemplate.aggregate(aggregation, "authors", ProlificAuthor.class).getMappedResults();
+            // 5. Project to correct assign name to the fields
+            Aggregation.project("author_name").and("_id").as("author_id"));
+    return mongoTemplate.aggregate(aggregation, "authors", ProlificAuthor.class).getMappedResults();
   }
-
 }
