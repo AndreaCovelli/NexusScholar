@@ -36,7 +36,7 @@ public class GraphService {
     try {
       List<PageRankEntry> resultPageRank = graphDAO.pageRankAlg();
 
-      if (resultPageRank.isEmpty()) return null;
+      if (resultPageRank.isEmpty()) return Collections.emptyList();
 
       List<PageRankDTO> resultPageRankDTO = new ArrayList<>();
       for (PageRankEntry e : resultPageRank) {
@@ -52,7 +52,11 @@ public class GraphService {
 
   public ShortestPathDTO collabPath(String author1, String author2) {
     try {
-      return toShortestPathDTO(graphDAO.shortestPathAlg(author1, author2));
+      ShortestPathAuthors spa = graphDAO.shortestPathAlg(author1, author2);
+      if (spa == null) {
+        return null;
+      }
+      return toShortestPathDTO(spa);
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return null;
@@ -64,7 +68,7 @@ public class GraphService {
     try {
       List<LeidenCommunity> ls = graphDAO.leidenCommunityAlg();
 
-      if (ls.isEmpty()) return null;
+      if (ls.isEmpty()) return Collections.emptyList();
 
       List<LeidenDTO> ldto = new ArrayList<>();
       for (LeidenCommunity lc : ls) {
@@ -91,7 +95,7 @@ public class GraphService {
     try {
       List<BetweennessEntry> lbe = graphDAO.betweennessAlg();
 
-      if (lbe.isEmpty()) return null;
+      if (lbe.isEmpty()) return Collections.emptyList();
 
       List<BetweennessDTO> lbto = new ArrayList<>();
       for (BetweennessEntry be : lbe) {
