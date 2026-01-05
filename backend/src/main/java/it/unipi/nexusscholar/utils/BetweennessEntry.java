@@ -103,8 +103,9 @@ public class BetweennessEntry implements Comparable<BetweennessEntry> {
   /**
    * Returns a normalized betweenness score in the range [0, 1].
    *
-   * <p>Normalization uses the formula: score / ((n-1)(n-2)/2) for undirected graphs, where n is the
-   * total node count. This method requires the total node count to be provided.
+   * <p>Normalization uses the formula: score / ((n - 1) * (n - 2)) for directed graphs, where n is
+   * the total number of nodes in the citation network. This method requires the total node count to
+   * be provided.
    *
    * @param totalNodes the total number of nodes in the graph
    * @return normalized betweenness score
