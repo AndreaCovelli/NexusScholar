@@ -115,7 +115,7 @@ public class BetweennessEntry implements Comparable<BetweennessEntry> {
     if (totalNodes < 3) {
       throw new IllegalArgumentException("Graph must have at least 3 nodes for normalization");
     }
-    double maxBetweenness = ((totalNodes - 1.0) * (totalNodes - 2.0)) / 2.0;
+    double maxBetweenness = (totalNodes - 1.0) * (totalNodes - 2.0);
     return betweenness / maxBetweenness;
   }
 

@@ -128,10 +128,10 @@ class BetweennessEntryTest {
   void testNormalizedBetweenness() {
     BetweennessEntry entry = new BetweennessEntry("Paper", 100.0);
 
-    // For 100 nodes: max = (99 * 98) / 2 = 4851
+    // For directed graph with 100 nodes: max = (99 * 98) = 9702
     double normalized = entry.getNormalizedBetweenness(100);
 
-    assertEquals(100.0 / 4851.0, normalized, 0.0001);
+    assertEquals(100.0 / 9702.0, normalized, 0.0001);
   }
 
   @Test

@@ -190,7 +190,8 @@ public class GraphService {
    * "gatekeeper" papers who sits on information flow by being on the shortest paths between the
    * highest number of citation pairs.
    *
-   * @return List of top 100 papers ranked by betweenness centrality score, or an empty list on error
+   * @return List of top 100 papers ranked by betweenness centrality score, or an empty list on
+   *     error
    */
   public List<BetweennessEntry> betweenness() {
     try (Session session = driver.session()) {

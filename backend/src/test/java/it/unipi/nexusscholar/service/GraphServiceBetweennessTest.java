@@ -49,10 +49,8 @@ public class GraphServiceBetweennessTest {
     List<BetweennessEntry> results = graphService.betweenness();
 
     assertNotNull(results, "Betweenness results should not be null");
-    assertFalse(results.isEmpty(), "Should return at least one author");
+    assertFalse(results.isEmpty(), "Should return at least one paper");
 
-    assertNotNull(results);
-    assertFalse(results.isEmpty(), "Results should not be empty");
     assertEquals(
         "Hub Paper", results.get(0).getTitle(), "Hub paper should have highest betweenness");
   }
