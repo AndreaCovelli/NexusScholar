@@ -6,12 +6,14 @@ import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.springframework.stereotype.Repository;
 
+@Slf4j // Add Lombok annotation
 @Repository
 public class GraphDAO {
 
@@ -26,7 +28,9 @@ public class GraphDAO {
       driver.verifyConnectivity();
       return true;
     } catch (Exception e) {
-      System.err.println("Connection failed: " + e.getMessage());
+      // Best Practice: Log the message AND the exception to capture the stack trace
+      // SLF4J handles the formatting; do not concatenate strings manually.
+      log.error("Neo4j connection failed: {}", e.getMessage(), e);
       return false;
     }
   }
@@ -79,8 +83,8 @@ public class GraphDAO {
 
       return lr.stream().map(PageRankEntry::new).collect(Collectors.toList());
     } catch (Exception e) {
-      System.err.println(e.getMessage());
-      return java.util.Collections.emptyList();
+      log.error("PageRank calculation failed", e);
+      return Collections.emptyList();
     }
   }
 
@@ -112,7 +116,7 @@ public class GraphDAO {
 
       return null;
     } catch (Exception e) {
-      System.err.println(e.getMessage());
+      log.error("Shortest path calculation failed", e);
       return null;
     }
   }
@@ -173,8 +177,8 @@ public class GraphDAO {
 
       return new ArrayList<>(communities.values());
     } catch (Exception e) {
-      System.err.println(e.getMessage());
-      return java.util.Collections.emptyList();
+      log.error("Leiden Community detection failed", e);
+      return Collections.emptyList();
     }
   }
 
@@ -219,7 +223,7 @@ public class GraphDAO {
               });
 
       if (stats == null || stats.get("relationshipCount").asLong() == 0) {
-        System.err.println("WARNING: Graph projection has 0 relationships");
+        log.warn("Graph projection has 0 relationships. Betweenness cannot be calculated.");
         return Collections.emptyList();
       }
 
@@ -245,7 +249,7 @@ public class GraphDAO {
 
       return records.stream().map(BetweennessEntry::new).collect(Collectors.toList());
     } catch (Exception e) {
-      System.err.println("Betweenness calculation failed: " + e.getMessage());
+      log.error("Betweenness calculation failed", e);
       return Collections.emptyList();
     }
   }

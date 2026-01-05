@@ -12,11 +12,13 @@ import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
 import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Relationship;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class GraphService {
 
@@ -31,7 +33,7 @@ public class GraphService {
       graphDAO.connect();
       return true;
     } catch (Exception e) {
-      System.err.println("GraphDAO not connected: " + e.getMessage());
+      log.error("Failed to connect to GraphDAO", e);
       return false;
     }
   }
@@ -49,7 +51,7 @@ public class GraphService {
 
       return resultPageRankDTO;
     } catch (Exception e) {
-      System.err.println(e.getMessage());
+      log.error("Error executing PageRank algorithm", e);
       return null;
     }
   }
@@ -62,7 +64,7 @@ public class GraphService {
       }
       return toShortestPathDTO(spa);
     } catch (Exception e) {
-      System.err.println(e.getMessage());
+      log.error("Error finding shortest path between {} and {}", author1, author2, e);
       return null;
     }
   }
@@ -80,8 +82,8 @@ public class GraphService {
 
       return ldto;
     } catch (Exception e) {
-      System.err.println(e.getMessage());
-      return null;
+      log.error("Error executing hidden communities algorithm (Leiden)", e);
+      return Collections.emptyList();
     }
   }
 
@@ -99,7 +101,7 @@ public class GraphService {
       return lbto;
 
     } catch (Exception e) {
-      System.err.println("Betweenness calculation failed: " + e.getMessage());
+      log.error("Betweenness calculation failed", e);
       return Collections.emptyList();
     }
   }
