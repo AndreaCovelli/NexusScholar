@@ -5,6 +5,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
 import it.unipi.nexusscholar.NexusScholarBackendApplication;
+import it.unipi.nexusscholar.dao.neo4j.GraphDAO;
 import org.junit.jupiter.api.Test;
 import org.neo4j.driver.Driver;
 
@@ -15,8 +16,9 @@ class GraphServiceAdditionalTest {
     // This unit test ensures the overloaded method delegates correctly
     Driver mockDriver = mock(Driver.class);
     doNothing().when(mockDriver).verifyConnectivity();
+    GraphDAO graphDAO =new  GraphDAO(mockDriver);
 
-    GraphService service = new GraphService(mockDriver);
+    GraphService service = new GraphService(graphDAO);
 
     // Calls connect(user, pass) -> connects() -> driver.verifyConnectivity()
     // Since mock does nothing (success), connect returns true
