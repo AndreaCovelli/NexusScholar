@@ -4,15 +4,15 @@ import it.unipi.nexusscholar.utils.BetweennessEntry;
 
 public class BetweennesDTO {
 
-    private String authorName;
+    private String paperTitle;
     private double score;
 
-    public String getAuthorName() {
-        return authorName;
+    public String getPaperTitle() {
+        return paperTitle;
     }
 
-    public void setAuthorName(String authorName) {
-        this.authorName = authorName;
+    public void setPaperTitle(String paperTitle) {
+        this.paperTitle= paperTitle;
     }
 
     public double getScore() {
