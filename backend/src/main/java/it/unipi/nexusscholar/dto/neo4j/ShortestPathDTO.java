@@ -1,19 +1,31 @@
 package it.unipi.nexusscholar.dto.neo4j;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import it.unipi.nexusscholar.utils.ShortestPathSerializer;
 import org.neo4j.driver.types.Path;
+
+import java.util.List;
 
 public class ShortestPathDTO {
 
-    private Path shortestPath;
+    private String nodes;
+    private String edges;
     private int degreeSeparation;
 
-
-    public Path getShortestPath() {
-        return shortestPath;
+    public String getNodes() {
+        return nodes;
     }
 
-    public void setShortestPath(Path shortestPath) {
-        this.shortestPath = shortestPath;
+    public void setNodes(String nodes) {
+        this.nodes = nodes;
+    }
+
+    public String getEdges() {
+        return edges;
+    }
+
+    public void setEdges(String edges) {
+        this.edges = edges;
     }
 
     public int getDegreeSeparation() {

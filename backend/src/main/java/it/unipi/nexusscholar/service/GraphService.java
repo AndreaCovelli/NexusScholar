@@ -1,5 +1,9 @@
 package it.unipi.nexusscholar.service;
 
+import it.unipi.nexusscholar.dto.neo4j.BetweennesDTO;
+import it.unipi.nexusscholar.dto.neo4j.LeidenDTO;
+import it.unipi.nexusscholar.dto.neo4j.PageRankDTO;
+import it.unipi.nexusscholar.dto.neo4j.ShortestPathDTO;
 import it.unipi.nexusscholar.utils.BetweennessEntry;
 import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
@@ -42,7 +46,7 @@ public class GraphService {
     return connect();
   }
 
-  public List<PageRankEntry> pagerank() {
+  public List<PageRankDTO> pagerank() {
     try (Session session = driver.session()) {
       boolean ex =
           session.executeRead(
@@ -84,14 +88,19 @@ public class GraphService {
         resultPageRank.add(new PageRankEntry(r));
       }
 
-      return resultPageRank;
+      List<PageRankDTO> resultPageRankDTO = new ArrayList<>();
+      for (PageRankEntry e : resultPageRank) {
+        resultPageRankDTO.add(toPageRankDTO(e));
+      }
+
+      return resultPageRankDTO;
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return null;
     }
   }
 
-  public ShortestPathAuthors collabPath(String author1, String author2) {
+  public ShortestPathDTO collabPath(String author1, String author2) {
     if (author1 == null || author1.isEmpty() || author2 == null || author2.isEmpty()) return null;
 
     try (Session session = driver.session()) {
@@ -115,7 +124,10 @@ public class GraphService {
                 return res.hasNext() ? res.single() : null;
               });
 
-      if (r != null) return new ShortestPathAuthors(r);
+      if (r != null){
+          ShortestPathAuthors sss = new ShortestPathAuthors(r);
+          return toShortestPathDTO(sss);
+      }
       return null;
     } catch (Exception e) {
       System.err.println(e.getMessage());
@@ -123,7 +135,7 @@ public class GraphService {
     }
   }
 
-  public List<LeidenCommunity> hiddenCommunities() {
+  public List<LeidenDTO> hiddenCommunities() {
     try (Session session = driver.session()) {
       // 1. Project the graph using Native Projection with UNDIRECTED orientation.
       // We drop the graph first to ensure we don't use an existing directed version from previous
@@ -177,7 +189,14 @@ public class GraphService {
         communities.computeIfAbsent(communityId, LeidenCommunity::new).addAuthor(name);
       }
 
-      return new ArrayList<>(communities.values());
+      List<LeidenCommunity> ls = new ArrayList<>(communities.values());
+
+      List<LeidenDTO> ldto = new ArrayList<>();
+      for(LeidenCommunity lc : ls){
+            ldto.add(toLeidenDTO(lc));
+      }
+
+      return ldto;
 
     } catch (Exception e) {
       System.err.println(e.getMessage());
@@ -265,4 +284,36 @@ public class GraphService {
       return Collections.emptyList();
     }
   }
+
+  private PageRankDTO toPageRankDTO(PageRankEntry entry) {
+      PageRankDTO dto = new PageRankDTO();
+      dto.setRank(entry.getRank());
+      dto.setPaperTitle(entry.getPaperTitle());
+      return dto;
+  }
+
+  private LeidenDTO toLeidenDTO(LeidenCommunity community) {
+      LeidenDTO dto = new LeidenDTO();
+      dto.setCommunityId(community.getCommunityId());
+      dto.setAuthors(community.getAuthors());
+      return dto;
+  }
+
+  private ShortestPathDTO toShortestPathDTO(ShortestPathAuthors spa) {
+      ShortestPathDTO dto = new ShortestPathDTO();
+      dto.setDegreeSeparation(spa.getDegreeSeparation());
+      dto.setEdges(spa.getShortestPath().relationships().toString());
+      dto.setNodes(spa.getShortestPath().nodes().toString());
+      return dto;
+  }
+
+
+  private BetweennesDTO toBetweennesDTO(BetweennessEntry entry) {
+      BetweennesDTO dto = new BetweennesDTO();
+      dto.setPaperTitle(entry.getPaperTitle());
+      dto.setScore(entry.getScore());
+      return dto;
+  }
+
+
 }
