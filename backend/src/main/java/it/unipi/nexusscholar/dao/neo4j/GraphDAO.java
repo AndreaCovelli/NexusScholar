@@ -77,12 +77,7 @@ public class GraphDAO {
                 return res.list();
               });
 
-      List<PageRankEntry> resultPageRank = new ArrayList<>();
-      for (Record r : lr) {
-        resultPageRank.add(new PageRankEntry(r));
-      }
-
-      return resultPageRank;
+      return lr.stream().map(PageRankEntry::new).collect(Collectors.toList());
     } catch (Exception e) {
       System.err.println(e.getMessage());
       return java.util.Collections.emptyList();
