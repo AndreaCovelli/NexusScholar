@@ -4,12 +4,17 @@ import it.unipi.nexusscholar.dao.neo4j.GraphDAO;
 import it.unipi.nexusscholar.dto.neo4j.BetweennessDTO;
 import it.unipi.nexusscholar.dto.neo4j.LeidenDTO;
 import it.unipi.nexusscholar.dto.neo4j.PageRankDTO;
+import it.unipi.nexusscholar.dto.neo4j.PathNodeDTO;
+import it.unipi.nexusscholar.dto.neo4j.PathRelationshipDTO;
 import it.unipi.nexusscholar.dto.neo4j.ShortestPathDTO;
 import it.unipi.nexusscholar.utils.BetweennessEntry;
 import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
 import it.unipi.nexusscholar.utils.ShortestPathAuthors;
 import java.util.*;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Path;
+import org.neo4j.driver.types.Relationship;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,7 +37,6 @@ public class GraphService {
   }
 
   public List<PageRankDTO> pagerank() {
-
     try {
       List<PageRankEntry> resultPageRank = graphDAO.pageRankAlg();
 
@@ -64,7 +68,6 @@ public class GraphService {
   }
 
   public List<LeidenDTO> hiddenCommunities() {
-
     try {
       List<LeidenCommunity> ls = graphDAO.leidenCommunityAlg();
 
@@ -82,16 +85,7 @@ public class GraphService {
     }
   }
 
-  /**
-   * Calculates betweenness papers in the collaboration network. Betweenness centrality identifies
-   * "gatekeeper" papers who sits on information flow by being on the shortest paths between the
-   * highest number of citation pairs.
-   *
-   * @return List of top 100 papers ranked by betweenness centrality score, or an empty list on
-   *     error
-   */
   public List<BetweennessDTO> betweenness() {
-
     try {
       List<BetweennessEntry> lbe = graphDAO.betweennessAlg();
 
@@ -127,8 +121,36 @@ public class GraphService {
   private ShortestPathDTO toShortestPathDTO(ShortestPathAuthors spa) {
     ShortestPathDTO dto = new ShortestPathDTO();
     dto.setDegreeSeparation(spa.getDegreeSeparation());
-    dto.setEdges(spa.getShortestPath().relationships().toString());
-    dto.setNodes(spa.getShortestPath().nodes().toString());
+
+    Path path = spa.getShortestPath();
+
+    List<PathNodeDTO> nodeDTOs = new ArrayList<>();
+    for (Node node : path.nodes()) {
+      PathNodeDTO nodeDTO = new PathNodeDTO();
+      nodeDTO.setElementId(node.elementId());
+
+      if (node.hasLabel("Author")) {
+        nodeDTO.setType("Author");
+        nodeDTO.setDisplayName(node.get("name").asString());
+      } else if (node.hasLabel("Paper")) {
+        nodeDTO.setType("Paper");
+        nodeDTO.setDisplayName(node.get("title").asString());
+      }
+      nodeDTOs.add(nodeDTO);
+    }
+    dto.setNodes(nodeDTOs);
+
+    List<PathRelationshipDTO> relDTOs = new ArrayList<>();
+    for (Relationship rel : path.relationships()) {
+      PathRelationshipDTO relDTO = new PathRelationshipDTO();
+      relDTO.setElementId(rel.elementId());
+      relDTO.setType(rel.type());
+      relDTO.setStartNodeId(rel.startNodeElementId());
+      relDTO.setEndNodeId(rel.endNodeElementId());
+      relDTOs.add(relDTO);
+    }
+    dto.setRelationships(relDTOs);
+
     return dto;
   }
 
