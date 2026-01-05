@@ -35,15 +35,6 @@ public class GraphDAO {
     }
   }
 
-  /**
-   * Overloaded connect method for backward compatibility. In the Spring Boot/Testcontainers
-   * environment, credentials are handled by the injected Driver, so we delegate to the no-arg
-   * connect().
-   */
-  public boolean connect(String user, String pass) {
-    return connect();
-  }
-
   public List<PageRankEntry> pageRankAlg() {
     try (Session session = driver.session()) {
       boolean ex =
