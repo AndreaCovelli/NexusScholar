@@ -87,10 +87,10 @@ class PaperAnalysisDAOImplTest {
     List<VenueAnalysis> results = paperAnalysisDAO.getVenueAnalysis();
 
     assertEquals(2, results.size());
-    assertTrue(
-        results.stream().anyMatch(r -> r.getVenue().equals("NeurIPS") && r.getPaperCreated() == 2));
-    assertTrue(
-        results.stream().anyMatch(r -> r.getVenue().equals("ICML") && r.getPaperCreated() == 1));
+    assertEquals("NeurIPS", results.get(0).getVenue());
+    assertEquals(2, results.get(0).getPaperCreated());
+    assertEquals("ICML", results.get(1).getVenue());
+    assertEquals(1, results.get(1).getPaperCreated());
   }
 
   @Test
@@ -120,12 +120,10 @@ class PaperAnalysisDAOImplTest {
     List<CollaborationEvolution> results = paperAnalysisDAO.getCollaborationEvolution();
 
     assertEquals(2, results.size());
-    assertTrue(
-        results.stream()
-            .anyMatch(r -> r.getYear() == 2023 && Math.abs(r.getAvgAuthors() - 3.0) < 0.001));
-    assertTrue(
-        results.stream()
-            .anyMatch(r -> r.getYear() == 2022 && Math.abs(r.getAvgAuthors() - 2.0) < 0.001));
+    assertEquals(2022, results.get(0).getYear());
+    assertEquals(2.0, results.get(0).getAvgAuthors(), 0.001);
+    assertEquals(2023, results.get(1).getYear());
+    assertEquals(3.0, results.get(1).getAvgAuthors(), 0.001);
   }
 
   @Test

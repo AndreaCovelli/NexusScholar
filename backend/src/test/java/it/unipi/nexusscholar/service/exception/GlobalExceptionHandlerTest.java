@@ -53,6 +53,7 @@ class GlobalExceptionHandlerTest {
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertEquals("Invalid Argument", response.getBody().get("error"));
+    assertEquals("Invalid argument", response.getBody().get("details"));
   }
 
   @Test
@@ -65,6 +66,7 @@ class GlobalExceptionHandlerTest {
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertEquals("Validation Error", response.getBody().get("error"));
+    assertEquals("Validation failed", response.getBody().get("details"));
   }
 
   @Test

@@ -62,8 +62,6 @@ class AuthorAnalysisDAOImplTest {
     ProlificAuthor resultAuthor = results.get(0);
     assertEquals("A001", resultAuthor.getAuthorId());
     assertEquals("Prolific Researcher", resultAuthor.getAuthorName());
-    // The aggregation groups by year, so we should get results
-    // The exact count depends on aggregation logic
   }
 
   @Test
