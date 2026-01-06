@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/** Data Transfer Object for Paper entities. Used for API request/response serialization. */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,6 +17,10 @@ public class PaperDTO {
   private String doi;
   private String abstractText;
   private List<String> fieldsOfStudy;
-  private List<String> authors;
+
+  // CRITICAL CHANGE: Use embedded author objects instead of plain strings
+  // This maintains consistency with the Paper model and enables proper author linking
+  private List<PaperAuthorDTO> authors;
+
   private List<String> venue;
 }
