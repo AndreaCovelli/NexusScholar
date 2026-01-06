@@ -23,6 +23,7 @@ public class Author {
   @Field("total_publications")
   private Integer totalPublications;
 
-  @Field("publication_summary")
+  // STANDARDIZED: Use "publications_summary" to match data pipeline output
+  @Field("publications_summary")
   private List<PublicationSummary> publicationsSummary;
 }

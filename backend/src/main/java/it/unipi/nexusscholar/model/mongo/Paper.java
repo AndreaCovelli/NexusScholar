@@ -29,6 +29,9 @@ public class Paper {
   @Field("fields_of_study")
   private List<String> fieldsOfStudy;
 
-  private List<String> authors;
+  // CRITICAL CHANGE: Use embedded PaperAuthor objects instead of plain strings
+  // This matches the data pipeline output from 3_integration.py
+  private List<PaperAuthor> authors;
+
   private List<String> venue;
 }

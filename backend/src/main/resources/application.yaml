@@ -1,4 +1,28 @@
+# src/main/resources/application.yaml
 spring:
   application:
     name: NexusScholarBackend
 
+  # Default profiles (optional, but good practice)
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:default}
+
+  # Production/Docker Configuration (Relies on Env Vars)
+  data:
+    mongodb:
+      # In Docker, this is injected by docker-compose.
+      # If no Env Var is present, this will fail (which is good, it forces you to use a profile locally)
+      uri: ${SPRING_DATA_MONGODB_URI}
+  neo4j:
+    uri: ${SPRING_NEO4J_URI}
+    authentication:
+      username: ${SPRING_NEO4J_AUTHENTICATION_USERNAME}
+      password: ${SPRING_NEO4J_AUTHENTICATION_PASSWORD}
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    it.unipi.nexusscholar: INFO
