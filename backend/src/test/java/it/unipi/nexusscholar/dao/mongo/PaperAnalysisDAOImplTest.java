@@ -42,8 +42,28 @@ class PaperAnalysisDAOImplTest {
 
     List<TrendAnalysis> results = paperAnalysisDAO.getTrendAnalysis();
 
-    assertNotNull(results);
-    assertFalse(results.isEmpty());
+    assertEquals(3, results.size());
+    assertTrue(
+        results.stream()
+            .anyMatch(
+                r ->
+                    r.getFieldOfStudy().equals("Machine Learning")
+                        && r.getYear() == 2023
+                        && r.getPaperCreated() == 1));
+    assertTrue(
+        results.stream()
+            .anyMatch(
+                r ->
+                    r.getFieldOfStudy().equals("Deep Learning")
+                        && r.getYear() == 2023
+                        && r.getPaperCreated() == 1));
+    assertTrue(
+        results.stream()
+            .anyMatch(
+                r ->
+                    r.getFieldOfStudy().equals("Machine Learning")
+                        && r.getYear() == 2022
+                        && r.getPaperCreated() == 1));
   }
 
   @Test
@@ -66,8 +86,11 @@ class PaperAnalysisDAOImplTest {
 
     List<VenueAnalysis> results = paperAnalysisDAO.getVenueAnalysis();
 
-    assertNotNull(results);
-    assertFalse(results.isEmpty());
+    assertEquals(2, results.size());
+    assertTrue(
+        results.stream().anyMatch(r -> r.getVenue().equals("NeurIPS") && r.getPaperCreated() == 2));
+    assertTrue(
+        results.stream().anyMatch(r -> r.getVenue().equals("ICML") && r.getPaperCreated() == 1));
   }
 
   @Test
@@ -96,8 +119,13 @@ class PaperAnalysisDAOImplTest {
 
     List<CollaborationEvolution> results = paperAnalysisDAO.getCollaborationEvolution();
 
-    assertNotNull(results);
-    assertFalse(results.isEmpty());
+    assertEquals(2, results.size());
+    assertTrue(
+        results.stream()
+            .anyMatch(r -> r.getYear() == 2023 && Math.abs(r.getAvgAuthors() - 3.0) < 0.001));
+    assertTrue(
+        results.stream()
+            .anyMatch(r -> r.getYear() == 2022 && Math.abs(r.getAvgAuthors() - 2.0) < 0.001));
   }
 
   @Test

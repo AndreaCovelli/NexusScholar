@@ -1,4 +1,3 @@
-// path: backend/src/test/java/it/unipi/nexusscholar/service/impl/AuthorAnalysisServiceImplTest.java
 package it.unipi.nexusscholar.service.impl;
 
 import static org.junit.jupiter.api.Assertions.*;

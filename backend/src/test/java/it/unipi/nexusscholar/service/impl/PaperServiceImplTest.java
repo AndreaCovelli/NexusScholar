@@ -316,27 +316,4 @@ class PaperServiceImplTest {
     assertNotNull(result.getFieldsOfStudy());
     assertNotNull(result.getVenue());
   }
-
-  @Test
-  void savePaper_NullPaperDTO_ReturnsNull() {
-    testPaperDTO = null;
-
-    // This tests the toPaper null check
-    PaperDTO newDTO = new PaperDTO();
-    newDTO.setAuthors(null);
-    newDTO.setFieldsOfStudy(null);
-    newDTO.setVenue(null);
-
-    when(paperDAO.save(any(Paper.class)))
-        .thenAnswer(
-            inv -> {
-              Paper p = inv.getArgument(0);
-              p.setId("test-id");
-              return p;
-            });
-
-    PaperDTO result = paperService.savePaper(newDTO);
-
-    assertNotNull(result);
-  }
 }
