@@ -53,7 +53,7 @@ The project is containerized for easy setup.
     ```
 3.  **Start the Services:**
     ```bash
-    docker-compose -f deployment/docker-compose.local.yml up -d
+    docker compose --env-file .env -f deployment/docker-compose.local.yml up -d
     ```
 4.  **Initialize the MongoDB Replica Set:**
     (Required only on the first run). Run the initialization script to configure the MongoDB containers into a replica set.
