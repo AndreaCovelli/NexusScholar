@@ -66,6 +66,14 @@ You must tell Spring Boot to load the `application-local.yaml` configuration.
 3.  Click **Run** or **Debug**.
 
 **Option B: Command Line**
+
+On Windows (PowerShell):
+```powershell
+cd backend
+mvn spring-boot:run "-Dspring-boot.run.profiles=local"
+```
+
+On Linux / macOS (Bash):
 ```bash
 cd backend
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
@@ -106,6 +114,21 @@ Once you have finished development and testing locally, you should verify that y
 # 1. Stop your local Java application (to free up port 8080)
 # 2. Run:
 docker compose --env-file .env -f deployment/docker-compose.local.yml up -d --build backend
+```
+
+To stop the containers but leave the containers created:
+```bash
+docker compose --env-file .env -f deployment/docker-compose.local.yml stop
+```
+
+To stop the containers and remove them (freeing up the ports), but keeping your database data safe in the Docker volumes:
+```bash
+docker compose --env-file .env -f deployment/docker-compose.local.yml down
+```
+
+Use this if you want to delete all databases data and start fresh (you should after rerun the *Pipeline* as in its [README](../data-pipeline/scripts/README.md)):
+```bash
+docker compose --env-file .env -f deployment/docker-compose.local.yml down -v
 ```
 
 ---
