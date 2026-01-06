@@ -27,9 +27,9 @@ public class graphController {
     } else return ResponseEntity.ok(res);
   }
 
-  @GetMapping("/shortestPath/{a1}&{a2}")
+  @GetMapping("/shortestPath")
   public ResponseEntity<ShortestPathDTO> callShortestPath(
-      @PathVariable String a1, @PathVariable String a2) {
+      @RequestParam String a1, @RequestParam String a2) {
     ShortestPathDTO res = graphService.collabPath(a1, a2);
     if (res == null) {
       return ResponseEntity.notFound().build();
