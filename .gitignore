@@ -35,7 +35,6 @@ build/
 
 # sensitive configuration
 .env
-application-local.yml
 /deployment/mongo-keyfile
 
 # database files
