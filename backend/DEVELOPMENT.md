@@ -33,7 +33,7 @@ spring:
     uri: bolt://localhost:7687
     authentication:
       username: neo4j
-      password: password
+      password: <your .env file password>
 ```
 
 *> **Note:** Update the usernames/passwords to match your `.env` file if you changed the defaults.*
@@ -81,18 +81,35 @@ cd backend
 
 ---
 
-## 4. Testing the Graph Controller
+## 4. Testing the API Endpoints
 
 Once the application is running locally on port 8080, you can test the endpoints directly in your browser or via Swagger.
 
 ### Option A: Swagger UI (Recommended)
 Navigate to: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-1.  Open the **`graph-controller`** section.
+You can explore and test all available endpoints here, organized by controller:
+* **`author-controller`** & **`paper-controller`**: MongoDB CRUD and search operations.
+* **`author-analysis-controller`** & **`paper-analysis-controller`**: Advanced MongoDB aggregations.
+* **`graph-controller`**: Neo4j algorithms (PageRank, Shortest Path, etc.).
+
+1.  Select a controller.
 2.  Click **Try it out** → **Execute**.
 
-### Option B: Browser URLs
-You can access these `GET` endpoints directly:
+### Option B: Browser URLs (GET Requests)
 
+#### 1. Document Data & Analysis (MongoDB)
+*   **Search Papers by Title:**
+    [http://localhost:8080/api/papers/search?title=Deep%20Learning](http://localhost:8080/api/papers/search?title=Deep%20Learning)
+*   **Get Papers by Year:**
+    [http://localhost:8080/api/papers/year/2019](http://localhost:8080/api/papers/year/2019)
+*   **Prolific Authors (Aggregation):**
+    [http://localhost:8080/api/authors/analysis/prolific?minPublications=5](http://localhost:8080/api/authors/analysis/prolific?minPublications=5)
+*   **Trend Analysis (Aggregation):**
+    [http://localhost:8080/api/papers/analysis/trend](http://localhost:8080/api/papers/analysis/trend)
+*   **Collaboration Evolution (Aggregation):**
+    [http://localhost:8080/api/papers/analysis/collaboration](http://localhost:8080/api/papers/analysis/collaboration)
+
+#### 2. Graph Algorithms (Neo4j)
 *   **PageRank Scores:**
     [http://localhost:8080/api/graph/analysis/pagerank](http://localhost:8080/api/graph/analysis/pagerank)
 *   **Leiden Communities:**
@@ -100,7 +117,7 @@ You can access these `GET` endpoints directly:
 *   **Betweenness Centrality:**
     [http://localhost:8080/api/graph/analysis/betweenness](http://localhost:8080/api/graph/analysis/betweenness)
 *   **Shortest Path (Example):**
-    [http://localhost:8080/api/graph/analysis/shortestPath/Jennifer%20Dean&B.%20Rappazzo](http://localhost:8080/api/graph/analysis/shortestPath/Jennifer%20Dean&B.%20Rappazzo)
+    [http://localhost:8080/api/graph/analysis/shortestPath?a1=Jennifer%20Dean&a2=B.%20Rappazzo](http://localhost:8080/api/graph/analysis/shortestPath?a1=Jennifer%20Dean&a2=B.%20Rappazzo)
 
 ---
 
