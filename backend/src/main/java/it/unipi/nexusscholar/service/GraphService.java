@@ -71,24 +71,22 @@ public class GraphService {
 
   public Page<LeidenDTO> hiddenCommunities(@PageableDefault(size = 20) Pageable pageable) {
     try {
-      // 1. Fetch all communities (Note: Optimization requires moving aggregation to Cypher)
-      List<LeidenDTO> allCommunities =
-          graphDAO.leidenCommunityAlg().stream().map(this::toLeidenDTO).toList();
+      // 1. Calculate pagination parameters
+      int skip = (int) pageable.getOffset();
+      int limit = pageable.getPageSize();
 
-      // 2. Calculate indices for in-memory pagination
-      int start = (int) pageable.getOffset();
-      int end = Math.min((start + pageable.getPageSize()), allCommunities.size());
+      // 2. Fetch only the requested slice from the database
+      // Note: This requires the DAO update shown in Step 1
+      List<LeidenDTO> pagedContent =
+          graphDAO.leidenCommunityAlg(skip, limit).stream().map(this::toLeidenDTO).toList();
 
-      // 3. Handle out-of-bounds requests
-      List<LeidenDTO> pagedContent;
-      if (start > allCommunities.size()) {
-        pagedContent = Collections.emptyList();
-      } else {
-        pagedContent = allCommunities.subList(start, end);
-      }
+      // 3. Fetch total count for pagination metadata
+      // Note: 'leidenCount()' calculates total unique communities
+      int totalElements = graphDAO.leidenCount();
 
-      // 4. Return the specific slice
-      return new PageImpl<>(pagedContent, pageable, allCommunities.size());
+      // 4. Return the Page object
+      return new PageImpl<>(pagedContent, pageable, totalElements);
+
     } catch (Exception e) {
       log.error("Error executing hidden communities algorithm (Leiden)", e);
       return Page.empty(pageable);

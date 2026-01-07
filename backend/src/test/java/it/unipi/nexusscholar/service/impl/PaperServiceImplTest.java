@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -112,8 +113,11 @@ class PaperServiceImplTest {
     assertNotNull(result);
     assertEquals("generated-id", result.getId());
 
-    verify(authorDAO, atLeastOnce()).saveAll(any());
-    verify(graphDAO).savePaperNode(any());
+    ArgumentCaptor<PaperDTO> captor = ArgumentCaptor.forClass(PaperDTO.class);
+    verify(graphDAO).savePaperNode(captor.capture());
+    PaperDTO capturedDTO = captor.getValue();
+    assertNotNull(
+        capturedDTO.getId(), "The PaperDTO passed to the graph DAO must have a non-null ID");
   }
 
   @Test

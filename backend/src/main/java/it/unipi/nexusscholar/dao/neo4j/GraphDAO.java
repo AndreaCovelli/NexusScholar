@@ -12,6 +12,7 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.Value;
 import org.springframework.stereotype.Repository;
 
 @Slf4j // Add Lombok annotation
@@ -159,7 +160,7 @@ public class GraphDAO {
     }
   }
 
-  public List<LeidenCommunity> leidenCommunityAlg() {
+  public List<LeidenCommunity> leidenCommunityAlg(int skip, int limit) {
     try (Session session = driver.session()) {
       // 1. Project the graph using Native Projection with UNDIRECTED orientation.
       // We drop the graph first to ensure we don't use an existing directed version from previous
@@ -181,39 +182,33 @@ public class GraphDAO {
                                  """);
           });
 
-      // 2. Stream Leiden results
-      // Since the projection is bipartite (Author-Paper), we filter WHERE node:Author
-      List<Record> lr =
-          session.executeRead(
-              tx -> {
-                Result r =
-                    tx.run(
-                        """
-                                                 CALL gds.leiden.stream(
-                                                     'coAuthors',
-                                                     {
-                                                         randomSeed: 42
-                                                     }
-                                                 )
-                                                 YIELD nodeId, communityId
-                                                 WITH communityId, gds.util.asNode(nodeId) as node
-                                                 WHERE node:Author
-                                                 RETURN communityId,
-                                                        node.name as name
-                                                 """);
-                return r.list();
-              });
+      // 2. Stream, Aggregate, and Paginate in Cypher
+      return session.executeRead(
+          tx -> {
+            Result r =
+                tx.run(
+                    """
+                    CALL gds.leiden.stream('coAuthors', { randomSeed: 42 })
+                    YIELD nodeId, communityId
+                    WITH communityId, gds.util.asNode(nodeId) as node
+                    WHERE node:Author
+                    // Aggregate authors per community HERE
+                    WITH communityId, collect(node.name) as authors
+                    RETURN communityId, authors
+                    ORDER BY communityId ASC
+                    SKIP $skip
+                    LIMIT $limit
+                    """,
+                    Map.of("skip", skip, "limit", limit));
 
-      // 3. Aggregate results into communities
-      Map<Integer, LeidenCommunity> communities = new HashMap<>();
-      for (Record r : lr) {
-        int communityId = r.get("communityId").asInt();
-        String name = r.get("name").asString();
-
-        communities.computeIfAbsent(communityId, LeidenCommunity::new).addAuthor(name);
-      }
-
-      return new ArrayList<>(communities.values());
+            return r.list().stream()
+                .map(
+                    record ->
+                        new LeidenCommunity(
+                            record.get("communityId").asInt(),
+                            record.get("authors").asList(Value::asString)))
+                .collect(Collectors.toList());
+          });
     } catch (Exception e) {
       log.error("Leiden Community detection failed", e);
       return Collections.emptyList();
@@ -367,9 +362,9 @@ public class GraphDAO {
                                 DELETE r
                                 WITH p
                                 UNWIND $authors as author
-                                MERGE (a:Author{id:author.id})
+                                MERGE (a:Author {id: author.id})
                                 ON CREATE SET a.name = author.name
-                                MERGE (p:Paper <- [:AUTHORED] - author:Author)
+                                MERGE (p)<-[:AUTHORED]-(a)
                                 """,
                 Map.of(
                     "paperID",

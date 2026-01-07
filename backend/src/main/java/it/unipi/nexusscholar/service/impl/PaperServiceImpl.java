@@ -110,6 +110,7 @@ public class PaperServiceImpl implements PaperService {
     // 4. Persist
     Paper savedEntity = paperDAO.save(paperToSave);
 
+    paperDTO.setId(savedEntity.getId());
     if (!graphDAO.savePaperNode(paperDTO))
       throw new DAOException("Paper could not be saved in graph database");
 

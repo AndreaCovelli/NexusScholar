@@ -63,7 +63,8 @@ class GraphServiceExceptionTest {
 
   @Test
   void testHiddenCommunitiesReturnsEmptyListOnException() {
-    when(mockGraphDAO.leidenCommunityAlg()).thenThrow(new RuntimeException("Leiden failed"));
+    when(mockGraphDAO.leidenCommunityAlg(anyInt(), anyInt()))
+        .thenThrow(new RuntimeException("Leiden failed"));
 
     Page<LeidenDTO> results = graphService.hiddenCommunities(PageRequest.of(0, 10));
 

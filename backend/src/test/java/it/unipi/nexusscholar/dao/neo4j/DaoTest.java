@@ -129,7 +129,7 @@ class DaoTest {
   void testLeidenCommunityAlgReturnsEmptyListOnException() {
     when(mockDriver.session()).thenThrow(new RuntimeException("Database error"));
 
-    List<LeidenCommunity> results = graphDAO.leidenCommunityAlg();
+    List<LeidenCommunity> results = graphDAO.leidenCommunityAlg(0, 10);
 
     assertNotNull(results);
     assertTrue(results.isEmpty(), "Should return empty list on exception");
