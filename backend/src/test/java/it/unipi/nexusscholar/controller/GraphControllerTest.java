@@ -29,7 +29,7 @@ class GraphControllerTest {
   void callPageRank_ReturnsOk() throws Exception {
     PageRankDTO pageRank = new PageRankDTO("Important Paper", 0.95);
     List<PageRankDTO> pageRanks = List.of(pageRank);
-    when(graphService.pagerank(PageRequest.of(0, 20)))
+    when(graphService.pagerank(any(Pageable.class)))
         .thenReturn(new PageImpl<>(pageRanks, PageRequest.of(0, 20), pageRanks.size()));
 
     mockMvc
