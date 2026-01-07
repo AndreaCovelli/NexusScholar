@@ -328,17 +328,36 @@ public class GraphDAO {
 
   public int betweennessCount() {
     try (Session session = driver.session()) {
+      boolean ex =
+          session.executeRead(
+              tx -> {
+                Result res =
+                    tx.run("CALL gds.graph.exists('paperCitations') YIELD exists RETURN exists");
+                return res.single().get("exists").asBoolean();
+              });
+
+      if (!ex) {
+        session.executeWriteWithoutResult(
+            tx -> {
+              tx.run(
+                  """
+                                                      CALL gds.graph.project(
+                                                        'paperCitations',
+                                                        'Paper',
+                                                        'CITES'
+                                                      );
+                                                      """);
+            });
+      }
       return session.executeRead(
           tx -> {
-            // FIX: Use gds.graph.list to get metadata count.
-            // Also fixed method name typo (betwenness -> betweenness)
             Result res =
                 tx.run(
                     """
-                                        CALL gds.graph.list('paperCitations')
-                                        YIELD nodeCount
-                                        RETURN nodeCount;
-                                        """);
+                                                            CALL gds.graph.list('paperCitations')
+                                                            YIELD nodeCount
+                                                            RETURN nodeCount;
+                                                            """);
             return res.hasNext() ? res.single().get("nodeCount").asInt() : 0;
           });
     } catch (Exception e) {
