@@ -35,8 +35,8 @@ class GraphControllerTest {
     mockMvc
         .perform(get("/api/graph/analysis/pagerank"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].paperTitle").value("Important Paper"))
-        .andExpect(jsonPath("$[0].rank").value(0.95));
+        .andExpect(jsonPath("$.content[0].paperTitle").value("Important Paper"))
+        .andExpect(jsonPath("$.content[0].rank").value(0.95));
   }
 
   @Test
