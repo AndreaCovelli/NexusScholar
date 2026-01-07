@@ -23,7 +23,7 @@ public class GraphController {
   // Request for Pagerank computations
   @GetMapping("/pagerank")
   public ResponseEntity<Page<PageRankDTO>> callPageRank(
-      @PageableDefault(size = 20, sort = "score", direction = Sort.Direction.DESC)
+      @PageableDefault(size = 20, sort = "rank", direction = Sort.Direction.DESC)
           Pageable pageable) {
     return ResponseEntity.ok(graphService.pagerank(pageable));
   }
@@ -43,7 +43,7 @@ public class GraphController {
 
   @GetMapping("/betweenness")
   public ResponseEntity<Page<BetweennessDTO>> callBetweenness(
-      @PageableDefault(size = 20, sort = "score", direction = Sort.Direction.DESC)
+      @PageableDefault(size = 20, sort = "betweenness", direction = Sort.Direction.DESC)
           Pageable pageable) {
     return ResponseEntity.ok(graphService.betweenness(pageable));
   }
