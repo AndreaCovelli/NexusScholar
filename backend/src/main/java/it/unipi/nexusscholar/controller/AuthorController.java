@@ -2,8 +2,10 @@ package it.unipi.nexusscholar.controller;
 
 import it.unipi.nexusscholar.dto.mongo.AuthorDTO;
 import it.unipi.nexusscholar.service.AuthorService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,54 +15,61 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthorController {
 
-  private final AuthorService authorService;
+    private final AuthorService authorService;
 
-  // --- CREATE / UPDATE ---
+    // --- CREATE / UPDATE ---
 
-  /**
-   * Creates or updates an author. POST /api/authors
-   *
-   * <p>If ID is null: Creates new author (S2 ID must be unique, no publication history allowed) If
-   * ID exists: Updates existing author (validates paper references)
-   */
-  @PostMapping
-  public ResponseEntity<AuthorDTO> saveAuthor(@RequestBody AuthorDTO authorDTO) {
-    AuthorDTO savedAuthor = authorService.saveAuthor(authorDTO);
-    return ResponseEntity.ok(savedAuthor);
-  }
+    /**
+     * Creates or updates an author. POST /api/authors
+     *
+     * <p>If ID is null: Creates new author (S2 ID must be unique, no publication history allowed).
+     * <br>If ID exists: Updates existing author (validates paper references).
+     */
+    @PostMapping
+    public ResponseEntity<AuthorDTO> saveAuthor(@RequestBody AuthorDTO authorDTO) {
+        AuthorDTO savedAuthor = authorService.saveAuthor(authorDTO);
+        return ResponseEntity.ok(savedAuthor);
+    }
 
-  // --- READ ---
+    // --- READ ---
 
-  /** Retrieves an author by Semantic Scholar ID. GET /api/authors/s2/{s2Id} */
-  @GetMapping("/s2/{s2Id}")
-  public ResponseEntity<AuthorDTO> getAuthorByS2Id(@PathVariable String s2Id) {
-    AuthorDTO author = authorService.getAuthorByS2Id(s2Id);
-    return ResponseEntity.ok(author);
-  }
+    /** Retrieves an author by Semantic Scholar ID. GET /api/authors/s2/{s2Id} */
+    @GetMapping("/s2/{s2Id}")
+    public ResponseEntity<AuthorDTO> getAuthorByS2Id(@PathVariable String s2Id) {
+        AuthorDTO author = authorService.getAuthorByS2Id(s2Id);
+        return ResponseEntity.ok(author);
+    }
 
-  /**
-   * Searches authors by name (partial match, case-insensitive). GET /api/authors/search?name=Mario
-   */
-  @GetMapping("/search")
-  public ResponseEntity<List<AuthorDTO>> searchAuthorsByName(@RequestParam String name) {
-    List<AuthorDTO> authors = authorService.searchAuthorsByName(name);
-    return ResponseEntity.ok(authors);
-  }
+    /**
+     * Searches authors by name (partial match, case-insensitive) with pagination.
+     * GET /api/authors/search?name=Mario&page=0&size=10
+     */
+    @GetMapping("/search")
+    public ResponseEntity<Page<AuthorDTO>> searchAuthorsByName(
+            @RequestParam String name,
+            @PageableDefault(size = 10) Pageable pageable) {
+        Page<AuthorDTO> authors = authorService.searchAuthorsByName(name, pageable);
+        return ResponseEntity.ok(authors);
+    }
 
-  /** Filters authors by minimum publication count. GET /api/authors/filter?min=10 */
-  @GetMapping("/filter")
-  public ResponseEntity<List<AuthorDTO>> getAuthorsWithMinPublications(
-      @RequestParam("min") Integer minPublications) {
-    List<AuthorDTO> authors = authorService.getAuthorsWithMinPublications(minPublications);
-    return ResponseEntity.ok(authors);
-  }
+    /**
+     * Filters authors by minimum publication count with pagination.
+     * GET /api/authors/filter?min=10&page=0&size=10
+     */
+    @GetMapping("/filter")
+    public ResponseEntity<Page<AuthorDTO>> getAuthorsWithMinPublications(
+            @RequestParam("min") Integer minPublications,
+            @PageableDefault(size = 10) Pageable pageable) {
+        Page<AuthorDTO> authors = authorService.getAuthorsWithMinPublications(minPublications, pageable);
+        return ResponseEntity.ok(authors);
+    }
 
-  // --- DELETE ---
+    // --- DELETE ---
 
-  /** Deletes an author by Semantic Scholar ID. DELETE /api/authors/s2/{s2Id} */
-  @DeleteMapping("/s2/{s2Id}")
-  public ResponseEntity<Void> deleteAuthorByS2Id(@PathVariable String s2Id) {
-    authorService.deleteAuthorByS2Id(s2Id);
-    return ResponseEntity.ok().build();
-  }
+    /** Deletes an author by internal ID. DELETE /api/authors/{id} */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAuthor(@PathVariable String id) {
+        authorService.deleteAuthorById(id);
+        return ResponseEntity.ok().build();
+    }
 }
