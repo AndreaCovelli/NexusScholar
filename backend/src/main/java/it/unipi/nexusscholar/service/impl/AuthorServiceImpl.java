@@ -26,247 +26,248 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthorServiceImpl implements AuthorService {
 
-    private final AuthorDAO authorDAO;
-    private final PaperDAO paperDAO;
+  private final AuthorDAO authorDAO;
+  private final PaperDAO paperDAO;
 
-    @Override
-    @Transactional
-    public AuthorDTO saveAuthor(AuthorDTO authorDTO) {
-        Author authorToSave;
+  @Override
+  @Transactional
+  public AuthorDTO saveAuthor(AuthorDTO authorDTO) {
+    Author authorToSave;
 
-        if (authorDTO.getId() != null && !authorDTO.getId().isEmpty()) {
-            // --- UPDATE CASE ---
-            Author existingAuthor =
-                    authorDAO
-                            .findById(authorDTO.getId())
-                            .orElseThrow(
-                                    () ->
-                                            new BusinessException(
-                                                    "Cannot update: Author not found with ID " + authorDTO.getId()));
+    if (authorDTO.getId() != null && !authorDTO.getId().isEmpty()) {
+      // --- UPDATE CASE ---
+      Author existingAuthor =
+          authorDAO
+              .findById(authorDTO.getId())
+              .orElseThrow(
+                  () ->
+                      new BusinessException(
+                          "Cannot update: Author not found with ID " + authorDTO.getId()));
 
-            // 1. Validate S2 ID Uniqueness for Update
-            if (!existingAuthor.getS2AuthorId().equals(authorDTO.getS2AuthorId())) {
-                Optional<Author> conflictAuthor = authorDAO.findByS2AuthorId(authorDTO.getS2AuthorId());
-                if (conflictAuthor.isPresent()) {
-                    throw new BusinessException(
-                            "Cannot update: The S2 ID " + authorDTO.getS2AuthorId() + " is already in use by another author.");
-                }
-            }
+      // 1. Validate S2 ID Uniqueness for Update
+      if (!existingAuthor.getS2AuthorId().equals(authorDTO.getS2AuthorId())) {
+        Optional<Author> conflictAuthor = authorDAO.findByS2AuthorId(authorDTO.getS2AuthorId());
+        if (conflictAuthor.isPresent()) {
+          throw new BusinessException(
+              "Cannot update: The S2 ID "
+                  + authorDTO.getS2AuthorId()
+                  + " is already in use by another author.");
+        }
+      }
 
-            existingAuthor.setName(authorDTO.getName());
-            existingAuthor.setS2AuthorId(authorDTO.getS2AuthorId());
+      existingAuthor.setName(authorDTO.getName());
+      existingAuthor.setS2AuthorId(authorDTO.getS2AuthorId());
 
-            // 2. Logic to Handle Publication Summary Update & Side Effects
-            if (authorDTO.getPublicationsSummary() != null) {
+      // 2. Logic to Handle Publication Summary Update & Side Effects
+      if (authorDTO.getPublicationsSummary() != null) {
 
-                Set<String> existingPaperIds =
-                        existingAuthor.getPublicationsSummary() != null
-                                ? existingAuthor.getPublicationsSummary().stream()
-                                .map(PublicationSummary::getPaperId)
-                                .collect(Collectors.toSet())
-                                : new HashSet<>();
+        Set<String> existingPaperIds =
+            existingAuthor.getPublicationsSummary() != null
+                ? existingAuthor.getPublicationsSummary().stream()
+                    .map(PublicationSummary::getPaperId)
+                    .collect(Collectors.toSet())
+                : new HashSet<>();
 
-                Set<String> newPaperIds = new HashSet<>();
-                List<PublicationSummary> newSummaries = new ArrayList<>();
+        Set<String> newPaperIds = new HashSet<>();
+        List<PublicationSummary> newSummaries = new ArrayList<>();
 
-                for (PublicationSummaryDTO summaryDTO : authorDTO.getPublicationsSummary()) {
-                    String paperId = summaryDTO.getPaperId();
+        for (PublicationSummaryDTO summaryDTO : authorDTO.getPublicationsSummary()) {
+          String paperId = summaryDTO.getPaperId();
 
-                    if (newPaperIds.contains(paperId)) {
-                        throw new BusinessException("Duplicate: Paper ID " + paperId + " repeated in request.");
-                    }
-                    newPaperIds.add(paperId);
+          if (newPaperIds.contains(paperId)) {
+            throw new BusinessException("Duplicate: Paper ID " + paperId + " repeated in request.");
+          }
+          newPaperIds.add(paperId);
 
-                    Paper paperEntity =
-                            paperDAO
-                                    .findById(paperId)
-                                    .orElseThrow(
-                                            () ->
-                                                    new BusinessException(
-                                                            "Referenced Paper with ID " + paperId + " does not exist."));
+          Paper paperEntity =
+              paperDAO
+                  .findById(paperId)
+                  .orElseThrow(
+                      () ->
+                          new BusinessException(
+                              "Referenced Paper with ID " + paperId + " does not exist."));
 
-                    if (!existingPaperIds.contains(paperId)) {
-                        addAuthorToPaper(paperEntity, existingAuthor);
-                    }
+          if (!existingPaperIds.contains(paperId)) {
+            addAuthorToPaper(paperEntity, existingAuthor);
+          }
 
-                    newSummaries.add(toPublicationSummary(summaryDTO));
-                }
-
-                // Removal Logic
-                Set<String> papersToRemove = new HashSet<>(existingPaperIds);
-                papersToRemove.removeAll(newPaperIds);
-
-                for (String paperIdToRemove : papersToRemove) {
-                    removeAuthorFromPaper(paperIdToRemove, existingAuthor.getId());
-                }
-
-                existingAuthor.setPublicationsSummary(newSummaries);
-                existingAuthor.setTotalPublications(newSummaries.size());
-            }
-
-            authorToSave = existingAuthor;
-
-        } else {
-            // --- INSERT CASE ---
-            if (authorDAO.findByS2AuthorId(authorDTO.getS2AuthorId()).isPresent()) {
-                throw new BusinessException(
-                        "Author already exists with S2 ID " + authorDTO.getS2AuthorId());
-            }
-
-            if (authorDTO.getPublicationsSummary() != null
-                    && !authorDTO.getPublicationsSummary().isEmpty()) {
-                throw new BusinessException("New authors cannot have publication history on creation.");
-            }
-
-            authorToSave = toAuthor(authorDTO);
-            authorToSave.setId(null);
-            authorToSave.setPublicationsSummary(new ArrayList<>());
-            authorToSave.setTotalPublications(0);
+          newSummaries.add(toPublicationSummary(summaryDTO));
         }
 
-        Author savedEntity = authorDAO.save(authorToSave);
-        return toAuthorDTO(savedEntity);
+        // Removal Logic
+        Set<String> papersToRemove = new HashSet<>(existingPaperIds);
+        papersToRemove.removeAll(newPaperIds);
+
+        for (String paperIdToRemove : papersToRemove) {
+          removeAuthorFromPaper(paperIdToRemove, existingAuthor.getId());
+        }
+
+        existingAuthor.setPublicationsSummary(newSummaries);
+        existingAuthor.setTotalPublications(newSummaries.size());
+      }
+
+      authorToSave = existingAuthor;
+
+    } else {
+      // --- INSERT CASE ---
+      if (authorDAO.findByS2AuthorId(authorDTO.getS2AuthorId()).isPresent()) {
+        throw new BusinessException(
+            "Author already exists with S2 ID " + authorDTO.getS2AuthorId());
+      }
+
+      if (authorDTO.getPublicationsSummary() != null
+          && !authorDTO.getPublicationsSummary().isEmpty()) {
+        throw new BusinessException("New authors cannot have publication history on creation.");
+      }
+
+      authorToSave = toAuthor(authorDTO);
+      authorToSave.setId(null);
+      authorToSave.setPublicationsSummary(new ArrayList<>());
+      authorToSave.setTotalPublications(0);
     }
 
-    // --- HELPER METHODS FOR SIDE EFFECTS ---
+    Author savedEntity = authorDAO.save(authorToSave);
+    return toAuthorDTO(savedEntity);
+  }
 
-    private void addAuthorToPaper(Paper paper, Author author) {
-        if (paper.getAuthors() == null) {
-            paper.setAuthors(new ArrayList<>());
-        }
+  // --- HELPER METHODS FOR SIDE EFFECTS ---
 
-        boolean alreadyInPaper =
-                paper.getAuthors().stream().anyMatch(pa -> pa.getId().equals(author.getId()));
-
-        if (!alreadyInPaper) {
-            PaperAuthor newPaperAuthor = new PaperAuthor(author.getId(), author.getName());
-            paper.getAuthors().add(newPaperAuthor);
-            paperDAO.save(paper);
-        }
+  private void addAuthorToPaper(Paper paper, Author author) {
+    if (paper.getAuthors() == null) {
+      paper.setAuthors(new ArrayList<>());
     }
 
-    private void removeAuthorFromPaper(String paperId, String authorId) {
-        paperDAO.findById(paperId).ifPresent(paper -> {
-            if (paper.getAuthors() != null) {
+    boolean alreadyInPaper =
+        paper.getAuthors().stream().anyMatch(pa -> pa.getId().equals(author.getId()));
+
+    if (!alreadyInPaper) {
+      PaperAuthor newPaperAuthor = new PaperAuthor(author.getId(), author.getName());
+      paper.getAuthors().add(newPaperAuthor);
+      paperDAO.save(paper);
+    }
+  }
+
+  private void removeAuthorFromPaper(String paperId, String authorId) {
+    paperDAO
+        .findById(paperId)
+        .ifPresent(
+            paper -> {
+              if (paper.getAuthors() != null) {
                 boolean removed = paper.getAuthors().removeIf(pa -> pa.getId().equals(authorId));
 
                 if (removed) {
-                    if (paper.getAuthors().isEmpty()) {
-                        paperDAO.delete(paper); // Delete if empty
-                    } else {
-                        paperDAO.save(paper); // Update if just reduced
-                    }
+                  if (paper.getAuthors().isEmpty()) {
+                    paperDAO.delete(paper); // Delete if empty
+                  } else {
+                    paperDAO.save(paper); // Update if just reduced
+                  }
                 }
-            }
-        });
+              }
+            });
+  }
+
+  @Override
+  public AuthorDTO getAuthorByS2Id(String s2AuthorId) {
+    Author author =
+        authorDAO
+            .findByS2AuthorId(s2AuthorId)
+            .orElseThrow(
+                () -> new BusinessException("Author with S2 ID " + s2AuthorId + " not found!"));
+    return toAuthorDTO(author);
+  }
+
+  // --- MODIFIED METHODS USING PAGEABLE ---
+
+  @Override
+  public Page<AuthorDTO> searchAuthorsByName(String name, Pageable pageable) {
+    // Direct pass-through of Pageable to DAO
+    return authorDAO.findByNameContainingIgnoreCase(name, pageable).map(this::toAuthorDTO);
+  }
+
+  @Override
+  public Page<AuthorDTO> getAuthorsWithMinPublications(Integer minPublications, Pageable pageable) {
+    // Direct pass-through of Pageable to DAO
+    return authorDAO
+        .findByTotalPublicationsGreaterThan(minPublications, pageable)
+        .map(this::toAuthorDTO);
+  }
+
+  // --- DELETE METHODS ---
+
+  @Override
+  @Transactional
+  public void deleteAuthorById(String id) {
+    Author author =
+        authorDAO
+            .findById(id)
+            .orElseThrow(
+                () -> new BusinessException("Cannot delete: Author with ID " + id + " not found!"));
+
+    performDelete(author);
+  }
+
+  /**
+   * Shared delete logic: 1. Iterates over the author's papers. 2. Removes the author from each
+   * paper (deleting the paper if it becomes empty). 3. Deletes the author entity itself.
+   */
+  private void performDelete(Author author) {
+    if (author.getPublicationsSummary() != null) {
+      for (PublicationSummary pub : author.getPublicationsSummary()) {
+        removeAuthorFromPaper(pub.getPaperId(), author.getId());
+      }
     }
+    authorDAO.delete(author);
+  }
 
-    @Override
-    public AuthorDTO getAuthorByS2Id(String s2AuthorId) {
-        Author author =
-                authorDAO
-                        .findByS2AuthorId(s2AuthorId)
-                        .orElseThrow(
-                                () -> new BusinessException("Author with S2 ID " + s2AuthorId + " not found!"));
-        return toAuthorDTO(author);
+  // --- MAPPING METHODS ---
+
+  private Author toAuthor(AuthorDTO dto) {
+    Author author = new Author();
+    author.setId(dto.getId());
+    author.setName(dto.getName());
+    author.setS2AuthorId(dto.getS2AuthorId());
+    author.setTotalPublications(dto.getTotalPublications());
+
+    List<PublicationSummary> list = new ArrayList<>();
+    if (dto.getPublicationsSummary() != null) {
+      for (PublicationSummaryDTO summaryDTO : dto.getPublicationsSummary()) {
+        list.add(toPublicationSummary(summaryDTO));
+      }
     }
+    author.setPublicationsSummary(list);
+    return author;
+  }
 
-    // --- MODIFIED METHODS USING PAGEABLE ---
+  private AuthorDTO toAuthorDTO(Author author) {
+    AuthorDTO dto = new AuthorDTO();
+    dto.setId(author.getId());
+    dto.setName(author.getName());
+    dto.setS2AuthorId(author.getS2AuthorId());
+    dto.setTotalPublications(author.getTotalPublications());
 
-    @Override
-    public Page<AuthorDTO> searchAuthorsByName(String name, Pageable pageable) {
-        // Direct pass-through of Pageable to DAO
-        return authorDAO.findByNameContainingIgnoreCase(name, pageable)
-                .map(this::toAuthorDTO);
+    List<PublicationSummaryDTO> list = new ArrayList<>();
+    if (author.getPublicationsSummary() != null) {
+      for (PublicationSummary summary : author.getPublicationsSummary()) {
+        list.add(toPublicationSummaryDTO(summary));
+      }
     }
+    dto.setPublicationsSummary(list);
+    return dto;
+  }
 
-    @Override
-    public Page<AuthorDTO> getAuthorsWithMinPublications(Integer minPublications, Pageable pageable) {
-        // Direct pass-through of Pageable to DAO
-        return authorDAO.findByTotalPublicationsGreaterThan(minPublications, pageable)
-                .map(this::toAuthorDTO);
-    }
+  private PublicationSummaryDTO toPublicationSummaryDTO(PublicationSummary summary) {
+    PublicationSummaryDTO dto = new PublicationSummaryDTO();
+    dto.setPaperId(summary.getPaperId());
+    dto.setYear(summary.getYear());
+    dto.setTitle(summary.getTitle());
+    return dto;
+  }
 
-    // --- DELETE METHODS ---
-
-    @Override
-    @Transactional
-    public void deleteAuthorById(String id) {
-        Author author =
-                authorDAO
-                        .findById(id)
-                        .orElseThrow(
-                                () ->
-                                        new BusinessException(
-                                                "Cannot delete: Author with ID " + id + " not found!"));
-
-        performDelete(author);
-    }
-
-    /**
-     * Shared delete logic:
-     * 1. Iterates over the author's papers.
-     * 2. Removes the author from each paper (deleting the paper if it becomes empty).
-     * 3. Deletes the author entity itself.
-     */
-    private void performDelete(Author author) {
-        if (author.getPublicationsSummary() != null) {
-            for (PublicationSummary pub : author.getPublicationsSummary()) {
-                removeAuthorFromPaper(pub.getPaperId(), author.getId());
-            }
-        }
-        authorDAO.delete(author);
-    }
-
-    // --- MAPPING METHODS ---
-
-    private Author toAuthor(AuthorDTO dto) {
-        Author author = new Author();
-        author.setId(dto.getId());
-        author.setName(dto.getName());
-        author.setS2AuthorId(dto.getS2AuthorId());
-        author.setTotalPublications(dto.getTotalPublications());
-
-        List<PublicationSummary> list = new ArrayList<>();
-        if (dto.getPublicationsSummary() != null) {
-            for (PublicationSummaryDTO summaryDTO : dto.getPublicationsSummary()) {
-                list.add(toPublicationSummary(summaryDTO));
-            }
-        }
-        author.setPublicationsSummary(list);
-        return author;
-    }
-
-    private AuthorDTO toAuthorDTO(Author author) {
-        AuthorDTO dto = new AuthorDTO();
-        dto.setId(author.getId());
-        dto.setName(author.getName());
-        dto.setS2AuthorId(author.getS2AuthorId());
-        dto.setTotalPublications(author.getTotalPublications());
-
-        List<PublicationSummaryDTO> list = new ArrayList<>();
-        if (author.getPublicationsSummary() != null) {
-            for (PublicationSummary summary : author.getPublicationsSummary()) {
-                list.add(toPublicationSummaryDTO(summary));
-            }
-        }
-        dto.setPublicationsSummary(list);
-        return dto;
-    }
-
-    private PublicationSummaryDTO toPublicationSummaryDTO(PublicationSummary summary) {
-        PublicationSummaryDTO dto = new PublicationSummaryDTO();
-        dto.setPaperId(summary.getPaperId());
-        dto.setYear(summary.getYear());
-        dto.setTitle(summary.getTitle());
-        return dto;
-    }
-
-    private PublicationSummary toPublicationSummary(PublicationSummaryDTO dto) {
-        PublicationSummary summary = new PublicationSummary();
-        summary.setPaperId(dto.getPaperId());
-        summary.setYear(dto.getYear());
-        summary.setTitle(dto.getTitle());
-        return summary;
-    }
+  private PublicationSummary toPublicationSummary(PublicationSummaryDTO dto) {
+    PublicationSummary summary = new PublicationSummary();
+    summary.setPaperId(dto.getPaperId());
+    summary.setYear(dto.getYear());
+    summary.setTitle(dto.getTitle());
+    return summary;
+  }
 }

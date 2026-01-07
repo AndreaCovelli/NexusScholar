@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,22 +37,28 @@ public class PaperServiceImpl implements PaperService {
     Set<String> authorsToRemove = new HashSet<>();
     boolean isUpdate = false;
 
-    // 1. Validate all referenced authors exist
+    // 1. Extract incoming Author IDs
     List<String> incomingAuthorIds = new ArrayList<>();
     if (paperDTO.getAuthors() != null) {
       incomingAuthorIds =
           paperDTO.getAuthors().stream().map(PaperAuthorDTO::getId).collect(Collectors.toList());
     }
 
-    if (!incomingAuthorIds.isEmpty()) {
-      List<Author> foundAuthors = (List<Author>) authorDAO.findAllById(incomingAuthorIds);
-      if (foundAuthors.size() != incomingAuthorIds.size()) {
-        throw new BusinessException(
-            "Integrity Error: One or more authors do not exist in the database.");
-      }
+    // --- BUSINESS RULE: Minimum 1 Author Required ---
+    if (incomingAuthorIds.isEmpty()) {
+      throw new BusinessException("Validation Error: A paper must have at least one author.");
     }
 
-    // 2. Determine UPDATE vs INSERT
+    // 2. Validate Referential Integrity
+    List<Author> foundAuthors = new ArrayList<>();
+    authorDAO.findAllById(incomingAuthorIds).forEach(foundAuthors::add);
+
+    if (foundAuthors.size() != incomingAuthorIds.size()) {
+      throw new BusinessException(
+          "Integrity Error: One or more authors do not exist in the database.");
+    }
+
+    // 3. Determine if this is an UPDATE or an INSERT operation
     if (paperDTO.getId() != null && !paperDTO.getId().isEmpty()) {
       // --- UPDATE CASE ---
       isUpdate = true;
@@ -61,7 +68,6 @@ public class PaperServiceImpl implements PaperService {
               .orElseThrow(
                   () -> new BusinessException("Paper not found with ID: " + paperDTO.getId()));
 
-      // Check DOI uniqueness (excluding self)
       if (paperDTO.getDoi() != null && !paperDTO.getDoi().equals(existingPaper.getDoi())) {
         Optional<Paper> duplicate = paperDAO.findByDoi(paperDTO.getDoi());
         if (duplicate.isPresent()) {
@@ -69,7 +75,6 @@ public class PaperServiceImpl implements PaperService {
         }
       }
 
-      // Calculate author delta
       Set<String> oldAuthorIds =
           existingPaper.getAuthors().stream().map(PaperAuthor::getId).collect(Collectors.toSet());
       Set<String> newAuthorIds = new HashSet<>(incomingAuthorIds);
@@ -97,10 +102,10 @@ public class PaperServiceImpl implements PaperService {
       authorsToAdd.addAll(incomingAuthorIds);
     }
 
-    // 3. Persist Paper
+    // 4. Persist
     Paper savedEntity = paperDAO.save(paperToSave);
 
-    // 4. Side Effects: Update author statistics
+    // 5. Side Effects
     if (isUpdate) {
       if (!authorsToRemove.isEmpty()) {
         updateAuthorsRemovePaper(authorsToRemove, savedEntity);
@@ -127,17 +132,15 @@ public class PaperServiceImpl implements PaperService {
   }
 
   @Override
-  public List<PaperDTO> searchPapersByTitle(String title) {
-    return paperDAO.findByTitleContainingIgnoreCase(title, Pageable.unpaged()).getContent().stream()
-        .map(this::toPaperDTO)
-        .collect(Collectors.toList());
+  public Page<PaperDTO> searchPapersByTitle(String title, Pageable pageable) {
+    // Maps the Page<Paper> directly to Page<PaperDTO> using the DAO's method
+    return paperDAO.findByTitleContainingIgnoreCase(title, pageable).map(this::toPaperDTO);
   }
 
   @Override
-  public List<PaperDTO> getPapersByYear(Integer year) {
-    return paperDAO.findByYear(year, Pageable.unpaged()).getContent().stream()
-        .map(this::toPaperDTO)
-        .collect(Collectors.toList());
+  public Page<PaperDTO> getPapersByYear(Integer year, Pageable pageable) {
+    // Maps the Page<Paper> directly to Page<PaperDTO> using the DAO's method
+    return paperDAO.findByYear(year, pageable).map(this::toPaperDTO);
   }
 
   @Override
@@ -149,20 +152,21 @@ public class PaperServiceImpl implements PaperService {
             .orElseThrow(
                 () -> new BusinessException("Cannot delete. Paper not found with ID: " + id));
 
-    List<String> authorIds =
-        paperToDelete.getAuthors().stream().map(PaperAuthor::getId).collect(Collectors.toList());
+    Set<String> authorIds =
+        paperToDelete.getAuthors().stream().map(PaperAuthor::getId).collect(Collectors.toSet());
 
     paperDAO.delete(paperToDelete);
 
     if (!authorIds.isEmpty()) {
-      updateAuthorsRemovePaper(new HashSet<>(authorIds), paperToDelete);
+      updateAuthorsRemovePaper(authorIds, paperToDelete);
     }
   }
 
   // --- SIDE EFFECT HELPERS ---
 
   private void updateAuthorsAddPaper(Set<String> authorIds, Paper paper) {
-    List<Author> authorsToUpdate = (List<Author>) authorDAO.findAllById(authorIds);
+    List<Author> authorsToUpdate = new ArrayList<>();
+    authorDAO.findAllById(authorIds).forEach(authorsToUpdate::add);
 
     for (Author author : authorsToUpdate) {
       int currentTotal = author.getTotalPublications() != null ? author.getTotalPublications() : 0;
@@ -180,6 +184,7 @@ public class PaperServiceImpl implements PaperService {
       boolean exists =
           author.getPublicationsSummary().stream()
               .anyMatch(s -> s.getPaperId().equals(paper.getId()));
+
       if (!exists) {
         author.getPublicationsSummary().add(summary);
       }
@@ -188,7 +193,12 @@ public class PaperServiceImpl implements PaperService {
   }
 
   private void updateAuthorsRemovePaper(Set<String> authorIds, Paper paper) {
-    List<Author> authorsToUpdate = (List<Author>) authorDAO.findAllById(authorIds);
+    List<Author> authorsToUpdate = new ArrayList<>();
+    authorDAO.findAllById(authorIds).forEach(authorsToUpdate::add);
+
+    if (authorsToUpdate.isEmpty()) {
+      return;
+    }
 
     for (Author author : authorsToUpdate) {
       if (author.getTotalPublications() != null && author.getTotalPublications() > 0) {
@@ -216,6 +226,7 @@ public class PaperServiceImpl implements PaperService {
     dto.setDblpKey(paper.getDblpKey());
     dto.setDoi(paper.getDoi());
     dto.setAbstractText(paper.getAbstractText());
+
     dto.setFieldsOfStudy(
         paper.getFieldsOfStudy() != null
             ? new ArrayList<>(paper.getFieldsOfStudy())
@@ -249,6 +260,7 @@ public class PaperServiceImpl implements PaperService {
     paper.setDblpKey(dto.getDblpKey());
     paper.setDoi(dto.getDoi());
     paper.setAbstractText(dto.getAbstractText());
+
     paper.setFieldsOfStudy(
         dto.getFieldsOfStudy() != null
             ? new ArrayList<>(dto.getFieldsOfStudy())

@@ -2,8 +2,10 @@ package it.unipi.nexusscholar.controller;
 
 import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.service.PaperService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,12 +19,6 @@ public class PaperController {
 
   // --- CREATE / UPDATE ---
 
-  /**
-   * Creates or updates a paper. POST /api/papers
-   *
-   * <p>Validates author references exist, enforces DOI uniqueness, and maintains bidirectional
-   * consistency with Author collection.
-   */
   @PostMapping
   public ResponseEntity<PaperDTO> savePaper(@RequestBody PaperDTO paperDTO) {
     PaperDTO savedPaper = paperService.savePaper(paperDTO);
@@ -31,29 +27,38 @@ public class PaperController {
 
   // --- READ ---
 
-  /** Retrieves a paper by MongoDB ID. GET /api/papers/{id} */
   @GetMapping("/{id}")
   public ResponseEntity<PaperDTO> getPaperById(@PathVariable String id) {
     return ResponseEntity.ok(paperService.getPaperById(id));
   }
 
   /**
-   * Searches papers by title (partial match, case-insensitive). GET /api/papers/search?title=Deep
-   * Learning
+   * Searches papers by title with pagination. Spring automatically resolves page, size, and sort
+   * parameters into the Pageable object. Example: GET
+   * /api/papers/search?title=Deep&page=0&size=10&sort=year,desc
    */
   @GetMapping("/search")
-  public ResponseEntity<List<PaperDTO>> searchPapersByTitle(@RequestParam String title) {
-    List<PaperDTO> papers = paperService.searchPapersByTitle(title);
+  public ResponseEntity<Page<PaperDTO>> searchPapersByTitle(
+      @RequestParam String title, @PageableDefault(size = 10) Pageable pageable) {
+
+    Page<PaperDTO> papers = paperService.searchPapersByTitle(title, pageable);
+
     if (papers.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.ok(papers);
   }
 
-  /** Retrieves papers by publication year. GET /api/papers/year/2023 */
+  /**
+   * Retrieves papers by publication year with pagination. Example: GET
+   * /api/papers/year/2023?page=0&size=20
+   */
   @GetMapping("/year/{year}")
-  public ResponseEntity<List<PaperDTO>> getPapersByYear(@PathVariable Integer year) {
-    List<PaperDTO> papers = paperService.getPapersByYear(year);
+  public ResponseEntity<Page<PaperDTO>> getPapersByYear(
+      @PathVariable Integer year, @PageableDefault(size = 10) Pageable pageable) {
+
+    Page<PaperDTO> papers = paperService.getPapersByYear(year, pageable);
+
     if (papers.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
@@ -62,11 +67,6 @@ public class PaperController {
 
   // --- DELETE ---
 
-  /**
-   * Deletes a paper by ID. DELETE /api/papers/{id}
-   *
-   * <p>Side effect: Removes paper from all associated authors' publication histories.
-   */
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deletePaper(@PathVariable String id) {
     paperService.deletePaper(id);

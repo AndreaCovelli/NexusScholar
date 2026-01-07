@@ -3,6 +3,7 @@ package it.unipi.nexusscholar.service.impl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import it.unipi.nexusscholar.dao.mongo.AuthorDAO;
@@ -26,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +41,7 @@ class PaperServiceImplTest {
   private Paper testPaper;
   private PaperDTO testPaperDTO;
   private Author testAuthor;
+  private Pageable pageable;
 
   @BeforeEach
   void setUp() {
@@ -66,6 +69,8 @@ class PaperServiceImplTest {
     testAuthor.setName("John Doe");
     testAuthor.setTotalPublications(5);
     testAuthor.setPublicationsSummary(new ArrayList<>());
+
+    pageable = PageRequest.of(0, 10);
   }
 
   @Test
@@ -229,10 +234,10 @@ class PaperServiceImplTest {
     when(paperDAO.findByTitleContainingIgnoreCase(eq("Deep"), any(Pageable.class)))
         .thenReturn(page);
 
-    List<PaperDTO> results = paperService.searchPapersByTitle("Deep");
+    Page<PaperDTO> results = paperService.searchPapersByTitle("Deep", pageable);
 
-    assertEquals(1, results.size());
-    assertEquals("Deep Learning Advances", results.get(0).getTitle());
+    assertEquals(1, results.getTotalElements());
+    assertEquals("Deep Learning Advances", results.getContent().get(0).getTitle());
   }
 
   @Test
@@ -241,7 +246,7 @@ class PaperServiceImplTest {
     when(paperDAO.findByTitleContainingIgnoreCase(eq("NonExistent"), any(Pageable.class)))
         .thenReturn(emptyPage);
 
-    List<PaperDTO> results = paperService.searchPapersByTitle("NonExistent");
+    Page<PaperDTO> results = paperService.searchPapersByTitle("NonExistent", pageable);
 
     assertTrue(results.isEmpty());
   }
@@ -251,9 +256,9 @@ class PaperServiceImplTest {
     Page<Paper> page = new PageImpl<>(List.of(testPaper));
     when(paperDAO.findByYear(eq(2023), any(Pageable.class))).thenReturn(page);
 
-    List<PaperDTO> results = paperService.getPapersByYear(2023);
+    Page<PaperDTO> results = paperService.getPapersByYear(2023, pageable);
 
-    assertEquals(1, results.size());
+    assertEquals(1, results.getTotalElements());
   }
 
   @Test
