@@ -139,7 +139,7 @@ class DaoTest {
   void testBetweennessAlgReturnsEmptyListOnException() {
     when(mockDriver.session()).thenThrow(new RuntimeException("Database error"));
 
-    List<BetweennessEntry> results = graphDAO.betweennessAlg();
+    List<BetweennessEntry> results = graphDAO.betweennessAlg(0, 10);
 
     assertNotNull(results);
     assertTrue(results.isEmpty(), "Should return empty list on exception");

@@ -71,8 +71,24 @@ public class GraphService {
 
   public Page<LeidenDTO> hiddenCommunities(@PageableDefault(size = 20) Pageable pageable) {
     try {
-      List<LeidenDTO> cont = graphDAO.leidenCommunityAlg().stream().map(this::toLeidenDTO).toList();
-      return new PageImpl<>(cont, pageable, graphDAO.leidenCount());
+      // 1. Fetch all communities (Note: Optimization requires moving aggregation to Cypher)
+      List<LeidenDTO> allCommunities =
+          graphDAO.leidenCommunityAlg().stream().map(this::toLeidenDTO).toList();
+
+      // 2. Calculate indices for in-memory pagination
+      int start = (int) pageable.getOffset();
+      int end = Math.min((start + pageable.getPageSize()), allCommunities.size());
+
+      // 3. Handle out-of-bounds requests
+      List<LeidenDTO> pagedContent;
+      if (start > allCommunities.size()) {
+        pagedContent = Collections.emptyList();
+      } else {
+        pagedContent = allCommunities.subList(start, end);
+      }
+
+      // 4. Return the specific slice
+      return new PageImpl<>(pagedContent, pageable, allCommunities.size());
     } catch (Exception e) {
       log.error("Error executing hidden communities algorithm (Leiden)", e);
       return Page.empty(pageable);
@@ -83,9 +99,17 @@ public class GraphService {
       @PageableDefault(size = 20, sort = "score", direction = Sort.Direction.DESC)
           Pageable pageable) {
     try {
+      // 1. Pass pagination params to DAO (Database-level slicing)
+      int skip = (int) pageable.getOffset();
+      int limit = pageable.getPageSize();
+
       List<BetweennessDTO> res =
-          graphDAO.betweennessAlg().stream().map(this::toBetweennessDTO).toList();
-      return new PageImpl<>(res, pageable, graphDAO.betweennessCount());
+          graphDAO.betweennessAlg(skip, limit).stream().map(this::toBetweennessDTO).toList();
+
+      // 2. Fetch total count for correct Page metadata
+      int totalCount = graphDAO.betweennessCount();
+
+      return new PageImpl<>(res, pageable, totalCount);
     } catch (Exception e) {
       log.error("Betweenness calculation failed", e);
       return Page.empty(pageable);

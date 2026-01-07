@@ -222,17 +222,34 @@ public class GraphDAO {
 
   public int leidenCount() {
     try (Session session = driver.session()) {
+      // Ensure projection exists before counting
+      session.executeWriteWithoutResult(
+          tx -> {
+            tx.run("CALL gds.graph.drop('coAuthors', false)");
+            tx.run(
+                """
+                                                 CALL gds.graph.project(
+                                                     'coAuthors',
+                                                     ['Author', 'Paper'],
+                                                     {
+                                                         AUTHORED: {
+                                                             orientation: 'UNDIRECTED'
+                                                         }
+                                                     }
+                                                 )
+                                                 """);
+          });
+
       return session.executeRead(
           tx -> {
-            // FIX: Use gds.graph.list to get metadata count
             Result r =
                 tx.run(
                     """
-                                        CALL gds.graph.list('coAuthors')
-                                        YIELD nodeCount
-                                        RETURN nodeCount;
-                                        """);
-            return r.hasNext() ? r.single().get("nodeCount").asInt() : 0;
+                                                            CALL gds.leiden.stream('coAuthors', { randomSeed: 42 })
+                                                            YIELD communityId
+                                                            RETURN count(DISTINCT communityId) as communityCount;
+                                                            """);
+            return r.hasNext() ? r.single().get("communityCount").asInt() : 0;
           });
     } catch (Exception e) {
       log.error("Count for leiden not achievable");
@@ -240,9 +257,10 @@ public class GraphDAO {
     }
   }
 
-  public List<BetweennessEntry> betweennessAlg() {
+  public List<BetweennessEntry> betweennessAlg(int skip, int limit) {
     try (Session session = driver.session()) {
-      // Step 1: Check if projection exists
+
+      // 1. Ensure the Graph Projection exists
       boolean exists =
           session.executeRead(
               tx -> {
@@ -251,7 +269,6 @@ public class GraphDAO {
                 return res.single().get("exists").asBoolean();
               });
 
-      // Step 2: Create projection if missing
       if (!exists) {
         session.executeWriteWithoutResult(
             tx -> {
@@ -266,7 +283,7 @@ public class GraphDAO {
             });
       }
 
-      // Step 3: Validate projection has data (CRITICAL DIAGNOSTIC)
+      // 2. Check for empty graph
       Record stats =
           session.executeRead(
               tx -> {
@@ -285,7 +302,7 @@ public class GraphDAO {
         return Collections.emptyList();
       }
 
-      // Step 4: Run betweenness with sampling for performance
+      // 3. Execute Algorithm with Pagination
       List<Record> records =
           session.executeRead(
               tx -> {
@@ -300,8 +317,10 @@ public class GraphDAO {
                                                 RETURN gds.util.asNode(nodeId).title AS title,
                                                        round(score, 4) AS betweenness
                                                 ORDER BY score DESC
-                                                LIMIT 100
-                                                """);
+                                                SKIP $skip
+                                                LIMIT $limit
+                                                """,
+                        Map.of("skip", skip, "limit", limit));
                 return res.list();
               });
 
@@ -348,7 +367,7 @@ public class GraphDAO {
                                 DELETE r
                                 WITH p
                                 UNWIND $authors as author
-                                MERGE (a:Author{id:author.id}
+                                MERGE (a:Author{id:author.id})
                                 ON CREATE SET a.name = author.name
                                 MERGE (p:Paper <- [:AUTHORED] - author:Author)
                                 """,

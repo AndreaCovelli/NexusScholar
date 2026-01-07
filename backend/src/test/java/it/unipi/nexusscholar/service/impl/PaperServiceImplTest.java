@@ -113,7 +113,6 @@ class PaperServiceImplTest {
     assertEquals("generated-id", result.getId());
 
     verify(authorDAO, atLeastOnce()).saveAll(any());
-    verify(graphDAO).connect();
     verify(graphDAO).savePaperNode(any());
   }
 

@@ -73,7 +73,8 @@ class GraphServiceExceptionTest {
 
   @Test
   void testBetweennessReturnsEmptyListOnException() {
-    when(mockGraphDAO.betweennessAlg()).thenThrow(new RuntimeException("Betweenness failed"));
+    when(mockGraphDAO.betweennessAlg(anyInt(), anyInt()))
+        .thenThrow(new RuntimeException("Betweenness failed"));
 
     Page<BetweennessDTO> results = graphService.betweenness(PageRequest.of(0, 10));
 

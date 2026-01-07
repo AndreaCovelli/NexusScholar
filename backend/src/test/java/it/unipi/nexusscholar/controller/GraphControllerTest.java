@@ -71,7 +71,7 @@ class GraphControllerTest {
     LeidenDTO community = new LeidenDTO(1, List.of("Author1", "Author2"));
     List<LeidenDTO> communityLeiden = List.of(community);
 
-    when(graphService.hiddenCommunities(PageRequest.of(0, 20)))
+    when(graphService.hiddenCommunities(any(Pageable.class)))
         .thenReturn(new PageImpl<>(communityLeiden, PageRequest.of(0, 20), communityLeiden.size()));
 
     mockMvc
