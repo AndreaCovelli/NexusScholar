@@ -363,7 +363,7 @@ public class GraphDAO {
                                 WITH p
                                 UNWIND $authors as author
                                 MERGE (a:Author {id: author.id})
-                                ON CREATE SET a.name = author.name
+                                SET a.name = author.name
                                 MERGE (p)<-[:AUTHORED]-(a)
                                 """,
                 Map.of(

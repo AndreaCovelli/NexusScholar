@@ -19,8 +19,6 @@ import org.neo4j.driver.types.Relationship;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -69,7 +67,7 @@ public class GraphService {
     }
   }
 
-  public Page<LeidenDTO> hiddenCommunities(@PageableDefault(size = 20) Pageable pageable) {
+  public Page<LeidenDTO> hiddenCommunities(Pageable pageable) {
     try {
       // 1. Calculate pagination parameters
       int skip = (int) pageable.getOffset();
@@ -93,9 +91,7 @@ public class GraphService {
     }
   }
 
-  public Page<BetweennessDTO> betweenness(
-      @PageableDefault(size = 20, sort = "score", direction = Sort.Direction.DESC)
-          Pageable pageable) {
+  public Page<BetweennessDTO> betweenness(Pageable pageable) {
     try {
       // 1. Pass pagination params to DAO (Database-level slicing)
       int skip = (int) pageable.getOffset();
