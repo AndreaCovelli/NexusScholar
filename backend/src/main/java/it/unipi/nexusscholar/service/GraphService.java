@@ -16,6 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Relationship;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -38,12 +43,16 @@ public class GraphService {
     }
   }
 
-  public List<PageRankDTO> pagerank() {
+  public Page<PageRankDTO> pagerank(Pageable pageable) {
     try {
-      return graphDAO.pageRankAlg().stream().map(this::toPageRankDTO).toList();
+      List<PageRankDTO> cont =
+          graphDAO.pageRankAlg((int) pageable.getOffset(), pageable.getPageSize()).stream()
+              .map(this::toPageRankDTO)
+              .toList();
+      return new PageImpl<>(cont, pageable, graphDAO.pageRankCount());
     } catch (Exception e) {
       log.error("Error executing PageRank algorithm", e);
-      return Collections.emptyList();
+      return Page.empty(pageable);
     }
   }
 
@@ -60,21 +69,26 @@ public class GraphService {
     }
   }
 
-  public List<LeidenDTO> hiddenCommunities() {
+  public Page<LeidenDTO> hiddenCommunities(@PageableDefault(size = 20) Pageable pageable) {
     try {
-      return graphDAO.leidenCommunityAlg().stream().map(this::toLeidenDTO).toList();
+      List<LeidenDTO> cont = graphDAO.leidenCommunityAlg().stream().map(this::toLeidenDTO).toList();
+      return new PageImpl<>(cont, pageable, graphDAO.leidenCount());
     } catch (Exception e) {
       log.error("Error executing hidden communities algorithm (Leiden)", e);
-      return Collections.emptyList();
+      return Page.empty(pageable);
     }
   }
 
-  public List<BetweennessDTO> betweenness() {
+  public Page<BetweennessDTO> betweenness(
+      @PageableDefault(size = 20, sort = "score", direction = Sort.Direction.DESC)
+          Pageable pageable) {
     try {
-      return graphDAO.betweennessAlg().stream().map(this::toBetweennessDTO).toList();
+      List<BetweennessDTO> res =
+          graphDAO.betweennessAlg().stream().map(this::toBetweennessDTO).toList();
+      return new PageImpl<>(res, pageable, graphDAO.betwennessCount());
     } catch (Exception e) {
       log.error("Betweenness calculation failed", e);
-      return Collections.emptyList();
+      return Page.empty(pageable);
     }
   }
 

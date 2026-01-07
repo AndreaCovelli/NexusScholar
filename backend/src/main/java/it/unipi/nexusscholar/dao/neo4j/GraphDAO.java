@@ -1,5 +1,6 @@
 package it.unipi.nexusscholar.dao.neo4j;
 
+import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.utils.BetweennessEntry;
 import it.unipi.nexusscholar.utils.LeidenCommunity;
 import it.unipi.nexusscholar.utils.PageRankEntry;
@@ -35,7 +36,7 @@ public class GraphDAO {
     }
   }
 
-  public List<PageRankEntry> pageRankAlg() {
+  public List<PageRankEntry> pageRankAlg(int skip, int limit) {
     try (Session session = driver.session()) {
       boolean ex =
           session.executeRead(
@@ -68,7 +69,10 @@ public class GraphDAO {
                                                         CALL gds.pageRank.stream('paperCitations')
                                                         YIELD nodeId,score
                                                         RETURN gds.util.asNode(nodeId).title as title, round(score,4) as rank
-                                                        ORDER BY score DESC;""");
+                                                        ORDER BY score DESC
+                                                        SKIP $s
+                                                        LIMIT $l;""",
+                        Map.of("s", skip, "l", limit));
                 return res.list();
               });
 
@@ -76,6 +80,47 @@ public class GraphDAO {
     } catch (Exception e) {
       log.error("PageRank calculation failed", e);
       return Collections.emptyList();
+    }
+  }
+
+  public int pageRankCount() {
+    try (Session session = driver.session()) {
+      boolean ex =
+          session.executeRead(
+              tx -> {
+                Result res =
+                    tx.run("CALL gds.graph.exists('paperCitations') YIELD exists RETURN exists");
+                return res.single().get("exists").asBoolean();
+              });
+
+      if (!ex) {
+        session.executeWriteWithoutResult(
+            tx -> {
+              tx.run(
+                  """
+                                                            CALL gds.graph.project(
+                                                            'paperCitations',
+                                                            'Paper',
+                                                            'CITES'
+                                                            );
+                                                            """);
+            });
+      }
+
+      return session.executeRead(
+          tx -> {
+            Result res =
+                tx.run(
+                    """
+                                                                              CALL gds.pageRank.stream('paperCitations')
+                                                                              YIELD nodeCount
+                                                                              RETURN nodeCount;""");
+            return res.single().get("nodeCount").asInt();
+          });
+
+    } catch (Exception e) {
+      log.error("PageRank calculation failed", e);
+      return -1;
     }
   }
 
@@ -173,6 +218,30 @@ public class GraphDAO {
     }
   }
 
+  public int leidenCount() {
+    try (Session session = driver.session()) {
+      return session.executeRead(
+          tx -> {
+            Result r =
+                tx.run(
+                    """
+                                              CALL gds.leiden.stream(
+                                                  'coAuthors',
+                                                  {
+                                                      randomSeed: 42
+                                                  }
+                                              )
+                                              YIELD nodeCount
+                                              RETURN nodeCount;
+                                              """);
+            return r.single().get("nodeCount").asInt();
+          });
+    } catch (Exception e) {
+      log.error("Count for leiden not achievable");
+      return -1;
+    }
+  }
+
   public List<BetweennessEntry> betweennessAlg() {
     try (Session session = driver.session()) {
       // Step 1: Check if projection exists
@@ -242,6 +311,62 @@ public class GraphDAO {
     } catch (Exception e) {
       log.error("Betweenness calculation failed", e);
       return Collections.emptyList();
+    }
+  }
+
+  public int betwennessCount() {
+    try (Session session = driver.session()) {
+      return session.executeRead(
+          tx -> {
+            Result res =
+                tx.run(
+                    """
+                                                      CALL gds.betweenness.stream('paperCitations', {
+                                                          samplingSize: 1000,
+                                                          samplingSeed: 42
+                                                      })
+                                                      YIELD nodeCount
+                                                      RETURN nodeCount;
+                                                      LIMIT 100
+                                                  """);
+            return res.single().get("nodeCount").asInt();
+          });
+    }
+  }
+
+  public boolean savePaperNode(PaperDTO p) {
+
+    if (p == null || p.getId() == null) return false;
+
+    try (Session session = driver.session()) {
+      session.executeWriteWithoutResult(
+          tx -> {
+            tx.run(
+                """
+                        MERGE (p:Paper{paperID:$paperID})
+                        SET p.title = $title
+                        WITH p
+                        OPTIONAL MATCH p <- [r:AUTHORED] - (:Author)
+                        DELETE r
+                        WITH p
+                        UNWIND $authors as author
+                        MERGE (a:Author{id:author.id}
+                        ON CREATE SET a.name = author.name
+                        MERGE (p:Paper <- [:AUTHORED] - author:Author)
+                        """,
+                Map.of(
+                    "paperID", p.getId(),
+                    "title", p.getTitle(),
+                    "authors",
+                        p.getAuthors().stream()
+                            .map(a -> Map.of("id", a.getId(), "name", a.getName()))
+                            .toList()));
+          });
+
+      return true;
+    } catch (Exception e) {
+      log.error("Save paper node failed", e);
+      return false;
     }
   }
 }

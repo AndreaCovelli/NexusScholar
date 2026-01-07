@@ -39,7 +39,7 @@ class GraphServiceExceptionTest {
 
   @Test
   void testPageRankReturnsEmptyListOnException() {
-    when(mockGraphDAO.pageRankAlg()).thenThrow(new RuntimeException("PageRank failed"));
+    when(mockGraphDAO.pageRankAlg(10, 30)).thenThrow(new RuntimeException("PageRank failed"));
 
     List<PageRankDTO> results = graphService.pagerank();
 

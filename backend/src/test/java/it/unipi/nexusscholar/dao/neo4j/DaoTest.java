@@ -59,7 +59,7 @@ class DaoTest {
   void testPageRankAlgReturnsEmptyListOnException() {
     when(mockDriver.session()).thenThrow(new RuntimeException("Database error"));
 
-    List<PageRankEntry> results = graphDAO.pageRankAlg();
+    List<PageRankEntry> results = graphDAO.pageRankAlg(10, 30);
 
     assertNotNull(results);
     assertTrue(results.isEmpty(), "Should return empty list on exception");
@@ -73,7 +73,7 @@ class DaoTest {
         .thenReturn(true)
         .thenReturn(Collections.emptyList());
 
-    List<PageRankEntry> results = graphDAO.pageRankAlg();
+    List<PageRankEntry> results = graphDAO.pageRankAlg(10, 30);
 
     assertNotNull(results);
   }
