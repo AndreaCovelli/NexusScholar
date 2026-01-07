@@ -1,5 +1,6 @@
 package it.unipi.nexusscholar.model.mongo;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,8 +11,6 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.time.LocalDateTime;
-
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -19,21 +18,20 @@ import java.time.LocalDateTime;
 @Document(collection = "users")
 public abstract class User {
 
-    @Id
-    private String id;
+  @Id private String id;
 
-    @Indexed(unique = true)
-    private String username;
+  @Indexed(unique = true)
+  private String username;
 
-    @Indexed(unique = true)
-    private String email;
+  @Indexed(unique = true)
+  private String email;
 
-    @Field("password_hash")
-    private String password;
+  @Field("password_hash")
+  private String password;
 
-    private Role role;
+  private Role role;
 
-    @CreatedDate
-    @Field("created_at")
-    private LocalDateTime createdAt;
+  @CreatedDate
+  @Field("created_at")
+  private LocalDateTime createdAt;
 }
