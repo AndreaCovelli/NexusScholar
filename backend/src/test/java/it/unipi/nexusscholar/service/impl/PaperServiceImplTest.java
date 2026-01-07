@@ -2,10 +2,12 @@ package it.unipi.nexusscholar.service.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import it.unipi.nexusscholar.dao.mongo.AuthorDAO;
 import it.unipi.nexusscholar.dao.mongo.PaperDAO;
+import it.unipi.nexusscholar.dao.neo4j.GraphDAO;
 import it.unipi.nexusscholar.dto.mongo.PaperAuthorDTO;
 import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.model.mongo.Author;
@@ -32,6 +34,7 @@ class PaperServiceImplTest {
 
   @Mock private PaperDAO paperDAO;
   @Mock private AuthorDAO authorDAO;
+  @Mock private GraphDAO graphDAO; // Added missing mock
 
   @InjectMocks private PaperServiceImpl paperService;
 
@@ -43,7 +46,7 @@ class PaperServiceImplTest {
 
   @BeforeEach
   void setUp() {
-    // 1. Setup Authors
+
     authorJohn = new Author();
     authorJohn.setId("id-john");
     authorJohn.setName("John Doe");
@@ -56,7 +59,6 @@ class PaperServiceImplTest {
     authorJane.setTotalPublications(0);
     authorJane.setPublicationsSummary(new ArrayList<>());
 
-    // 2. Setup Paper (Entity)
     testPaper = new Paper();
     testPaper.setId("paper-1");
     testPaper.setTitle("AI Research");
@@ -64,19 +66,15 @@ class PaperServiceImplTest {
     testPaper.setAuthors(new ArrayList<>(List.of(new PaperAuthor("id-john", "John Doe"))));
     testPaper.setVenue(new ArrayList<>(List.of("Conf A")));
 
-    // 3. Setup PaperDTO (Input)
     testPaperDTO = new PaperDTO();
     testPaperDTO.setTitle("AI Research");
     testPaperDTO.setDoi("10.1000/1");
-    // DTO ha John come autore di default
+
     testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-john", "John Doe")));
     testPaperDTO.setVenue(List.of("Conf A"));
 
     pageable = PageRequest.of(0, 10);
 
-    // --- MOCK INTELLIGENTE PER findAllById ---
-    // Questo mock risponde dinamicamente in base agli ID richiesti.
-    // Risolve sia la validazione iniziale che i side-effects (updateAuthorsAdd/Remove).
     lenient()
         .when(authorDAO.findAllById(any()))
         .thenAnswer(
@@ -92,11 +90,9 @@ class PaperServiceImplTest {
                 });
   }
 
-  // --- CREATE TESTS ---
-
   @Test
   void savePaper_Create_Success() {
-    // Caso: Nuovo paper, ID null
+
     testPaperDTO.setId(null);
     testPaperDTO.setDoi("10.NEW/DOI");
 
@@ -108,13 +104,17 @@ class PaperServiceImplTest {
               p.setId("generated-id");
               return p;
             });
+    // Stub GraphDAO to ensure success
+    when(graphDAO.savePaperNode(any())).thenReturn(true);
 
     PaperDTO result = paperService.savePaper(testPaperDTO);
 
     assertNotNull(result);
     assertEquals("generated-id", result.getId());
-    // Verifica side effects
+
     verify(authorDAO, atLeastOnce()).saveAll(any());
+    verify(graphDAO).connect();
+    verify(graphDAO).savePaperNode(any());
   }
 
   @Test
@@ -127,11 +127,8 @@ class PaperServiceImplTest {
 
   @Test
   void savePaper_Create_AuthorNotFound_IntegrityError() {
-    // DTO chiede un autore che non esiste nel nostro Mock findAllById setup
-    testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-ghost", "Ghost")));
 
-    // Il mock intelligente ritornerà lista vuota per "id-ghost"
-    // Scatta: foundAuthors.size() != incomingAuthorIds.size()
+    testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-ghost", "Ghost")));
 
     BusinessException ex =
         assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
@@ -140,14 +137,12 @@ class PaperServiceImplTest {
 
   @Test
   void savePaper_Create_NoAuthors_ValidationError() {
-    testPaperDTO.setAuthors(new ArrayList<>()); // Lista vuota
+    testPaperDTO.setAuthors(new ArrayList<>());
 
     BusinessException ex =
         assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
     assertTrue(ex.getMessage().contains("must have at least one author"));
   }
-
-  // --- UPDATE TESTS ---
 
   @Test
   void savePaper_Update_Simple_Success() {
@@ -156,35 +151,31 @@ class PaperServiceImplTest {
 
     when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
     when(paperDAO.save(any(Paper.class))).thenReturn(testPaper);
+    // Stub GraphDAO to ensure success
+    when(graphDAO.savePaperNode(any())).thenReturn(true);
 
     PaperDTO result = paperService.savePaper(testPaperDTO);
 
     assertEquals("Updated Title", result.getTitle());
     verify(paperDAO).save(testPaper);
+    verify(graphDAO).savePaperNode(any());
   }
 
   @Test
   void savePaper_Update_AddAndRemoveAuthors() {
-    // SETUP:
-    // DB Paper: ha John.
-    // DTO Update: vuole Jane (quindi rimuove John, aggiunge Jane).
 
     testPaperDTO.setId("paper-1");
     testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-jane", "Jane Smith")));
 
     when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
     when(paperDAO.save(any(Paper.class))).thenReturn(testPaper);
+    // Stub GraphDAO to ensure success
+    when(graphDAO.savePaperNode(any())).thenReturn(true);
 
-    // Esecuzione
     paperService.savePaper(testPaperDTO);
 
-    // Verifiche
-    // 1. Deve aver chiamato saveAll per aggiornare John (decremento) e Jane (incremento)
-    // Il mock intelligente di findAllById gestisce il recupero di entrambi.
     verify(authorDAO, atLeastOnce()).saveAll(any());
-
-    // Possiamo verificare logicamente che gli oggetti siano stati toccati se necessario,
-    // ma per il test di unità basta sapere che il flusso è passato di lì.
+    verify(graphDAO).savePaperNode(any());
   }
 
   @Test
@@ -208,8 +199,6 @@ class PaperServiceImplTest {
 
     assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
   }
-
-  // --- READ TESTS ---
 
   @Test
   void getPaperById_Success() {
@@ -238,17 +227,15 @@ class PaperServiceImplTest {
     assertEquals(1, result.getTotalElements());
   }
 
-  // --- DELETE TESTS ---
-
   @Test
   void deletePaper_Success() {
-    // Il paper ha autori (John), quindi il delete deve scatenare updateAuthorsRemovePaper
+
     when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
 
     paperService.deletePaper("paper-1");
 
     verify(paperDAO).delete(testPaper);
-    // Deve chiamare findAllById per trovare John e decrementare il count
+
     verify(authorDAO, atLeastOnce()).findAllById(any());
     verify(authorDAO, atLeastOnce()).saveAll(any());
   }

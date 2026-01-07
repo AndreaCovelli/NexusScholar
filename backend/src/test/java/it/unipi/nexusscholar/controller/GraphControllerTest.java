@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -76,21 +77,21 @@ class GraphControllerTest {
     mockMvc
         .perform(get("/api/graph/analysis/leidenCommunities"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].communityId").value(1))
-        .andExpect(jsonPath("$[0].authors[0]").value("Author1"));
+        .andExpect(jsonPath("$.content[0].communityId").value(1))
+        .andExpect(jsonPath("$.content[0].authors[0]").value("Author1"));
   }
 
   @Test
   void callBetweenness_ReturnsOk() throws Exception {
     BetweennessDTO betweenness = new BetweennessDTO("Hub Paper", 1523.45);
     List<BetweennessDTO> betweennesses = List.of(betweenness);
-    when(graphService.betweenness(PageRequest.of(0, 20)))
+    when(graphService.betweenness(any(Pageable.class)))
         .thenReturn(new PageImpl<>(betweennesses, PageRequest.of(0, 20), betweennesses.size()));
 
     mockMvc
         .perform(get("/api/graph/analysis/betweenness"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].paperTitle").value("Hub Paper"))
-        .andExpect(jsonPath("$[0].betweenness").value(1523.45));
+        .andExpect(jsonPath("$.content[0].paperTitle").value("Hub Paper"))
+        .andExpect(jsonPath("$.content[0].betweenness").value(1523.45));
   }
 }

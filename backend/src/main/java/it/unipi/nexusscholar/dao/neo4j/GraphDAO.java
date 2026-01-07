@@ -51,12 +51,12 @@ public class GraphDAO {
             tx -> {
               tx.run(
                   """
-                                            CALL gds.graph.project(
-                                            'paperCitations',
-                                            'Paper',
-                                            'CITES'
-                                            );
-                                            """);
+                                    CALL gds.graph.project(
+                                      'paperCitations',
+                                      'Paper',
+                                      'CITES'
+                                    );
+                                    """);
             });
       }
 
@@ -66,12 +66,12 @@ public class GraphDAO {
                 Result res =
                     tx.run(
                         """
-                                                        CALL gds.pageRank.stream('paperCitations')
-                                                        YIELD nodeId,score
-                                                        RETURN gds.util.asNode(nodeId).title as title, round(score,4) as rank
-                                                        ORDER BY score DESC
-                                                        SKIP $s
-                                                        LIMIT $l;""",
+                                                CALL gds.pageRank.stream('paperCitations')
+                                                YIELD nodeId,score
+                                                RETURN gds.util.asNode(nodeId).title as title, round(score,4) as rank
+                                                ORDER BY score DESC
+                                                SKIP $s
+                                                LIMIT $l;""",
                         Map.of("s", skip, "l", limit));
                 return res.list();
               });
@@ -98,24 +98,26 @@ public class GraphDAO {
             tx -> {
               tx.run(
                   """
-                                                            CALL gds.graph.project(
-                                                            'paperCitations',
-                                                            'Paper',
-                                                            'CITES'
-                                                            );
-                                                            """);
+                                    CALL gds.graph.project(
+                                      'paperCitations',
+                                      'Paper',
+                                      'CITES'
+                                    );
+                                    """);
             });
       }
 
       return session.executeRead(
           tx -> {
+            // FIX: Use gds.graph.list to get metadata count instead of invalid stream yield
             Result res =
                 tx.run(
                     """
-                                                                              CALL gds.pageRank.stream('paperCitations')
-                                                                              YIELD nodeCount
-                                                                              RETURN nodeCount;""");
-            return res.single().get("nodeCount").asInt();
+                                        CALL gds.graph.list('paperCitations')
+                                        YIELD nodeCount
+                                        RETURN nodeCount;
+                                        """);
+            return res.hasNext() ? res.single().get("nodeCount").asInt() : 0;
           });
 
     } catch (Exception e) {
@@ -167,16 +169,16 @@ public class GraphDAO {
             tx.run("CALL gds.graph.drop('coAuthors', false)");
             tx.run(
                 """
-                                                 CALL gds.graph.project(
-                                                     'coAuthors',
-                                                     ['Author', 'Paper'],
-                                                     {
-                                                         AUTHORED: {
-                                                             orientation: 'UNDIRECTED'
-                                                         }
-                                                     }
-                                                 )
-                                                 """);
+                                 CALL gds.graph.project(
+                                     'coAuthors',
+                                     ['Author', 'Paper'],
+                                     {
+                                         AUTHORED: {
+                                             orientation: 'UNDIRECTED'
+                                         }
+                                     }
+                                 )
+                                 """);
           });
 
       // 2. Stream Leiden results
@@ -187,18 +189,18 @@ public class GraphDAO {
                 Result r =
                     tx.run(
                         """
-                                                                         CALL gds.leiden.stream(
-                                                                             'coAuthors',
-                                                                             {
-                                                                                 randomSeed: 42
-                                                                             }
-                                                                         )
-                                                                         YIELD nodeId, communityId
-                                                                         WITH communityId, gds.util.asNode(nodeId) as node
-                                                                         WHERE node:Author
-                                                                         RETURN communityId,
-                                                                                node.name as name
-                                                                         """);
+                                                 CALL gds.leiden.stream(
+                                                     'coAuthors',
+                                                     {
+                                                         randomSeed: 42
+                                                     }
+                                                 )
+                                                 YIELD nodeId, communityId
+                                                 WITH communityId, gds.util.asNode(nodeId) as node
+                                                 WHERE node:Author
+                                                 RETURN communityId,
+                                                        node.name as name
+                                                 """);
                 return r.list();
               });
 
@@ -222,19 +224,15 @@ public class GraphDAO {
     try (Session session = driver.session()) {
       return session.executeRead(
           tx -> {
+            // FIX: Use gds.graph.list to get metadata count
             Result r =
                 tx.run(
                     """
-                                              CALL gds.leiden.stream(
-                                                  'coAuthors',
-                                                  {
-                                                      randomSeed: 42
-                                                  }
-                                              )
-                                              YIELD nodeCount
-                                              RETURN nodeCount;
-                                              """);
-            return r.single().get("nodeCount").asInt();
+                                        CALL gds.graph.list('coAuthors')
+                                        YIELD nodeCount
+                                        RETURN nodeCount;
+                                        """);
+            return r.hasNext() ? r.single().get("nodeCount").asInt() : 0;
           });
     } catch (Exception e) {
       log.error("Count for leiden not achievable");
@@ -259,12 +257,12 @@ public class GraphDAO {
             tx -> {
               tx.run(
                   """
-                                      CALL gds.graph.project(
-                                          'paperCitations',
-                                          'Paper',
-                                          'CITES'
-                                      )
-                                  """);
+                                    CALL gds.graph.project(
+                                        'paperCitations',
+                                        'Paper',
+                                        'CITES'
+                                    )
+                                    """);
             });
       }
 
@@ -275,10 +273,10 @@ public class GraphDAO {
                 Result res =
                     tx.run(
                         """
-                                        CALL gds.graph.list('paperCitations')
-                                        YIELD nodeCount, relationshipCount
-                                        RETURN nodeCount, relationshipCount
-                                    """);
+                                                CALL gds.graph.list('paperCitations')
+                                                YIELD nodeCount, relationshipCount
+                                                RETURN nodeCount, relationshipCount
+                                                """);
                 return res.hasNext() ? res.single() : null;
               });
 
@@ -294,16 +292,16 @@ public class GraphDAO {
                 Result res =
                     tx.run(
                         """
-                                        CALL gds.betweenness.stream('paperCitations', {
-                                            samplingSize: 1000,
-                                            samplingSeed: 42
-                                        })
-                                        YIELD nodeId, score
-                                        RETURN gds.util.asNode(nodeId).title AS title,
-                                               round(score, 4) AS betweenness
-                                        ORDER BY score DESC
-                                        LIMIT 100
-                                    """);
+                                                CALL gds.betweenness.stream('paperCitations', {
+                                                    samplingSize: 1000,
+                                                    samplingSeed: 42
+                                                })
+                                                YIELD nodeId, score
+                                                RETURN gds.util.asNode(nodeId).title AS title,
+                                                       round(score, 4) AS betweenness
+                                                ORDER BY score DESC
+                                                LIMIT 100
+                                                """);
                 return res.list();
               });
 
@@ -314,28 +312,28 @@ public class GraphDAO {
     }
   }
 
-  public int betwennessCount() {
+  public int betweennessCount() {
     try (Session session = driver.session()) {
       return session.executeRead(
           tx -> {
+            // FIX: Use gds.graph.list to get metadata count.
+            // Also fixed method name typo (betwenness -> betweenness)
             Result res =
                 tx.run(
                     """
-                                                      CALL gds.betweenness.stream('paperCitations', {
-                                                          samplingSize: 1000,
-                                                          samplingSeed: 42
-                                                      })
-                                                      YIELD nodeCount
-                                                      RETURN nodeCount;
-                                                      LIMIT 100
-                                                  """);
-            return res.single().get("nodeCount").asInt();
+                                        CALL gds.graph.list('paperCitations')
+                                        YIELD nodeCount
+                                        RETURN nodeCount;
+                                        """);
+            return res.hasNext() ? res.single().get("nodeCount").asInt() : 0;
           });
+    } catch (Exception e) {
+      log.error("Count for betweenness not achievable", e);
+      return -1;
     }
   }
 
   public boolean savePaperNode(PaperDTO p) {
-
     if (p == null || p.getId() == null) return false;
 
     try (Session session = driver.session()) {
@@ -343,24 +341,26 @@ public class GraphDAO {
           tx -> {
             tx.run(
                 """
-                        MERGE (p:Paper{paperID:$paperID})
-                        SET p.title = $title
-                        WITH p
-                        OPTIONAL MATCH p <- [r:AUTHORED] - (:Author)
-                        DELETE r
-                        WITH p
-                        UNWIND $authors as author
-                        MERGE (a:Author{id:author.id}
-                        ON CREATE SET a.name = author.name
-                        MERGE (p:Paper <- [:AUTHORED] - author:Author)
-                        """,
+                                MERGE (p:Paper{paperID:$paperID})
+                                SET p.title = $title
+                                WITH p
+                                OPTIONAL MATCH p <- [r:AUTHORED] - (:Author)
+                                DELETE r
+                                WITH p
+                                UNWIND $authors as author
+                                MERGE (a:Author{id:author.id}
+                                ON CREATE SET a.name = author.name
+                                MERGE (p:Paper <- [:AUTHORED] - author:Author)
+                                """,
                 Map.of(
-                    "paperID", p.getId(),
-                    "title", p.getTitle(),
+                    "paperID",
+                    p.getId(),
+                    "title",
+                    p.getTitle(),
                     "authors",
-                        p.getAuthors().stream()
-                            .map(a -> Map.of("id", a.getId(), "name", a.getName()))
-                            .toList()));
+                    p.getAuthors().stream()
+                        .map(a -> Map.of("id", a.getId(), "name", a.getName()))
+                        .toList()));
           });
 
       return true;

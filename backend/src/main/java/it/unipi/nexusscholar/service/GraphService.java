@@ -85,7 +85,7 @@ public class GraphService {
     try {
       List<BetweennessDTO> res =
           graphDAO.betweennessAlg().stream().map(this::toBetweennessDTO).toList();
-      return new PageImpl<>(res, pageable, graphDAO.betwennessCount());
+      return new PageImpl<>(res, pageable, graphDAO.betweennessCount());
     } catch (Exception e) {
       log.error("Betweenness calculation failed", e);
       return Page.empty(pageable);
