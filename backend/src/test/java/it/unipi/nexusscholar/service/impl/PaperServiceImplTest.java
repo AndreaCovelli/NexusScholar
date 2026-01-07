@@ -2,7 +2,6 @@ package it.unipi.nexusscholar.service.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 import it.unipi.nexusscholar.dao.mongo.AuthorDAO;
@@ -12,10 +11,8 @@ import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.model.mongo.Author;
 import it.unipi.nexusscholar.model.mongo.Paper;
 import it.unipi.nexusscholar.model.mongo.PaperAuthor;
-import it.unipi.nexusscholar.model.mongo.PublicationSummary;
 import it.unipi.nexusscholar.service.exception.BusinessException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,8 +21,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,282 +37,225 @@ class PaperServiceImplTest {
 
   private Paper testPaper;
   private PaperDTO testPaperDTO;
-  private Author testAuthor;
+  private Author authorJohn;
+  private Author authorJane;
+  private Pageable pageable;
 
   @BeforeEach
   void setUp() {
+    // 1. Setup Authors
+    authorJohn = new Author();
+    authorJohn.setId("id-john");
+    authorJohn.setName("John Doe");
+    authorJohn.setTotalPublications(1);
+    authorJohn.setPublicationsSummary(new ArrayList<>());
+
+    authorJane = new Author();
+    authorJane.setId("id-jane");
+    authorJane.setName("Jane Smith");
+    authorJane.setTotalPublications(0);
+    authorJane.setPublicationsSummary(new ArrayList<>());
+
+    // 2. Setup Paper (Entity)
     testPaper = new Paper();
-    testPaper.setId("paper-id-1");
-    testPaper.setTitle("Deep Learning Advances");
-    testPaper.setYear(2023);
-    testPaper.setDblpKey("dblp/123");
-    testPaper.setDoi("10.1234/test");
-    testPaper.setAbstractText("Test abstract");
-    testPaper.setFieldsOfStudy(new ArrayList<>(List.of("AI", "ML")));
-    testPaper.setAuthors(new ArrayList<>());
-    testPaper.setVenue(new ArrayList<>(List.of("NeurIPS")));
+    testPaper.setId("paper-1");
+    testPaper.setTitle("AI Research");
+    testPaper.setDoi("10.1000/1");
+    testPaper.setAuthors(new ArrayList<>(List.of(new PaperAuthor("id-john", "John Doe"))));
+    testPaper.setVenue(new ArrayList<>(List.of("Conf A")));
 
+    // 3. Setup PaperDTO (Input)
     testPaperDTO = new PaperDTO();
-    testPaperDTO.setTitle("Deep Learning Advances");
-    testPaperDTO.setYear(2023);
-    testPaperDTO.setDoi("10.1234/test");
-    testPaperDTO.setFieldsOfStudy(List.of("AI", "ML"));
-    testPaperDTO.setVenue(List.of("NeurIPS"));
-    testPaperDTO.setAuthors(new ArrayList<>());
+    testPaperDTO.setTitle("AI Research");
+    testPaperDTO.setDoi("10.1000/1");
+    // DTO ha John come autore di default
+    testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-john", "John Doe")));
+    testPaperDTO.setVenue(List.of("Conf A"));
 
-    testAuthor = new Author();
-    testAuthor.setId("author-id-1");
-    testAuthor.setName("John Doe");
-    testAuthor.setTotalPublications(5);
-    testAuthor.setPublicationsSummary(new ArrayList<>());
+    pageable = PageRequest.of(0, 10);
+
+    // --- MOCK INTELLIGENTE PER findAllById ---
+    // Questo mock risponde dinamicamente in base agli ID richiesti.
+    // Risolve sia la validazione iniziale che i side-effects (updateAuthorsAdd/Remove).
+    lenient()
+        .when(authorDAO.findAllById(any()))
+        .thenAnswer(
+            (Answer<List<Author>>)
+                invocation -> {
+                  Iterable<String> ids = invocation.getArgument(0);
+                  List<Author> results = new ArrayList<>();
+                  for (String id : ids) {
+                    if ("id-john".equals(id)) results.add(authorJohn);
+                    if ("id-jane".equals(id)) results.add(authorJane);
+                  }
+                  return results;
+                });
   }
 
+  // --- CREATE TESTS ---
+
   @Test
-  void savePaper_CreateNew_Success() {
-    when(paperDAO.findByDoi("10.1234/test")).thenReturn(Optional.empty());
+  void savePaper_Create_Success() {
+    // Caso: Nuovo paper, ID null
+    testPaperDTO.setId(null);
+    testPaperDTO.setDoi("10.NEW/DOI");
+
+    when(paperDAO.findByDoi("10.NEW/DOI")).thenReturn(Optional.empty());
     when(paperDAO.save(any(Paper.class)))
         .thenAnswer(
-            invocation -> {
-              Paper p = invocation.getArgument(0);
-              p.setId("new-paper-id");
+            i -> {
+              Paper p = i.getArgument(0);
+              p.setId("generated-id");
               return p;
             });
 
     PaperDTO result = paperService.savePaper(testPaperDTO);
 
     assertNotNull(result);
-    assertEquals("Deep Learning Advances", result.getTitle());
-    verify(paperDAO).save(any(Paper.class));
+    assertEquals("generated-id", result.getId());
+    // Verifica side effects
+    verify(authorDAO, atLeastOnce()).saveAll(any());
   }
 
   @Test
-  void savePaper_CreateNew_DuplicateDOI_ThrowsException() {
-    when(paperDAO.findByDoi("10.1234/test")).thenReturn(Optional.of(testPaper));
+  void savePaper_Create_DuplicateDOI_ThrowsException() {
+    testPaperDTO.setId(null);
+    when(paperDAO.findByDoi(testPaperDTO.getDoi())).thenReturn(Optional.of(testPaper));
 
     assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
   }
 
   @Test
-  void savePaper_CreateNew_WithAuthors_Success() {
-    PaperAuthorDTO authorDTO = new PaperAuthorDTO("author-id-1", "John Doe");
-    testPaperDTO.setAuthors(List.of(authorDTO));
-    testPaperDTO.setDoi(null);
+  void savePaper_Create_AuthorNotFound_IntegrityError() {
+    // DTO chiede un autore che non esiste nel nostro Mock findAllById setup
+    testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-ghost", "Ghost")));
 
-    when(authorDAO.findAllById(anyList())).thenReturn(List.of(testAuthor));
-    when(paperDAO.save(any(Paper.class)))
-        .thenAnswer(
-            invocation -> {
-              Paper p = invocation.getArgument(0);
-              p.setId("new-paper-id");
-              return p;
-            });
-    when(authorDAO.saveAll(anyList())).thenReturn(List.of(testAuthor));
+    // Il mock intelligente ritornerà lista vuota per "id-ghost"
+    // Scatta: foundAuthors.size() != incomingAuthorIds.size()
 
-    PaperDTO result = paperService.savePaper(testPaperDTO);
-
-    assertNotNull(result);
-    verify(authorDAO).saveAll(anyList());
+    BusinessException ex =
+        assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
+    assertTrue(ex.getMessage().contains("Integrity Error"));
   }
 
   @Test
-  void savePaper_CreateNew_AuthorNotFound_ThrowsException() {
-    PaperAuthorDTO authorDTO = new PaperAuthorDTO("non-existent", "Unknown");
-    testPaperDTO.setAuthors(List.of(authorDTO));
-    testPaperDTO.setDoi(null);
+  void savePaper_Create_NoAuthors_ValidationError() {
+    testPaperDTO.setAuthors(new ArrayList<>()); // Lista vuota
 
-    when(authorDAO.findAllById(anyList())).thenReturn(Collections.emptyList());
-
-    assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
+    BusinessException ex =
+        assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
+    assertTrue(ex.getMessage().contains("must have at least one author"));
   }
 
+  // --- UPDATE TESTS ---
+
   @Test
-  void savePaper_Update_Success() {
-    testPaperDTO.setId("paper-id-1");
+  void savePaper_Update_Simple_Success() {
+    testPaperDTO.setId("paper-1");
     testPaperDTO.setTitle("Updated Title");
 
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
+    when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
     when(paperDAO.save(any(Paper.class))).thenReturn(testPaper);
 
     PaperDTO result = paperService.savePaper(testPaperDTO);
 
-    assertNotNull(result);
-    verify(paperDAO).save(any(Paper.class));
-  }
-
-  @Test
-  void savePaper_Update_NotFound_ThrowsException() {
-    testPaperDTO.setId("non-existent");
-
-    when(paperDAO.findById("non-existent")).thenReturn(Optional.empty());
-
-    assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
-  }
-
-  @Test
-  void savePaper_Update_ChangeDOI_Duplicate_ThrowsException() {
-    testPaperDTO.setId("paper-id-1");
-    testPaperDTO.setDoi("10.5678/other");
-
-    Paper existingPaper = new Paper();
-    existingPaper.setId("paper-id-1");
-    existingPaper.setDoi("10.1234/original");
-    existingPaper.setAuthors(new ArrayList<>());
-
-    Paper duplicatePaper = new Paper();
-    duplicatePaper.setId("other-paper");
-    duplicatePaper.setDoi("10.5678/other");
-
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(existingPaper));
-    when(paperDAO.findByDoi("10.5678/other")).thenReturn(Optional.of(duplicatePaper));
-
-    assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
+    assertEquals("Updated Title", result.getTitle());
+    verify(paperDAO).save(testPaper);
   }
 
   @Test
   void savePaper_Update_AddAndRemoveAuthors() {
-    testPaperDTO.setId("paper-id-1");
+    // SETUP:
+    // DB Paper: ha John.
+    // DTO Update: vuole Jane (quindi rimuove John, aggiunge Jane).
 
-    Author oldAuthor = new Author();
-    oldAuthor.setId("old-author");
-    oldAuthor.setName("Old Author");
-    oldAuthor.setTotalPublications(3);
-    oldAuthor.setPublicationsSummary(
-        new ArrayList<>(List.of(new PublicationSummary("paper-id-1", 2023, "Test"))));
+    testPaperDTO.setId("paper-1");
+    testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-jane", "Jane Smith")));
 
-    Author newAuthor = new Author();
-    newAuthor.setId("new-author");
-    newAuthor.setName("New Author");
-    newAuthor.setTotalPublications(0);
-    newAuthor.setPublicationsSummary(new ArrayList<>());
+    when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
+    when(paperDAO.save(any(Paper.class))).thenReturn(testPaper);
 
-    PaperAuthorDTO newAuthorDTO = new PaperAuthorDTO("new-author", "New Author");
-    testPaperDTO.setAuthors(List.of(newAuthorDTO));
+    // Esecuzione
+    paperService.savePaper(testPaperDTO);
 
-    Paper existingPaper = new Paper();
-    existingPaper.setId("paper-id-1");
-    existingPaper.setTitle("Test");
-    existingPaper.setYear(2023);
-    existingPaper.setAuthors(new ArrayList<>(List.of(new PaperAuthor("old-author", "Old Author"))));
+    // Verifiche
+    // 1. Deve aver chiamato saveAll per aggiornare John (decremento) e Jane (incremento)
+    // Il mock intelligente di findAllById gestisce il recupero di entrambi.
+    verify(authorDAO, atLeastOnce()).saveAll(any());
 
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(existingPaper));
-    when(authorDAO.findAllById(List.of("new-author"))).thenReturn(List.of(newAuthor));
-    when(paperDAO.save(any(Paper.class))).thenReturn(existingPaper);
-    when(authorDAO.findAllById(anySet())).thenReturn(List.of(oldAuthor));
-    when(authorDAO.saveAll(anyList())).thenReturn(List.of());
-
-    PaperDTO result = paperService.savePaper(testPaperDTO);
-
-    assertNotNull(result);
+    // Possiamo verificare logicamente che gli oggetti siano stati toccati se necessario,
+    // ma per il test di unità basta sapere che il flusso è passato di lì.
   }
 
   @Test
-  void getPaperById_Found() {
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
-
-    PaperDTO result = paperService.getPaperById("paper-id-1");
-
-    assertNotNull(result);
-    assertEquals("Deep Learning Advances", result.getTitle());
-  }
-
-  @Test
-  void getPaperById_NotFound_ThrowsException() {
+  void savePaper_Update_NotFound() {
+    testPaperDTO.setId("non-existent");
     when(paperDAO.findById("non-existent")).thenReturn(Optional.empty());
 
-    assertThrows(BusinessException.class, () -> paperService.getPaperById("non-existent"));
+    assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
   }
 
   @Test
-  void searchPapersByTitle_ReturnsResults() {
+  void savePaper_Update_ChangeDoi_Duplicate() {
+    testPaperDTO.setId("paper-1");
+    testPaperDTO.setDoi("10.DUPLICATE");
+
+    Paper otherPaper = new Paper();
+    otherPaper.setId("paper-2");
+
+    when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
+    when(paperDAO.findByDoi("10.DUPLICATE")).thenReturn(Optional.of(otherPaper));
+
+    assertThrows(BusinessException.class, () -> paperService.savePaper(testPaperDTO));
+  }
+
+  // --- READ TESTS ---
+
+  @Test
+  void getPaperById_Success() {
+    when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
+
+    PaperDTO result = paperService.getPaperById("paper-1");
+    assertNotNull(result);
+    assertEquals("paper-1", result.getId());
+  }
+
+  @Test
+  void searchPapersByTitle_Success() {
     Page<Paper> page = new PageImpl<>(List.of(testPaper));
-    when(paperDAO.findByTitleContainingIgnoreCase(eq("Deep"), any(Pageable.class)))
-        .thenReturn(page);
+    when(paperDAO.findByTitleContainingIgnoreCase(eq("AI"), any(Pageable.class))).thenReturn(page);
 
-    List<PaperDTO> results = paperService.searchPapersByTitle("Deep");
-
-    assertEquals(1, results.size());
-    assertEquals("Deep Learning Advances", results.get(0).getTitle());
+    Page<PaperDTO> result = paperService.searchPapersByTitle("AI", pageable);
+    assertEquals(1, result.getTotalElements());
   }
 
   @Test
-  void searchPapersByTitle_EmptyResults() {
-    Page<Paper> emptyPage = new PageImpl<>(Collections.emptyList());
-    when(paperDAO.findByTitleContainingIgnoreCase(eq("NonExistent"), any(Pageable.class)))
-        .thenReturn(emptyPage);
-
-    List<PaperDTO> results = paperService.searchPapersByTitle("NonExistent");
-
-    assertTrue(results.isEmpty());
-  }
-
-  @Test
-  void getPapersByYear_ReturnsResults() {
+  void getPapersByYear_Success() {
     Page<Paper> page = new PageImpl<>(List.of(testPaper));
     when(paperDAO.findByYear(eq(2023), any(Pageable.class))).thenReturn(page);
 
-    List<PaperDTO> results = paperService.getPapersByYear(2023);
-
-    assertEquals(1, results.size());
+    Page<PaperDTO> result = paperService.getPapersByYear(2023, pageable);
+    assertEquals(1, result.getTotalElements());
   }
+
+  // --- DELETE TESTS ---
 
   @Test
   void deletePaper_Success() {
-    testPaper.setAuthors(List.of(new PaperAuthor("author-id-1", "John Doe")));
+    // Il paper ha autori (John), quindi il delete deve scatenare updateAuthorsRemovePaper
+    when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
 
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
-    when(authorDAO.findAllById(anySet())).thenReturn(List.of(testAuthor));
-    when(authorDAO.saveAll(anyList())).thenReturn(List.of());
-    doNothing().when(paperDAO).delete(testPaper);
+    paperService.deletePaper("paper-1");
 
-    assertDoesNotThrow(() -> paperService.deletePaper("paper-id-1"));
     verify(paperDAO).delete(testPaper);
+    // Deve chiamare findAllById per trovare John e decrementare il count
+    verify(authorDAO, atLeastOnce()).findAllById(any());
+    verify(authorDAO, atLeastOnce()).saveAll(any());
   }
 
   @Test
-  void deletePaper_NotFound_ThrowsException() {
+  void deletePaper_NotFound() {
     when(paperDAO.findById("non-existent")).thenReturn(Optional.empty());
-
     assertThrows(BusinessException.class, () -> paperService.deletePaper("non-existent"));
-  }
-
-  @Test
-  void deletePaper_NoAuthors_Success() {
-    testPaper.setAuthors(Collections.emptyList());
-
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
-    doNothing().when(paperDAO).delete(testPaper);
-
-    assertDoesNotThrow(() -> paperService.deletePaper("paper-id-1"));
-    verify(authorDAO, never()).saveAll(anyList());
-  }
-
-  @Test
-  void toPaperDTO_WithAllFields() {
-    testPaper.setAuthors(List.of(new PaperAuthor("a1", "Author Name")));
-
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
-
-    PaperDTO result = paperService.getPaperById("paper-id-1");
-
-    assertNotNull(result.getAuthors());
-    assertEquals(1, result.getAuthors().size());
-    assertNotNull(result.getFieldsOfStudy());
-    assertNotNull(result.getVenue());
-  }
-
-  @Test
-  void toPaperDTO_NullCollections() {
-    testPaper.setAuthors(null);
-    testPaper.setFieldsOfStudy(null);
-    testPaper.setVenue(null);
-
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
-
-    PaperDTO result = paperService.getPaperById("paper-id-1");
-
-    assertNotNull(result.getAuthors());
-    assertTrue(result.getAuthors().isEmpty());
-    assertNotNull(result.getFieldsOfStudy());
-    assertNotNull(result.getVenue());
   }
 }

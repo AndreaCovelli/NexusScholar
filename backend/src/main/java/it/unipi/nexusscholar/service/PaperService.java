@@ -1,7 +1,8 @@
 package it.unipi.nexusscholar.service;
 
 import it.unipi.nexusscholar.dto.mongo.PaperDTO;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Service interface for managing Paper entities. Handles CRUD operations and maintains
@@ -18,23 +19,17 @@ public interface PaperService {
    * <p>Integrity Checks & Side Effects: - All authors referenced must already exist in the
    * database. - Automatically updates totalPublications and publicationSummary for linked authors.
    * - DOI uniqueness is enforced (if provided).
-   *
-   * @throws BusinessException if validation fails
    */
   PaperDTO savePaper(PaperDTO paperDTO);
 
-  /**
-   * Retrieves a paper by its MongoDB ID.
-   *
-   * @throws BusinessException if paper not found
-   */
+  /** Retrieves a paper by its MongoDB ID. */
   PaperDTO getPaperById(String id);
 
-  /** Searches papers by title (case-insensitive partial match). */
-  List<PaperDTO> searchPapersByTitle(String title);
+  /** * Searches papers by title (case-insensitive partial match). Supports pagination. */
+  Page<PaperDTO> searchPapersByTitle(String title, Pageable pageable);
 
-  /** Retrieves papers published in a specific year. */
-  List<PaperDTO> getPapersByYear(Integer year);
+  /** * Retrieves papers published in a specific year. Supports pagination. */
+  Page<PaperDTO> getPapersByYear(Integer year, Pageable pageable);
 
   /**
    * Deletes a paper by ID. Side Effects: Removes paper from all associated authors' publication

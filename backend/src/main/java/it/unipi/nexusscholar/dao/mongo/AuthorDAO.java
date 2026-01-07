@@ -1,8 +1,9 @@
 package it.unipi.nexusscholar.dao.mongo;
 
 import it.unipi.nexusscholar.model.mongo.Author;
-import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,5 +21,7 @@ public interface AuthorDAO extends MongoRepository<Author, String> {
   Optional<Author> findByS2AuthorId(String s2AuthorId);
 
   /** Case-insensitive partial name search. Enables author discovery by name fragment. */
-  List<Author> findByNameContainingIgnoreCase(String name);
+  Page<Author> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+  Page<Author> findByTotalPublicationsGreaterThan(Integer totalPublications, Pageable pageable);
 }

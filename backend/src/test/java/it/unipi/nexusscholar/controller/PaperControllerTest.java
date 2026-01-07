@@ -1,6 +1,7 @@
 package it.unipi.nexusscholar.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -8,11 +9,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.service.PaperService;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -64,17 +67,26 @@ class PaperControllerTest {
     PaperDTO paperDTO = new PaperDTO();
     paperDTO.setTitle("Deep Learning");
 
-    when(paperService.searchPapersByTitle("Deep")).thenReturn(List.of(paperDTO));
+    // Wrap the result in a Page object
+    Page<PaperDTO> page = new PageImpl<>(List.of(paperDTO));
+
+    // Match the method signature: (String, Pageable)
+    when(paperService.searchPapersByTitle(eq("Deep"), any(Pageable.class))).thenReturn(page);
 
     mockMvc
-        .perform(get("/api/papers/search").param("title", "Deep"))
+        .perform(
+            get("/api/papers/search").param("title", "Deep").param("page", "0").param("size", "10"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].title").value("Deep Learning"));
+        // JSON structure changes: items are now inside "content"
+        .andExpect(jsonPath("$.content[0].title").value("Deep Learning"))
+        .andExpect(jsonPath("$.totalElements").value(1));
   }
 
   @Test
   void searchPapersByTitle_EmptyResults_ReturnsNoContent() throws Exception {
-    when(paperService.searchPapersByTitle("NonExistent")).thenReturn(Collections.emptyList());
+    // Return an empty Page
+    when(paperService.searchPapersByTitle(eq("NonExistent"), any(Pageable.class)))
+        .thenReturn(Page.empty());
 
     mockMvc
         .perform(get("/api/papers/search").param("title", "NonExistent"))
@@ -87,17 +99,19 @@ class PaperControllerTest {
     paperDTO.setTitle("Paper 2023");
     paperDTO.setYear(2023);
 
-    when(paperService.getPapersByYear(2023)).thenReturn(List.of(paperDTO));
+    Page<PaperDTO> page = new PageImpl<>(List.of(paperDTO));
+
+    when(paperService.getPapersByYear(eq(2023), any(Pageable.class))).thenReturn(page);
 
     mockMvc
         .perform(get("/api/papers/year/2023"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].year").value(2023));
+        .andExpect(jsonPath("$.content[0].year").value(2023));
   }
 
   @Test
   void getPapersByYear_EmptyResults_ReturnsNoContent() throws Exception {
-    when(paperService.getPapersByYear(1900)).thenReturn(Collections.emptyList());
+    when(paperService.getPapersByYear(eq(1900), any(Pageable.class))).thenReturn(Page.empty());
 
     mockMvc.perform(get("/api/papers/year/1900")).andExpect(status().isNoContent());
   }

@@ -15,7 +15,6 @@ import it.unipi.nexusscholar.model.mongo.PublicationSummary;
 import it.unipi.nexusscholar.service.exception.BusinessException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +23,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class AuthorServiceImplTest {
@@ -36,6 +39,7 @@ class AuthorServiceImplTest {
   private Author testAuthor;
   private AuthorDTO testAuthorDTO;
   private Paper testPaper;
+  private Pageable pageable;
 
   @BeforeEach
   void setUp() {
@@ -58,7 +62,11 @@ class AuthorServiceImplTest {
     testPaper.setTitle("Test Paper");
     testPaper.setYear(2023);
     testPaper.setAuthors(new ArrayList<>());
+
+    pageable = PageRequest.of(0, 10);
   }
+
+  // --- SAVE TESTS ---
 
   @Test
   void saveAuthor_CreateNewAuthor_Success() {
@@ -94,6 +102,7 @@ class AuthorServiceImplTest {
 
   @Test
   void saveAuthor_CreateNewAuthor_WithPublications_ThrowsException() {
+    // New authors cannot have history on creation rule
     AuthorDTO newAuthorDTO = new AuthorDTO();
     newAuthorDTO.setS2AuthorId("s2-new");
     newAuthorDTO.setPublicationsSummary(List.of(new PublicationSummaryDTO("p1", 2023, "Title")));
@@ -109,12 +118,27 @@ class AuthorServiceImplTest {
     testAuthorDTO.setPublicationsSummary(null);
 
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
+    // S2 ID check
+    // Assuming S2 ID hasn't changed, strictly implies equality check inside service
+
     when(authorDAO.save(any(Author.class))).thenReturn(testAuthor);
 
     AuthorDTO result = authorService.saveAuthor(testAuthorDTO);
 
     assertNotNull(result);
     verify(authorDAO).save(any(Author.class));
+  }
+
+  @Test
+  void saveAuthor_UpdateExistingAuthor_S2Conflict_ThrowsException() {
+    // Simulate changing S2 ID to one that already exists
+    testAuthorDTO.setS2AuthorId("s2-conflict");
+
+    when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
+    when(authorDAO.findByS2AuthorId("s2-conflict"))
+        .thenReturn(Optional.of(new Author())); // Another author
+
+    assertThrows(BusinessException.class, () -> authorService.saveAuthor(testAuthorDTO));
   }
 
   @Test
@@ -133,6 +157,7 @@ class AuthorServiceImplTest {
 
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
     when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
+    // Add author to paper side effect
     when(paperDAO.save(any(Paper.class))).thenReturn(testPaper);
     when(authorDAO.save(any(Author.class))).thenReturn(testAuthor);
 
@@ -143,14 +168,14 @@ class AuthorServiceImplTest {
   }
 
   @Test
-  void saveAuthor_UpdateWithDuplicatePaper_ThrowsException() {
+  void saveAuthor_UpdateWithDuplicatePaperInRequest_ThrowsException() {
     PublicationSummaryDTO pub1 = new PublicationSummaryDTO("paper-id-1", 2023, "Test");
     PublicationSummaryDTO pub2 = new PublicationSummaryDTO("paper-id-1", 2023, "Test");
     testAuthorDTO.setPublicationsSummary(Arrays.asList(pub1, pub2));
 
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
-    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
 
+    // The service now checks for duplicates in the incoming list itself
     assertThrows(BusinessException.class, () -> authorService.saveAuthor(testAuthorDTO));
   }
 
@@ -167,12 +192,14 @@ class AuthorServiceImplTest {
 
   @Test
   void saveAuthor_AddAuthorToPaper_AuthorAlreadyInPaper() {
+    // Setup paper that already has this author
     testPaper.setAuthors(new ArrayList<>(List.of(new PaperAuthor("author-id-1", "John Doe"))));
+
     PublicationSummaryDTO pubDTO = new PublicationSummaryDTO("paper-id-1", 2023, "Test");
     testAuthorDTO.setPublicationsSummary(List.of(pubDTO));
 
-    PublicationSummary existingSummary = new PublicationSummary("paper-id-1", 2023, "Test");
-    testAuthor.setPublicationsSummary(new ArrayList<>(List.of(existingSummary)));
+    // Author currently has no papers, adding this one
+    testAuthor.setPublicationsSummary(new ArrayList<>());
 
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
     when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
@@ -181,8 +208,11 @@ class AuthorServiceImplTest {
     AuthorDTO result = authorService.saveAuthor(testAuthorDTO);
 
     assertNotNull(result);
+    // Should NOT save the paper again since author was already there
     verify(paperDAO, never()).save(any(Paper.class));
   }
+
+  // --- READ TESTS ---
 
   @Test
   void getAuthorByS2Id_Found_Success() {
@@ -203,20 +233,24 @@ class AuthorServiceImplTest {
 
   @Test
   void searchAuthorsByName_ReturnsResults() {
-    when(authorDAO.findByNameContainingIgnoreCase("John")).thenReturn(List.of(testAuthor));
+    // Return a Page<Author> instead of List<Author>
+    Page<Author> page = new PageImpl<>(List.of(testAuthor));
 
-    List<AuthorDTO> results = authorService.searchAuthorsByName("John");
+    when(authorDAO.findByNameContainingIgnoreCase(eq("John"), any(Pageable.class)))
+        .thenReturn(page);
 
-    assertEquals(1, results.size());
-    assertEquals("John Doe", results.get(0).getName());
+    Page<AuthorDTO> results = authorService.searchAuthorsByName("John", pageable);
+
+    assertEquals(1, results.getTotalElements());
+    assertEquals("John Doe", results.getContent().get(0).getName());
   }
 
   @Test
   void searchAuthorsByName_EmptyResults() {
-    when(authorDAO.findByNameContainingIgnoreCase("NonExistent"))
-        .thenReturn(Collections.emptyList());
+    when(authorDAO.findByNameContainingIgnoreCase(eq("NonExistent"), any(Pageable.class)))
+        .thenReturn(Page.empty());
 
-    List<AuthorDTO> results = authorService.searchAuthorsByName("NonExistent");
+    Page<AuthorDTO> results = authorService.searchAuthorsByName("NonExistent", pageable);
 
     assertTrue(results.isEmpty());
   }
@@ -228,48 +262,64 @@ class AuthorServiceImplTest {
     author1.setName("Prolific Author");
     author1.setTotalPublications(10);
 
-    Author author2 = new Author();
-    author2.setId("a2");
-    author2.setName("Less Prolific");
-    author2.setTotalPublications(2);
+    Page<Author> page = new PageImpl<>(List.of(author1));
 
-    when(authorDAO.findAll()).thenReturn(Arrays.asList(author1, author2));
+    // Note: The DAO method name is findByTotalPublicationsGreaterThan
+    when(authorDAO.findByTotalPublicationsGreaterThan(eq(5), any(Pageable.class))).thenReturn(page);
 
-    List<AuthorDTO> results = authorService.getAuthorsWithMinPublications(5);
+    Page<AuthorDTO> results = authorService.getAuthorsWithMinPublications(5, pageable);
 
-    assertEquals(1, results.size());
-    assertEquals("Prolific Author", results.get(0).getName());
+    assertEquals(1, results.getTotalElements());
+    assertEquals("Prolific Author", results.getContent().get(0).getName());
   }
 
-  @Test
-  void getAuthorsWithMinPublications_NullPublications() {
-    Author author = new Author();
-    author.setId("a1");
-    author.setName("Author");
-    author.setTotalPublications(null);
-
-    when(authorDAO.findAll()).thenReturn(List.of(author));
-
-    List<AuthorDTO> results = authorService.getAuthorsWithMinPublications(5);
-
-    assertTrue(results.isEmpty());
-  }
+  // --- DELETE TESTS ---
 
   @Test
-  void deleteAuthorByS2Id_Success() {
-    when(authorDAO.findByS2AuthorId("s2-123")).thenReturn(Optional.of(testAuthor));
+  void deleteAuthorById_Success() {
+    // Use deleteAuthorById as per interface
+    when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
     doNothing().when(authorDAO).delete(testAuthor);
 
-    assertDoesNotThrow(() -> authorService.deleteAuthorByS2Id("s2-123"));
+    assertDoesNotThrow(() -> authorService.deleteAuthorById("author-id-1"));
+
+    // Verify cascading logic calls (removing from papers)
+    // Since testAuthor has empty publications, loop inside performDelete won't run,
+    // but the main delete is verified.
     verify(authorDAO).delete(testAuthor);
   }
 
   @Test
-  void deleteAuthorByS2Id_NotFound_ThrowsException() {
-    when(authorDAO.findByS2AuthorId("non-existent")).thenReturn(Optional.empty());
+  void deleteAuthorById_WithPublications_CascadesDelete() {
+    // Setup author with 1 paper
+    PublicationSummary pub = new PublicationSummary("paper-id-1", 2023, "Title");
+    testAuthor.setPublicationsSummary(List.of(pub));
 
-    assertThrows(BusinessException.class, () -> authorService.deleteAuthorByS2Id("non-existent"));
+    // Setup the paper
+    Paper paper = new Paper();
+    paper.setId("paper-id-1");
+    paper.setAuthors(new ArrayList<>(List.of(new PaperAuthor("author-id-1", "John"))));
+
+    when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
+    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(paper));
+
+    // Case: removing last author triggers paper deletion
+    doNothing().when(paperDAO).delete(paper);
+
+    authorService.deleteAuthorById("author-id-1");
+
+    verify(paperDAO).delete(paper); // Orphaned paper rule
+    verify(authorDAO).delete(testAuthor);
   }
+
+  @Test
+  void deleteAuthorById_NotFound_ThrowsException() {
+    when(authorDAO.findById("non-existent")).thenReturn(Optional.empty());
+
+    assertThrows(BusinessException.class, () -> authorService.deleteAuthorById("non-existent"));
+  }
+
+  // --- MAPPING TESTS ---
 
   @Test
   void toAuthorDTO_WithPublicationsSummary() {
