@@ -30,7 +30,6 @@ public interface AuthorService {
      *
      * @param authorDTO The author data transfer object.
      * @return The saved AuthorDTO.
-     * @throws it.unipi.nexusscholar.exception.BusinessException if validation fails.
      */
     AuthorDTO saveAuthor(AuthorDTO authorDTO);
 
@@ -39,7 +38,6 @@ public interface AuthorService {
      *
      * @param s2AuthorId The Semantic Scholar ID.
      * @return The requested AuthorDTO.
-     * @throws it.unipi.nexusscholar.exception.BusinessException if author is not found.
      */
     AuthorDTO getAuthorByS2Id(String s2AuthorId);
 
@@ -71,7 +69,6 @@ public interface AuthorService {
      * </ul>
      *
      * @param id The internal MongoDB ID of the author.
-     * @throws it.unipi.nexusscholar.exception.BusinessException if author is not found.
      */
     void deleteAuthorById(String id);
 }
