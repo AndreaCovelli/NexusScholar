@@ -59,7 +59,7 @@ docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mon
 
 #Importing registered User
 echo "   Importing registered Users..."
-docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection registeredUsers --file /import/registeredUsers.jsonl --drop
+docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection registeredUser --file /import/registeredUsers.jsonl --drop
 
 #Importing admin
 echo "   Importing Admins..."
