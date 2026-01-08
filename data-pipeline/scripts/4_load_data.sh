@@ -57,6 +57,15 @@ docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mon
 echo "   Importing Papers (This might take a while)..."
 docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection papers --file /import/papers.jsonl --drop
 
+#Importing registered User
+echo "   Importing registered Users..."
+docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection users --file /import/registeredUsers.jsonl --drop
+
+#Importing admin
+echo "   Importing Admins..."
+docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection admins --file /import/admins.jsonl --drop
+
+
 echo "MongoDB import complete."
 
 

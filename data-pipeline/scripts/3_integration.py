@@ -2,6 +2,10 @@ import sqlite3
 import json
 import csv
 import os
+import random
+import string
+import bcrypt
+from datetime import datetime,timedelta
 
 # --- CONFIGURATION ---
 DB_PATH = 'enrichment_cache.db'
@@ -9,7 +13,11 @@ INPUT_JSONL = 'dblp_ai_ml_2015_2025.jsonl'
 OUTPUT_DIR = 'import_files'
 MONGO_SUBDIR = 'mongodb'
 NEO4J_SUBDIR = 'neo4j'
-
+FILE_PAPER = 'nexusscholar.papers.json' #Just for now use static papers
+FILE_USERS_RAW = 'rawUsers.json'
+FILE_ADMIN_RAW = 'rawAdmin.json'
+FILE_OUTPUT_USERS = './import_files/mongodb/registeredUsers.jsonl'
+FILE_OUTPUT_ADMIN = './import_files/mongodb/admins.jsonl'
 
 def clean_text(text):
     """
@@ -280,6 +288,12 @@ class IntegrationPipeline:
             for author in self.authors.values():
                 f.write(json.dumps(author, ensure_ascii=False) + '\n')
 
+        
+        print("Random user generation started")
+        generate_users()
+        print("Admin random generation started")
+        generate_admin()
+
     def write_neo4j_files(self):
         print("Writing Neo4j CSV files (Optimized for neo4j-admin import)...")
 
@@ -340,6 +354,145 @@ class IntegrationPipeline:
             [':START_ID(Paper)', ':END_ID(Topic)'],
             self.relationships['HAS_TOPIC']
         )
+
+
+# function used to generate a date in last year
+def get_random_date():
+    end = datetime.now()
+    start = end - timedelta(days=365)
+    random_date = start + (end - start) * random.random()
+    return random_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+# function that generates password considering alphabet, digits and some spec. char.
+def generate_password(length=10):
+    chars = string.ascii_letters + string.digits + "!@#$%"
+    return ''.join(random.choice(chars) for i in range(length))
+
+
+def generate_users():
+
+    print("Starting Register Users generator")
+
+    try:
+        with open(FILE_PAPER,'r',encoding='utf-8') as f:
+            # retrieve json data from the file, stored as list
+            papers_data = json.load(f)
+
+    except Exception as e:
+        print(f"Error during load phase of papers:\n{e}")
+        return
+    
+    # load users data
+    try:
+        with open(FILE_USERS_RAW,'r',encoding='utf-8') as f:
+            users_raw = json.load(f)
+        fw = open(FILE_OUTPUT_USERS,'w',encoding='utf-8')
+    except Exception as e:
+        print(f"Error during users load phase:\n{e}")
+        return
+
+    print("Start generation")
+
+
+    for i, user_raw in enumerate(users_raw):
+
+        user_id = f"U{i+1:06d}"
+
+        full_name = user_raw.get('name')
+        email = user_raw.get('email')
+
+        clean_full_name = full_name.lower().replace(' ','_')
+        username = f"nexusscholar_{clean_full_name}"
+
+        passw = generate_password()
+        hashed_pass = bcrypt.hashpw(passw.encode('utf-8'),bcrypt.gensalt())
+        hash_str = hashed_pass.decode('utf-8')
+        
+        u_doc = get_random_date()
+
+        min_b = 2
+        max_b = 7
+        available_pap = len(papers_data)
+
+        if available_pap < min_b:
+            num_bookmarks = available_pap
+        else:
+            num_bookmarks = random.randint(min_b,min(max_b,available_pap))
+
+        pap_book = random.sample(papers_data,num_bookmarks)
+
+        bookmarks = []
+
+        for paper in pap_book:
+            p_id = paper.get("_id")
+            p_title = paper.get("title")
+            p_dos = datetime.strptime(u_doc, "%Y-%m-%dT%H:%M:%SZ") + timedelta(days=random.randint(0,200))
+
+
+            if p_id:
+                bookmarks.append({
+                    "paper_id": p_id,
+                    "title": p_title,
+                    "saved_at": p_dos.strftime("%Y-%m-%dT%H:%M:%SZ")
+                })
+
+        user_doc = {
+            "_id": user_id,
+            "username": username,
+            "email": email,
+            "password_hash":hash_str,
+            "created_at": u_doc,
+            "full_name": full_name,
+            "bookmarked_papers": bookmarks
+        }
+
+        user_line= json.dumps(user_doc)
+        fw.write(user_line+"\n")
+
+    print("user file jsonl generated")
+
+
+def generate_admin():
+    print("Start generating admin")
+
+    try:
+
+        with open(FILE_ADMIN_RAW,'r',encoding='utf-8') as f:
+            raw_admin=json.load(f)
+        fw = open(FILE_OUTPUT_ADMIN,'w',encoding='utf-8')
+
+    except Exception as e:
+        print(f"Error during admin generation:\n{e}")
+        return
+    
+    permission_list = ["DELETE_PAPER","BAN_USER","TRIGGER_ETL_SYNC"]
+
+    for i,ra in enumerate(raw_admin):
+        a_id = f"AD{i+1:02d}"
+        a_username = f"{ra.get("name").lower().replace(' ','_')}_admin"
+        a_email = ra.get("email")
+
+        pw = generate_password()
+        hash = bcrypt.hashpw(pw.encode('utf-8'),bcrypt.gensalt())
+        a_pw = hash.decode('utf-8')
+
+        a_doc = get_random_date()
+
+        a_permissions = random.sample(permission_list,random.randint(1,3))
+
+        admin_i={
+            "_id":a_id,
+            "username":a_username,
+            "email":a_email,
+            "password_hash":a_pw,
+            "created_at":a_doc,
+            "permissions":a_permissions
+        }
+
+        ad_line = json.dumps(admin_i)
+        fw.write(ad_line+"\n")
+    
+    print("admin jsonl file generated")
 
 
 def main():
