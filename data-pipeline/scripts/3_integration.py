@@ -290,10 +290,7 @@ class IntegrationPipeline:
                 f.write(json.dumps(author, ensure_ascii=False) + '\n')
 
         
-        print("Random user generation started")
-        generate_users()
-        print("Admin random generation started")
-        generate_admin()
+        
 
     def write_neo4j_files(self):
         print("Writing Neo4j CSV files (Optimized for neo4j-admin import)...")
@@ -525,6 +522,10 @@ def main():
     pipeline.process_records()
     pipeline.resolve_citations_and_metrics()
     pipeline.write_mongodb_files()
+    print("Random user generation started")
+    generate_users()
+    print("Admin random generation started")
+    generate_admin()
     pipeline.write_neo4j_files()
     print("Phase 3 Complete. Import files are ready in the 'import_files' directory.")
 
