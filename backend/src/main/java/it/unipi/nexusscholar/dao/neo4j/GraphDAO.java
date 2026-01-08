@@ -162,43 +162,24 @@ public class GraphDAO {
 
   public List<LeidenCommunity> leidenCommunityAlg(int skip, int limit) {
     try (Session session = driver.session()) {
-      // 1. Project the graph using Native Projection with UNDIRECTED orientation.
-      // We drop the graph first to ensure we don't use an existing directed version from previous
-      // failed runs.
-      session.executeWriteWithoutResult(
-          tx -> {
-            tx.run("CALL gds.graph.drop('coAuthors', false)");
-            tx.run(
-                """
-                                 CALL gds.graph.project(
-                                     'coAuthors',
-                                     ['Author', 'Paper'],
-                                     {
-                                         AUTHORED: {
-                                             orientation: 'UNDIRECTED'
-                                         }
-                                     }
-                                 )
-                                 """);
-          });
+      ensureCoAuthorsGraph(session);
 
-      // 2. Stream, Aggregate, and Paginate in Cypher
       return session.executeRead(
           tx -> {
             Result r =
                 tx.run(
                     """
-                    CALL gds.leiden.stream('coAuthors', { randomSeed: 42 })
-                    YIELD nodeId, communityId
-                    WITH communityId, gds.util.asNode(nodeId) as node
-                    WHERE node:Author
-                    // Aggregate authors per community HERE
-                    WITH communityId, collect(node.name) as authors
-                    RETURN communityId, authors
-                    ORDER BY communityId ASC
-                    SKIP $skip
-                    LIMIT $limit
-                    """,
+                                        CALL gds.leiden.stream('coAuthors', { randomSeed: 42 })
+                                        YIELD nodeId, communityId
+                                        WITH communityId, gds.util.asNode(nodeId) as node
+                                        WHERE node:Author
+                                        // Aggregate authors per community HERE
+                                        WITH communityId, collect(node.name) as authors
+                                        RETURN communityId, authors
+                                        ORDER BY communityId ASC
+                                        SKIP $skip
+                                        LIMIT $limit
+                                        """,
                     Map.of("skip", skip, "limit", limit));
 
             return r.list().stream()
@@ -217,38 +198,49 @@ public class GraphDAO {
 
   public int leidenCount() {
     try (Session session = driver.session()) {
-      // Ensure projection exists before counting
-      session.executeWriteWithoutResult(
-          tx -> {
-            tx.run("CALL gds.graph.drop('coAuthors', false)");
-            tx.run(
-                """
-                                                 CALL gds.graph.project(
-                                                     'coAuthors',
-                                                     ['Author', 'Paper'],
-                                                     {
-                                                         AUTHORED: {
-                                                             orientation: 'UNDIRECTED'
-                                                         }
-                                                     }
-                                                 )
-                                                 """);
-          });
+      ensureCoAuthorsGraph(session);
 
       return session.executeRead(
           tx -> {
             Result r =
                 tx.run(
                     """
-                                                            CALL gds.leiden.stream('coAuthors', { randomSeed: 42 })
-                                                            YIELD communityId
-                                                            RETURN count(DISTINCT communityId) as communityCount;
-                                                            """);
+                                        CALL gds.leiden.stream('coAuthors', { randomSeed: 42 })
+                                        YIELD communityId
+                                        RETURN count(DISTINCT communityId) as communityCount;
+                                        """);
             return r.hasNext() ? r.single().get("communityCount").asInt() : 0;
           });
     } catch (Exception e) {
       log.error("Count for leiden not achievable");
       return -1;
+    }
+  }
+
+  private void ensureCoAuthorsGraph(Session session) {
+    boolean exists =
+        session.executeRead(
+            tx -> {
+              Result res = tx.run("CALL gds.graph.exists('coAuthors') YIELD exists RETURN exists");
+              return res.single().get("exists").asBoolean();
+            });
+
+    if (!exists) {
+      session.executeWriteWithoutResult(
+          tx -> {
+            tx.run(
+                """
+                                CALL gds.graph.project(
+                                    'coAuthors',
+                                    ['Author', 'Paper'],
+                                    {
+                                        AUTHORED: {
+                                            orientation: 'UNDIRECTED'
+                                        }
+                                    }
+                                )
+                                """);
+          });
     }
   }
 
@@ -397,7 +389,7 @@ public class GraphDAO {
           });
 
       return true;
-} catch (org.neo4j.driver.exceptions.Neo4jException e) {
+    } catch (org.neo4j.driver.exceptions.Neo4jException e) {
       log.error("Save paper node failed", e);
       return false;
     }
