@@ -387,7 +387,6 @@ def generate_users():
     try:
         with open(FILE_USERS_RAW,'r',encoding='utf-8') as f:
             users_raw = json.load(f)
-        fw = open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_USERS}",'w',encoding='utf-8')
     except Exception as e:
         print(f"Error during users load phase:\n{e}")
         return
@@ -452,12 +451,13 @@ def generate_users():
         }
 
         user_line= json.dumps(user_doc)
-        fw.write(user_line+"\n")
-
-    try:
-        fw.close()
-    except Exception as e:
-        print(f"Error during closure of output file users:\n{e}")
+        
+        try:
+            with open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_USERS}",'w',encoding='utf-8') as fw:
+                fw.write(user_line+"\n")
+        except Exception as e:
+            print(f"Error during save of user:\n{e}")
+            return
 
     print("user file jsonl generated")
 
@@ -469,7 +469,6 @@ def generate_admin():
 
         with open(FILE_ADMIN_RAW,'r',encoding='utf-8') as f:
             raw_admin=json.load(f)
-        fw = open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_ADMIN}",'w',encoding='utf-8')
 
     except Exception as e:
         print(f"Error during admin generation:\n{e}")
@@ -507,13 +506,13 @@ def generate_admin():
         }
 
         ad_line = json.dumps(admin_i)
-        fw.write(ad_line+"\n")
-    
-
-    try:
-        fw.close()
-    except Exception as e:
-        print(f"Error during closure of output file admin:\n{e}")
+        
+        try:
+            with open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_ADMIN}",'w',encoding='utf-8') as fw:
+                fw.write(ad_line+"\n")
+        except Exception as e:
+            print(f"Error during save of admin:\n{e}")
+            return
 
     print("admin jsonl file generated")
 
