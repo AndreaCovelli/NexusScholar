@@ -16,8 +16,8 @@ NEO4J_SUBDIR = 'neo4j'
 FILE_PAPER = 'nexusscholar.papers.json' #Just for now use static papers
 FILE_USERS_RAW = 'rawUsers.json'
 FILE_ADMIN_RAW = 'rawAdmin.json'
-FILE_OUTPUT_USERS = './import_files/mongodb/registeredUsers.jsonl'
-FILE_OUTPUT_ADMIN = './import_files/mongodb/admins.jsonl'
+FILE_OUTPUT_USERS = 'registeredUsers.jsonl'
+FILE_OUTPUT_ADMIN = 'admins.jsonl'
 
 def clean_text(text):
     """
@@ -373,6 +373,7 @@ def generate_users():
 
     print("Starting Register Users generator")
 
+    
     try:
         with open(FILE_PAPER,'r',encoding='utf-8') as f:
             # retrieve json data from the file, stored as list
@@ -386,7 +387,7 @@ def generate_users():
     try:
         with open(FILE_USERS_RAW,'r',encoding='utf-8') as f:
             users_raw = json.load(f)
-        fw = open(FILE_OUTPUT_USERS,'w',encoding='utf-8')
+        fw = open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_USERS}",'w',encoding='utf-8')
     except Exception as e:
         print(f"Error during users load phase:\n{e}")
         return
@@ -400,6 +401,10 @@ def generate_users():
 
         full_name = user_raw.get('name')
         email = user_raw.get('email')
+
+        if not full_name or not email:
+            print(f"Skipping user record due to missing name or email: {user_raw}")
+            continue
 
         clean_full_name = full_name.lower().replace(' ','_')
         username = f"nexusscholar_{clean_full_name}"
@@ -449,6 +454,11 @@ def generate_users():
         user_line= json.dumps(user_doc)
         fw.write(user_line+"\n")
 
+    try:
+        fw.close()
+    except Exception as e:
+        print(f"Error during closure of output file users:\n{e}")
+
     print("user file jsonl generated")
 
 
@@ -459,7 +469,7 @@ def generate_admin():
 
         with open(FILE_ADMIN_RAW,'r',encoding='utf-8') as f:
             raw_admin=json.load(f)
-        fw = open(FILE_OUTPUT_ADMIN,'w',encoding='utf-8')
+        fw = open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_ADMIN}",'w',encoding='utf-8')
 
     except Exception as e:
         print(f"Error during admin generation:\n{e}")
@@ -469,7 +479,14 @@ def generate_admin():
 
     for i,ra in enumerate(raw_admin):
         a_id = f"AD{i+1:02d}"
-        a_username = f"{ra.get("name").lower().replace(' ','_')}_admin"
+
+        admin_name = ra.get("name")
+        if not admin_name:
+            print(f"Skipping admin record due to missing name: {ra}")
+            continue
+
+        a_username = f"{admin_name.lower().replace(' ','_')}_admin"
+
         a_email = ra.get("email")
 
         pw = generate_password()
@@ -492,6 +509,12 @@ def generate_admin():
         ad_line = json.dumps(admin_i)
         fw.write(ad_line+"\n")
     
+
+    try:
+        fw.close()
+    except Exception as e:
+        print(f"Error during closure of output file admin:\n{e}")
+
     print("admin jsonl file generated")
 
 
