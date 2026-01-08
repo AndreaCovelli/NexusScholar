@@ -496,7 +496,7 @@ def generate_admin():
 
                 a_doc = get_random_date()
 
-                a_permissions = random.sample(permission_list,random.randint(1,3))
+                a_permissions = random.sample(permission_list, random.randint(1, len(permission_list)))
 
                 admin_i={
                     "_id":a_id,
