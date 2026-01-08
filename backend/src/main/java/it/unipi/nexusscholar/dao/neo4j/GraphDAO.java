@@ -397,7 +397,7 @@ public class GraphDAO {
           });
 
       return true;
-    } catch (Exception e) {
+} catch (org.neo4j.driver.exceptions.Neo4jException e) {
       log.error("Save paper node failed", e);
       return false;
     }
