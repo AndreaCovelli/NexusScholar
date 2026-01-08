@@ -5,6 +5,7 @@ import os
 import random
 import string
 import bcrypt
+import secrets
 from datetime import datetime,timedelta
 
 # --- CONFIGURATION ---
@@ -366,7 +367,7 @@ def get_random_date():
 # function that generates password considering alphabet, digits and some spec. char.
 def generate_password(length=10):
     chars = string.ascii_letters + string.digits + "!@#$%"
-    return ''.join(random.choice(chars) for i in range(length))
+    return ''.join(secrets.choice(chars) for i in range(length))
 
 
 def generate_users():
@@ -393,71 +394,70 @@ def generate_users():
 
     print("Start generation")
 
+    try:
+        with open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_USERS}",'w',encoding='utf-8') as fw:
+            for i, user_raw in enumerate(users_raw):
 
-    for i, user_raw in enumerate(users_raw):
+                user_id = f"U{i+1:06d}"
 
-        user_id = f"U{i+1:06d}"
+                full_name = user_raw.get('name')
+                email = user_raw.get('email')
 
-        full_name = user_raw.get('name')
-        email = user_raw.get('email')
+                if not full_name or not email:
+                    print(f"Skipping user record due to missing name or email: {user_raw}")
+                    continue
 
-        if not full_name or not email:
-            print(f"Skipping user record due to missing name or email: {user_raw}")
-            continue
+                clean_full_name = full_name.lower().replace(' ','_')
+                username = f"nexusscholar_{clean_full_name}"
 
-        clean_full_name = full_name.lower().replace(' ','_')
-        username = f"nexusscholar_{clean_full_name}"
+                passw = generate_password()
+                hashed_pass = bcrypt.hashpw(passw.encode('utf-8'),bcrypt.gensalt())
+                hash_str = hashed_pass.decode('utf-8')
+                
+                u_doc = get_random_date()
 
-        passw = generate_password()
-        hashed_pass = bcrypt.hashpw(passw.encode('utf-8'),bcrypt.gensalt())
-        hash_str = hashed_pass.decode('utf-8')
-        
-        u_doc = get_random_date()
+                min_b = 2
+                max_b = 7
+                available_pap = len(papers_data)
 
-        min_b = 2
-        max_b = 7
-        available_pap = len(papers_data)
+                if available_pap < min_b:
+                    num_bookmarks = available_pap
+                else:
+                    num_bookmarks = random.randint(min_b,min(max_b,available_pap))
 
-        if available_pap < min_b:
-            num_bookmarks = available_pap
-        else:
-            num_bookmarks = random.randint(min_b,min(max_b,available_pap))
+                pap_book = random.sample(papers_data,num_bookmarks)
 
-        pap_book = random.sample(papers_data,num_bookmarks)
+                bookmarks = []
 
-        bookmarks = []
-
-        for paper in pap_book:
-            p_id = paper.get("_id")
-            p_title = paper.get("title")
-            p_dos = datetime.strptime(u_doc, "%Y-%m-%dT%H:%M:%SZ") + timedelta(days=random.randint(0,200))
+                for paper in pap_book:
+                    p_id = paper.get("_id")
+                    p_title = paper.get("title")
+                    p_dos = datetime.strptime(u_doc, "%Y-%m-%dT%H:%M:%SZ") + timedelta(days=random.randint(0,200))
 
 
-            if p_id:
-                bookmarks.append({
-                    "paper_id": p_id,
-                    "title": p_title,
-                    "saved_at": p_dos.strftime("%Y-%m-%dT%H:%M:%SZ")
-                })
+                    if p_id:
+                        bookmarks.append({
+                            "paper_id": p_id,
+                            "title": p_title,
+                            "saved_at": p_dos.strftime("%Y-%m-%dT%H:%M:%SZ")
+                        })
 
-        user_doc = {
-            "_id": user_id,
-            "username": username,
-            "email": email,
-            "password_hash":hash_str,
-            "created_at": u_doc,
-            "full_name": full_name,
-            "bookmarked_papers": bookmarks
-        }
+                user_doc = {
+                    "_id": user_id,
+                    "username": username,
+                    "email": email,
+                    "password_hash":hash_str,
+                    "created_at": u_doc,
+                    "full_name": full_name,
+                    "bookmarked_papers": bookmarks
+                }
 
-        user_line= json.dumps(user_doc)
-        
-        try:
-            with open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_USERS}",'w',encoding='utf-8') as fw:
+                user_line= json.dumps(user_doc)
                 fw.write(user_line+"\n")
-        except Exception as e:
-            print(f"Error during save of user:\n{e}")
-            return
+
+    except Exception as e:
+        print(f"Error during save of user:\n{e}")
+        return
 
     print("user file jsonl generated")
 
@@ -476,43 +476,44 @@ def generate_admin():
     
     permission_list = ["DELETE_PAPER","BAN_USER","TRIGGER_ETL_SYNC"]
 
-    for i,ra in enumerate(raw_admin):
-        a_id = f"AD{i+1:02d}"
+    try:
+        with open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_ADMIN}",'w',encoding='utf-8') as fw:
+            for i,ra in enumerate(raw_admin):
+                a_id = f"AD{i+1:02d}"
 
-        admin_name = ra.get("name")
-        if not admin_name:
-            print(f"Skipping admin record due to missing name: {ra}")
-            continue
+                admin_name = ra.get("name")
+                if not admin_name:
+                    print(f"Skipping admin record due to missing name: {ra}")
+                    continue
 
-        a_username = f"{admin_name.lower().replace(' ','_')}_admin"
+                a_username = f"{admin_name.lower().replace(' ','_')}_admin"
 
-        a_email = ra.get("email")
+                a_email = ra.get("email")
 
-        pw = generate_password()
-        hash = bcrypt.hashpw(pw.encode('utf-8'),bcrypt.gensalt())
-        a_pw = hash.decode('utf-8')
+                pw = generate_password()
+                hash = bcrypt.hashpw(pw.encode('utf-8'),bcrypt.gensalt())
+                a_pw = hash.decode('utf-8')
 
-        a_doc = get_random_date()
+                a_doc = get_random_date()
 
-        a_permissions = random.sample(permission_list,random.randint(1,3))
+                a_permissions = random.sample(permission_list,random.randint(1,3))
 
-        admin_i={
-            "_id":a_id,
-            "username":a_username,
-            "email":a_email,
-            "password_hash":a_pw,
-            "created_at":a_doc,
-            "permissions":a_permissions
-        }
+                admin_i={
+                    "_id":a_id,
+                    "username":a_username,
+                    "email":a_email,
+                    "password_hash":a_pw,
+                    "created_at":a_doc,
+                    "permissions":a_permissions
+                }
 
-        ad_line = json.dumps(admin_i)
-        
-        try:
-            with open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_ADMIN}",'w',encoding='utf-8') as fw:
+                ad_line = json.dumps(admin_i)
+                
+
                 fw.write(ad_line+"\n")
-        except Exception as e:
-            print(f"Error during save of admin:\n{e}")
-            return
+    except Exception as e:
+        print(f"Error during save of admin:\n{e}")
+        return
 
     print("admin jsonl file generated")
 
