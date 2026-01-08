@@ -5,8 +5,11 @@ import it.unipi.nexusscholar.dto.neo4j.LeidenDTO;
 import it.unipi.nexusscholar.dto.neo4j.PageRankDTO;
 import it.unipi.nexusscholar.dto.neo4j.ShortestPathDTO;
 import it.unipi.nexusscholar.service.GraphService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,8 +22,10 @@ public class GraphController {
 
   // Request for Pagerank computations
   @GetMapping("/pagerank")
-  public ResponseEntity<List<PageRankDTO>> callPageRank() {
-    return ResponseEntity.ok(graphService.pagerank());
+  public ResponseEntity<Page<PageRankDTO>> callPageRank(
+      @PageableDefault(size = 20, sort = "rank", direction = Sort.Direction.DESC)
+          Pageable pageable) {
+    return ResponseEntity.ok(graphService.pagerank(pageable));
   }
 
   @GetMapping("/shortestPath")
@@ -32,12 +37,14 @@ public class GraphController {
   }
 
   @GetMapping("/leidenCommunities")
-  public ResponseEntity<List<LeidenDTO>> callLeiden() {
-    return ResponseEntity.ok(graphService.hiddenCommunities());
+  public ResponseEntity<Page<LeidenDTO>> callLeiden(@PageableDefault(size = 20) Pageable pageable) {
+    return ResponseEntity.ok(graphService.hiddenCommunities(pageable));
   }
 
   @GetMapping("/betweenness")
-  public ResponseEntity<List<BetweennessDTO>> callBetweenness() {
-    return ResponseEntity.ok(graphService.betweenness());
+  public ResponseEntity<Page<BetweennessDTO>> callBetweenness(
+      @PageableDefault(size = 20, sort = "betweenness", direction = Sort.Direction.DESC)
+          Pageable pageable) {
+    return ResponseEntity.ok(graphService.betweenness(pageable));
   }
 }

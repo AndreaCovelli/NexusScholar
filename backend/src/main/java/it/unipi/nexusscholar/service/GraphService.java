@@ -16,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Path;
 import org.neo4j.driver.types.Relationship;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -38,12 +41,16 @@ public class GraphService {
     }
   }
 
-  public List<PageRankDTO> pagerank() {
+  public Page<PageRankDTO> pagerank(Pageable pageable) {
     try {
-      return graphDAO.pageRankAlg().stream().map(this::toPageRankDTO).toList();
+      List<PageRankDTO> cont =
+          graphDAO.pageRankAlg((int) pageable.getOffset(), pageable.getPageSize()).stream()
+              .map(this::toPageRankDTO)
+              .toList();
+      return new PageImpl<>(cont, pageable, graphDAO.pageRankCount());
     } catch (Exception e) {
       log.error("Error executing PageRank algorithm", e);
-      return Collections.emptyList();
+      return Page.empty(pageable);
     }
   }
 
@@ -60,21 +67,46 @@ public class GraphService {
     }
   }
 
-  public List<LeidenDTO> hiddenCommunities() {
+  public Page<LeidenDTO> hiddenCommunities(Pageable pageable) {
     try {
-      return graphDAO.leidenCommunityAlg().stream().map(this::toLeidenDTO).toList();
+      // 1. Calculate pagination parameters
+      int skip = (int) pageable.getOffset();
+      int limit = pageable.getPageSize();
+
+      // 2. Fetch only the requested slice from the database
+      // Note: This requires the DAO update shown in Step 1
+      List<LeidenDTO> pagedContent =
+          graphDAO.leidenCommunityAlg(skip, limit).stream().map(this::toLeidenDTO).toList();
+
+      // 3. Fetch total count for pagination metadata
+      // Note: 'leidenCount()' calculates total unique communities
+      int totalElements = graphDAO.leidenCount();
+
+      // 4. Return the Page object
+      return new PageImpl<>(pagedContent, pageable, totalElements);
+
     } catch (Exception e) {
       log.error("Error executing hidden communities algorithm (Leiden)", e);
-      return Collections.emptyList();
+      return Page.empty(pageable);
     }
   }
 
-  public List<BetweennessDTO> betweenness() {
+  public Page<BetweennessDTO> betweenness(Pageable pageable) {
     try {
-      return graphDAO.betweennessAlg().stream().map(this::toBetweennessDTO).toList();
+      // 1. Pass pagination params to DAO (Database-level slicing)
+      int skip = (int) pageable.getOffset();
+      int limit = pageable.getPageSize();
+
+      List<BetweennessDTO> res =
+          graphDAO.betweennessAlg(skip, limit).stream().map(this::toBetweennessDTO).toList();
+
+      // 2. Fetch total count for correct Page metadata
+      int totalCount = graphDAO.betweennessCount();
+
+      return new PageImpl<>(res, pageable, totalCount);
     } catch (Exception e) {
       log.error("Betweenness calculation failed", e);
-      return Collections.emptyList();
+      return Page.empty(pageable);
     }
   }
 

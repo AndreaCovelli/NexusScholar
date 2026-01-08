@@ -12,6 +12,8 @@ import org.neo4j.driver.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
@@ -26,27 +28,25 @@ public class GraphServiceBetweennessTest {
       session.run("CALL gds.graph.drop('paperCitations', false)");
       session.run("MATCH (n) DETACH DELETE n");
 
-      // Create a star topology: P1 is the hub
-      // P2, P3, P4 all cite P1; P1 cites P5
-      // P1 should have highest betweenness
       session.run(
           """
-            CREATE (p1:Paper {title: 'Hub Paper'})
-            CREATE (p2:Paper {title: 'Citing Paper 1'})
-            CREATE (p3:Paper {title: 'Citing Paper 2'})
-            CREATE (p4:Paper {title: 'Citing Paper 3'})
-            CREATE (p5:Paper {title: 'Foundation Paper'})
-            CREATE (p2)-[:CITES]->(p1)
-            CREATE (p3)-[:CITES]->(p1)
-            CREATE (p4)-[:CITES]->(p1)
-            CREATE (p1)-[:CITES]->(p5)
-        """);
+                CREATE (p1:Paper {title: 'Hub Paper'})
+                CREATE (p2:Paper {title: 'Citing Paper 1'})
+                CREATE (p3:Paper {title: 'Citing Paper 2'})
+                CREATE (p4:Paper {title: 'Citing Paper 3'})
+                CREATE (p5:Paper {title: 'Foundation Paper'})
+                CREATE (p2)-[:CITES]->(p1)
+                CREATE (p3)-[:CITES]->(p1)
+                CREATE (p4)-[:CITES]->(p1)
+                CREATE (p1)-[:CITES]->(p5)
+            """);
     }
   }
 
   @Test
   void testBetweennessCalculation() {
-    List<BetweennessDTO> results = graphService.betweenness();
+    Page<BetweennessDTO> page = graphService.betweenness(PageRequest.of(0, 10));
+    List<BetweennessDTO> results = page.getContent();
 
     assertNotNull(results, "Betweenness results should not be null");
     assertFalse(results.isEmpty(), "Should return at least one paper");

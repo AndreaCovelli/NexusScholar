@@ -59,7 +59,7 @@ class DaoTest {
   void testPageRankAlgReturnsEmptyListOnException() {
     when(mockDriver.session()).thenThrow(new RuntimeException("Database error"));
 
-    List<PageRankEntry> results = graphDAO.pageRankAlg();
+    List<PageRankEntry> results = graphDAO.pageRankAlg(10, 30);
 
     assertNotNull(results);
     assertTrue(results.isEmpty(), "Should return empty list on exception");
@@ -73,7 +73,7 @@ class DaoTest {
         .thenReturn(true)
         .thenReturn(Collections.emptyList());
 
-    List<PageRankEntry> results = graphDAO.pageRankAlg();
+    List<PageRankEntry> results = graphDAO.pageRankAlg(10, 30);
 
     assertNotNull(results);
   }
@@ -129,7 +129,7 @@ class DaoTest {
   void testLeidenCommunityAlgReturnsEmptyListOnException() {
     when(mockDriver.session()).thenThrow(new RuntimeException("Database error"));
 
-    List<LeidenCommunity> results = graphDAO.leidenCommunityAlg();
+    List<LeidenCommunity> results = graphDAO.leidenCommunityAlg(0, 10);
 
     assertNotNull(results);
     assertTrue(results.isEmpty(), "Should return empty list on exception");
@@ -139,7 +139,7 @@ class DaoTest {
   void testBetweennessAlgReturnsEmptyListOnException() {
     when(mockDriver.session()).thenThrow(new RuntimeException("Database error"));
 
-    List<BetweennessEntry> results = graphDAO.betweennessAlg();
+    List<BetweennessEntry> results = graphDAO.betweennessAlg(0, 10);
 
     assertNotNull(results);
     assertTrue(results.isEmpty(), "Should return empty list on exception");

@@ -10,6 +10,7 @@ import org.neo4j.driver.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
@@ -44,9 +45,10 @@ public class GraphServiceTest {
   @Test
   public void TestGraphService() {
     assertTrue(graphService.connect());
-    assertNotNull(graphService.pagerank());
+    assertNotNull(graphService.pagerank(PageRequest.of(0, 20)));
     assertNotNull(graphService.collabPath("Jennifer Dean", "B. Rappazzo"));
     assertNull(graphService.collabPath("Chunhong Pan", "DanieleCong"));
-    assertNotNull(graphService.hiddenCommunities());
+    assertNotNull(graphService.hiddenCommunities(PageRequest.of(0, 20)));
+    assertNotNull(graphService.betweenness(PageRequest.of(0, 20)));
   }
 }

@@ -1,7 +1,9 @@
 package it.unipi.nexusscholar.service.impl;
 
+import it.unipi.nexusscholar.dao.exception.DAOException;
 import it.unipi.nexusscholar.dao.mongo.AuthorDAO;
 import it.unipi.nexusscholar.dao.mongo.PaperDAO;
+import it.unipi.nexusscholar.dao.neo4j.GraphDAO;
 import it.unipi.nexusscholar.dto.mongo.PaperAuthorDTO;
 import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.model.mongo.Author;
@@ -28,6 +30,7 @@ public class PaperServiceImpl implements PaperService {
 
   private final PaperDAO paperDAO;
   private final AuthorDAO authorDAO;
+  private final GraphDAO graphDAO;
 
   @Override
   @Transactional
@@ -68,6 +71,7 @@ public class PaperServiceImpl implements PaperService {
               .orElseThrow(
                   () -> new BusinessException("Paper not found with ID: " + paperDTO.getId()));
 
+      // Check DOI uniqueness (excluding self)
       if (paperDTO.getDoi() != null && !paperDTO.getDoi().equals(existingPaper.getDoi())) {
         Optional<Paper> duplicate = paperDAO.findByDoi(paperDTO.getDoi());
         if (duplicate.isPresent()) {
@@ -75,6 +79,7 @@ public class PaperServiceImpl implements PaperService {
         }
       }
 
+      // Calculate author delta
       Set<String> oldAuthorIds =
           existingPaper.getAuthors().stream().map(PaperAuthor::getId).collect(Collectors.toSet());
       Set<String> newAuthorIds = new HashSet<>(incomingAuthorIds);
@@ -105,7 +110,11 @@ public class PaperServiceImpl implements PaperService {
     // 4. Persist
     Paper savedEntity = paperDAO.save(paperToSave);
 
-    // 5. Side Effects
+    paperDTO.setId(savedEntity.getId());
+    if (!graphDAO.savePaperNode(paperDTO))
+      throw new DAOException("Paper could not be saved in graph database");
+
+    // 5. Side Effects: Update author statistics
     if (isUpdate) {
       if (!authorsToRemove.isEmpty()) {
         updateAuthorsRemovePaper(authorsToRemove, savedEntity);
