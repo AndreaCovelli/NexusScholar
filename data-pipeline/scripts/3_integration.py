@@ -385,7 +385,7 @@ def generate_users():
     try:
         with open(FILE_USERS_RAW,'r',encoding='utf-8') as f:
             users_raw = json.load(f)
-    except Exception as e:
+    except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error during users load phase:\n{e}")
         return
 
