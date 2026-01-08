@@ -380,7 +380,7 @@ def generate_users():
             # retrieve json data from the file, stored as list
             papers_data = json.load(f)
 
-    except Exception as e:
+    except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error during load phase of papers:\n{e}")
         return
     
