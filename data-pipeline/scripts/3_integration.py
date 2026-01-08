@@ -467,7 +467,7 @@ def generate_admin():
         with open(FILE_ADMIN_RAW,'r',encoding='utf-8') as f:
             raw_admin=json.load(f)
 
-    except Exception as e:
+    except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error during admin generation:\n{e}")
         return
     
