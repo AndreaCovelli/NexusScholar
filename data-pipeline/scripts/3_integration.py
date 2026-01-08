@@ -491,8 +491,8 @@ def generate_admin():
                 a_email = ra.get("email")
 
                 pw = generate_password()
-                hash = bcrypt.hashpw(pw.encode('utf-8'),bcrypt.gensalt())
-                a_pw = hash.decode('utf-8')
+                hashed_pass = bcrypt.hashpw(pw.encode('utf-8'),bcrypt.gensalt())
+                a_pw = hashed_pass.decode('utf-8')
 
                 a_doc = get_random_date()
 
