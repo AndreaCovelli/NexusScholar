@@ -392,7 +392,8 @@ class IntegrationPipeline:
         print("Start generation")
 
         try:
-            with open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_USERS}",'w',encoding='utf-8') as fw:
+            user_output_path = os.path.join(OUTPUT_DIR, MONGO_SUBDIR, FILE_OUTPUT_USERS)
+            with open(user_output_path, 'w', encoding='utf-8') as fw:
                 for i, user_raw in enumerate(users_raw):
 
                     user_id = f"U{i+1:06d}"
