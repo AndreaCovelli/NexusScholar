@@ -124,6 +124,17 @@ bash ../../deployment/scripts/init-mongo-replica.sh
     *   Temporarily **stops** the Neo4j container.
     *   Runs `neo4j-admin database import` for high-speed CSV loading.
     *   **Restarts** the Neo4j container.
+### Phase 5: Index creation
+*   **Action:** Uses Docker commands create indexes.
+
+1.  **Ensure Docker containers are running** (see Prerequisites).
+2.  Run the loader script:
+    ```bash
+    bash 5_create_index.sh
+    ```
+    **What this script does:**
+    *   Create Indexes into **MongoDB**.
+
 
 ---
 
@@ -152,4 +163,8 @@ If you need to wipe the databases and start fresh (e.g., if Phase 4 failed partw
     ```bash
     cd data-pipeline/scripts
     bash 4_load_data.sh
+    ```
+5.  **Re-run Phase 5:**
+    ```bash
+    bash 5_create_index.sh
     ```

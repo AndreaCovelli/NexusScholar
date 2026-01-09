@@ -19,38 +19,4 @@ import lombok.NoArgsConstructor;
 public class CollaborationEvolutionDTO {
   private double avgAuthors;
   private int year;
-
-  @Data
-  public static class AuthRequest {
-    @NotBlank private String username;
-
-    @NotBlank private String password;
-  }
-
-  @Data
-  public static class RegisterAdminRequest {
-    @NotBlank private String username;
-
-    @Email @NotBlank private String email;
-
-    @NotBlank private String password;
-
-    private List<Permission> permissions;
-  }
-
-  @Data
-  public static class RegisterUserRequest {
-    @NotBlank private String username;
-
-    @Email @NotBlank private String email;
-
-    @NotBlank
-    @Size(min = 8)
-    private String password;
-
-    // Campi specifici RegisteredUser
-    @NotBlank private String fullName;
-
-    private String affiliation;
-  }
 }
