@@ -20,6 +20,10 @@ FILE_ADMIN_RAW = os.path.join(INPUT_DIR, 'rawAdmin.json')
 FILE_OUTPUT_USERS = 'registeredUsers.jsonl'
 FILE_OUTPUT_ADMIN = 'admins.jsonl'
 
+# User Generation Constants
+MIN_BOOKMARKS = 2
+MAX_BOOKMARKS = 7
+
 def clean_text(text):
     """
     Cleans text: ensures string type, removes null bytes and specific
@@ -38,6 +42,14 @@ class IntegrationPipeline:
     - Processing records
     - Writing MongoDB and Neo4j export files
     """
+
+    # Admin Permissions Definition
+    # Defined as a class attribute to centralize permission logic
+    PERMISSIONS = [
+        "DELETE_PAPER",
+        "BAN_USER",
+        "TRIGGER_ETL_SYNC"
+    ]
 
     def __init__(
             self,
@@ -78,7 +90,30 @@ class IntegrationPipeline:
         self.author_id_counter = 0
         self.topic_id_counter = 0
 
+        # Identity tracking (for deduplication)
+        self.seen_emails = set()
+        self.seen_usernames = set()
+
     # --- HELPER METHODS ---
+
+    def _resolve_unique_identity(self, base_username, email):
+        """
+        Ensures email uniqueness and generates a unique username.
+        Returns the final unique username, or None if email is duplicated.
+        """
+        if email in self.seen_emails:
+            return None  # Skip duplicate email
+
+        candidate = base_username
+        counter = 1
+        # Auto-increment username if it exists (e.g. user, user1, user2)
+        while candidate in self.seen_usernames:
+            candidate = f"{base_username}{counter}"
+            counter += 1
+
+        self.seen_emails.add(email)
+        self.seen_usernames.add(candidate)
+        return candidate
 
     def get_topic_id(self, topic_name):
         cleaned_name = clean_text(topic_name)
@@ -416,8 +451,14 @@ class IntegrationPipeline:
                         continue
 
                     user_id = f"U{i+1:06d}"
-                    clean_full_name = clean_text(full_name).lower().replace(' ', '_')
-                    username = f"{clean_full_name}"
+
+                    # Uniqueness Check: Generate safe username or skip if email invalid
+                    base_username = clean_text(full_name).lower().replace(' ', '_')
+                    username = self._resolve_unique_identity(base_username, email)
+
+                    if not username:
+                        print(f"Skipping duplicate email: {email}")
+                        continue
 
                     # Security: Generate Hash
                     raw_password = self.generate_password()
@@ -432,9 +473,16 @@ class IntegrationPipeline:
                     # Logic: Bookmarks
                     bookmarks = []
                     if paper_keys:
-                        min_b, max_b = 2, 7
+                        # Use global constants
                         available_count = len(paper_keys)
-                        num_bookmarks = available_count if available_count < min_b else random.randint(min_b, min(max_b, available_count))
+
+                        # Guard against cases where fewer papers exist than the minimum requested
+                        if available_count < MIN_BOOKMARKS:
+                            num_bookmarks = available_count
+                        else:
+                            # Clamp the upper bound to the available count
+                            upper_bound = min(MAX_BOOKMARKS, available_count)
+                            num_bookmarks = random.randint(MIN_BOOKMARKS, upper_bound)
 
                         # Sample from lightweight list
                         selected_papers = random.sample(paper_keys, num_bookmarks)
@@ -486,7 +534,6 @@ class IntegrationPipeline:
             print(f"Error: Failed to parse {FILE_ADMIN_RAW}: {e}")
             return
 
-        permission_list = ["DELETE_PAPER", "BAN_USER", "TRIGGER_ETL_SYNC"]
         admin_output_path = os.path.join(self.mongo_dir, FILE_OUTPUT_ADMIN)
         print(f"Generating {len(raw_admin)} admins (JSONL)...")
 
@@ -500,9 +547,16 @@ class IntegrationPipeline:
                         continue
 
                     a_id = f"AD{i+1:02d}"
-                    # Ensure safe username generation
+
+                    # Uniqueness Check: Ensure safe username generation
                     safe_name = clean_text(admin_name).lower().replace(' ', '_')
-                    a_username = f"{safe_name}_admin"
+                    base_username = f"{safe_name}_admin"
+
+                    a_username = self._resolve_unique_identity(base_username, email)
+
+                    if not a_username:
+                        print(f"Skipping duplicate email (Admin): {email}")
+                        continue
 
                     # Security: Hash
                     raw_pw = self.generate_password()
@@ -513,8 +567,11 @@ class IntegrationPipeline:
                     a_date_obj = self.get_random_date_obj()
                     a_date_str = a_date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-                    # Permissions
-                    a_permissions = random.sample(permission_list, random.randint(1, len(permission_list)))
+                    # Permissions: Use class constant
+                    total_perms = len(self.PERMISSIONS)
+                    # Select at least 1 permission, up to the total number available
+                    num_perms_to_assign = random.randint(1, total_perms)
+                    a_permissions = random.sample(self.PERMISSIONS, num_perms_to_assign)
 
                     admin_doc = {
                         "_id": a_id,
