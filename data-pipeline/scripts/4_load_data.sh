@@ -65,9 +65,7 @@ docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mon
 echo "   Importing Admins..."
 docker compose -f $COMPOSE_FILE run --rm -v $MONGO_IMPORT_DIR:/import mongo1 mongoimport $MONGO_CONN --collection admin --file /import/admins.jsonl --drop
 
-
 echo "MongoDB import complete."
-
 
 # --- Neo4j Loading (neo4j-admin import) ---
 # This tool requires the database to be OFFLINE for maximum performance and safety.
