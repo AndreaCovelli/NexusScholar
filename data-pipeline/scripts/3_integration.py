@@ -354,7 +354,7 @@ class IntegrationPipeline:
         )
 
 
-# function used to generate a date in last year
+    # function used to generate a date in last year
     def get_random_date(self):
         end = datetime.now()
         start = end - timedelta(days=365)
