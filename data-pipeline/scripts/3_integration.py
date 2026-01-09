@@ -20,6 +20,7 @@ FILE_ADMIN_RAW = 'rawAdmin.json'
 FILE_OUTPUT_USERS = 'registeredUsers.jsonl'
 FILE_OUTPUT_ADMIN = 'admins.jsonl'
 FILE_USER_PLAIN = 'usersPlain.json'
+FILE_ADMIN_PLAIN = 'adminPlain.json'
 
 def clean_text(text):
     """
@@ -481,6 +482,8 @@ class IntegrationPipeline:
         print("Admin random generation started")
         print("Start generating admin")
 
+        admin_plain = []
+
         try:
 
             with open(FILE_ADMIN_RAW,'r',encoding='utf-8') as f:
@@ -510,6 +513,12 @@ class IntegrationPipeline:
                     hashed_pass = bcrypt.hashpw(pw.encode('utf-8'),bcrypt.gensalt())
                     a_pw = hashed_pass.decode('utf-8')
 
+                    admin_plain.append({
+                            "_id":a_id,
+                            "username":a_username,
+                            "password":pw
+                    })
+
                     a_doc = self.get_random_date()
 
                     a_permissions = random.sample(permission_list, random.randint(1, len(permission_list)))
@@ -527,6 +536,11 @@ class IntegrationPipeline:
                     
 
                     fw.write(ad_line+"\n")
+
+
+            with open(FILE_ADMIN_PLAIN,'w',encoding='utf-8') as fw2:
+                fw2.write(json.dumps(admin_plain,indent=4))
+
         except Exception as e:
             print(f"Error during save of admin:\n{e}")
             return
