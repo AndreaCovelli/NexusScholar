@@ -36,4 +36,11 @@ public interface PaperService {
    * histories.
    */
   void deletePaper(String id);
+
+  /**
+   * Searches papers using MongoDB full-text search.
+   * This allows searching for keywords across all text-indexed fields (e.g., title, abstract).
+   * Supports pagination.
+   */
+  Page<PaperDTO> searchPapersByText(String keyword, Pageable pageable);
 }

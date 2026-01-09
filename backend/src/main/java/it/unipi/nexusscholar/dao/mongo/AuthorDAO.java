@@ -20,8 +20,12 @@ public interface AuthorDAO extends MongoRepository<Author, String> {
    */
   Optional<Author> findByS2AuthorId(String s2AuthorId);
 
-  /** Case-insensitive partial name search. Enables author discovery by name fragment. */
-  Page<Author> findByNameContainingIgnoreCase(String name, Pageable pageable);
+  /** Prefix-based name search. Case-sensitive. */
+  Page<Author> findByNameStartsWith(String name, Pageable pageable);
 
+  /**
+   * Retrieves authors with a total publication count strictly greater than the specified value.
+   * Useful for identifying prolific authors or filtering based on productivity.
+   */
   Page<Author> findByTotalPublicationsGreaterThan(Integer totalPublications, Pageable pageable);
 }

@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -22,4 +23,10 @@ public interface PaperDAO extends MongoRepository<Paper, String> {
 
   /** Retrieves papers by publication year with pagination. */
   Page<Paper> findByYear(Integer year, Pageable pageable);
+
+  /**
+   * Performs a full-text search using MongoDB's $text operator.
+   */
+  @Query("{'$text': {'$search': ?0}}")
+  Page<Paper> findByTextSearch(String keyword, Pageable pageable);
 }

@@ -50,6 +50,23 @@ public class PaperController {
   }
 
   /**
+   * Searches papers smartly with pagination. Spring automatically resolves page, size, and sort
+   * parameters into the Pageable object. Example: GET
+   * /api/papers/smart-search?keyword=Deep&page=0&size=10&sort=year,desc
+   */
+  @GetMapping("/smart-search")
+  public ResponseEntity<Page<PaperDTO>> smartSearch(
+          @RequestParam String keyword, @PageableDefault(size = 10) Pageable pageable) {
+
+    Page<PaperDTO> papers = paperService.searchPapersByText(keyword, pageable);
+
+    if (papers.isEmpty()) {
+      return ResponseEntity.noContent().build();
+    }
+    return ResponseEntity.ok(papers);
+  }
+
+  /**
    * Retrieves papers by publication year with pagination. Example: GET
    * /api/papers/year/2023?page=0&size=20
    */

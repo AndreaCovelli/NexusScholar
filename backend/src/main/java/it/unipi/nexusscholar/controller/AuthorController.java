@@ -42,7 +42,7 @@ public class AuthorController {
   }
 
   /**
-   * Searches authors by name (partial match, case-insensitive) with pagination. GET
+   * Searches authors by name with pagination. GET
    * /api/authors/search?name=Mario&page=0&size=10
    */
   @GetMapping("/search")

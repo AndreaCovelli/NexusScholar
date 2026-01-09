@@ -145,6 +145,11 @@ public class PaperServiceImpl implements PaperService {
     // Maps the Page<Paper> directly to Page<PaperDTO> using the DAO's method
     return paperDAO.findByTitleContainingIgnoreCase(title, pageable).map(this::toPaperDTO);
   }
+  @Override
+  public Page<PaperDTO> searchPapersByText(String keyword, Pageable pageable){
+    // Maps the Page<Paper> directly to Page<PaperDTO> using the DAO's method
+    return paperDAO.findByTextSearch(keyword, pageable).map(this::toPaperDTO);
+  }
 
   @Override
   public Page<PaperDTO> getPapersByYear(Integer year, Pageable pageable) {
