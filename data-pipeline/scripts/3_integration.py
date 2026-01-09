@@ -2,6 +2,12 @@ import sqlite3
 import json
 import csv
 import os
+import random
+import string
+import bcrypt
+import secrets
+from typing import Callable, Dict, List, Tuple
+from datetime import datetime, timedelta, timezone
 
 # --- CONFIGURATION ---
 DB_PATH = 'enrichment_cache.db'
@@ -9,7 +15,15 @@ INPUT_JSONL = 'dblp_ai_ml_2015_2025.jsonl'
 OUTPUT_DIR = 'import_files'
 MONGO_SUBDIR = 'mongodb'
 NEO4J_SUBDIR = 'neo4j'
+INPUT_DIR = 'input_files'
+FILE_USERS_RAW = os.path.join(INPUT_DIR, 'rawUsers.json')
+FILE_ADMIN_RAW = os.path.join(INPUT_DIR, 'rawAdmin.json')
+FILE_OUTPUT_USERS = 'registeredUsers.jsonl'
+FILE_OUTPUT_ADMIN = 'admins.jsonl'
 
+# User Generation Constants
+MIN_BOOKMARKS = 2
+MAX_BOOKMARKS = 7
 
 def clean_text(text):
     """
@@ -29,6 +43,14 @@ class IntegrationPipeline:
     - Processing records
     - Writing MongoDB and Neo4j export files
     """
+
+    # Admin Permissions Definition
+    # Defined as a class attribute to centralize permission logic
+    PERMISSIONS = [
+        "DELETE_PAPER",
+        "BAN_USER",
+        "TRIGGER_ETL_SYNC"
+    ]
 
     def __init__(
             self,
@@ -69,7 +91,39 @@ class IntegrationPipeline:
         self.author_id_counter = 0
         self.topic_id_counter = 0
 
+        # Identity tracking (for deduplication)
+        self.seen_emails = set()
+        self.seen_usernames = set()
+
     # --- HELPER METHODS ---
+
+    def _resolve_unique_identity(self, base_username, email):
+        """
+        Ensures email uniqueness and generates a unique username.
+        Returns the final unique username, or None if email is duplicated.
+        """
+        if email in self.seen_emails:
+            return None  # Skip duplicate email
+
+        candidate = base_username
+        counter = 1
+        # Auto-increment username if it exists (e.g. user, user1, user2)
+        while candidate in self.seen_usernames:
+            candidate = f"{base_username}{counter}"
+            counter += 1
+
+        self.seen_emails.add(email)
+        self.seen_usernames.add(candidate)
+        return candidate
+
+    @staticmethod
+    def _hash_password(password: str) -> str:
+        """
+        Hashes a password using bcrypt.
+        Low rounds (4) used for mock generation performance.
+        """
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=4))
+        return hashed.decode('utf-8')
 
     def get_topic_id(self, topic_name):
         cleaned_name = clean_text(topic_name)
@@ -145,15 +199,22 @@ class IntegrationPipeline:
 
     def process_records(self):
         conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
 
         print("Loading enrichment cache into memory...")
         # Load the cache into memory for fast lookup
-        cursor.execute("SELECT dblp_key, status, s2_data FROM enrichment")
-        cache = {row[0]: (row[1], row[2]) for row in cursor.fetchall()}
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT dblp_key, status, s2_data FROM enrichment")
+            cache = {row[0]: (row[1], row[2]) for row in cursor.fetchall()}
+        finally:
+            conn.close()
 
         print("Starting processing...")
+
+        if not os.path.exists(self.input_jsonl):
+            print(f"Error: {self.input_jsonl} not found.")
+            return
+
         with open(self.input_jsonl, 'r', encoding='utf-8') as f:
             for line in f:
                 dblp_record = json.loads(line)
@@ -341,6 +402,209 @@ class IntegrationPipeline:
             self.relationships['HAS_TOPIC']
         )
 
+    # --- ACCOUNT GENERATION HELPERS ---
+
+    # function used to generate a date in last year
+    @staticmethod
+    def get_random_date_obj():
+        """
+        Returns a timezone-aware datetime object in UTC within the last year.
+        """
+        # Use timezone.utc to ensure the 'Z' suffix is actually true
+        end = datetime.now(timezone.utc)
+        start = end - timedelta(days=365)
+
+        # Calculate random time
+        random_date = start + (end - start) * random.random()
+        return random_date
+
+    @staticmethod
+    def generate_password(length=10):
+        """Generates a secure random password using letters, digits, and punctuation."""
+        chars = string.ascii_letters + string.digits + string.punctuation
+        return ''.join(secrets.choice(chars) for _ in range(length))
+
+    @staticmethod
+    def _generate_bookmarks(creation_date_obj: datetime, paper_keys: List[Tuple[str, str]]) -> List[Dict]:
+        """
+        Logic: Bookmarks
+        Generates a list of random bookmarks occurring strictly after user creation.
+        """
+        bookmarks = []
+        if not paper_keys:
+            return bookmarks
+
+        # Use global constants
+        available_count = len(paper_keys)
+
+        # Guard against cases where fewer papers exist than the minimum requested
+        if available_count < MIN_BOOKMARKS:
+            num_bookmarks = available_count
+        else:
+            # Clamp the upper bound to the available count
+            upper_bound = min(MAX_BOOKMARKS, available_count)
+            num_bookmarks = random.randint(MIN_BOOKMARKS, upper_bound)
+
+        # Sample from lightweight list
+        selected_papers = random.sample(paper_keys, num_bookmarks)
+
+        now_utc = datetime.now(timezone.utc)
+        time_gap = (now_utc - creation_date_obj).total_seconds()
+        max_seconds = int(time_gap) if time_gap > 0 else 0
+
+        for p_id, p_title in selected_papers:
+            # Randomize bookmark time strictly between User Creation and Now
+            seconds_offset = random.randint(0, max_seconds)
+            saved_at_obj = creation_date_obj + timedelta(seconds=seconds_offset)
+
+            bookmarks.append({
+                "paper_id": p_id,
+                "title": p_title,
+                "saved_at": saved_at_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+            })
+
+        return bookmarks
+
+    def _process_account_generation(
+            self,
+            entity_name: str,
+            input_path: str,
+            output_filename: str,
+            id_prefix: str,
+            id_width: int,
+            username_suffix: str,
+            record_mapper: Callable[[Dict, datetime], Dict]
+    ):
+        """
+        Generic function to improve code reuse for users/admins.
+        Handles: I/O, ID generation, Uniqueness, Hashing, and Writing.
+        """
+        print(f"Starting {entity_name} Generation...")
+
+        # Checking for the existence of the input file.
+        if not os.path.exists(input_path):
+            print(f"Error: {input_path} not found. Skipping {entity_name} generation.")
+            return
+
+        # Reading and parsing the raw JSON data.
+        try:
+            with open(input_path, 'r', encoding='utf-8') as f:
+                raw_data = json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"Error: Failed to parse {input_path}: {e}")
+            return
+
+        # Opening the output file for writing.
+        output_path = os.path.join(self.mongo_dir, output_filename)
+        print(f"Generating {len(raw_data)} {entity_name.lower()} (JSONL)...")
+
+        try:
+            with open(output_path, 'w', encoding='utf-8') as fw:
+                # Iterating through records.
+                for i, record in enumerate(raw_data):
+                    # Validate required fields
+                    full_name = record.get('name')
+                    email = record.get('email')
+
+                    if not full_name or not email:
+                        continue
+
+                    # ID Generation
+                    record_id = f"{id_prefix}{i + 1:0{id_width}d}"
+
+                    # Uniqueness Check: Ensure safe username generation
+                    # Resolving unique identities (username/email).
+                    safe_name = clean_text(full_name).lower().replace(' ', '_') # type: ignore
+                    base_username = f"{safe_name}{username_suffix}"
+
+                    username = self._resolve_unique_identity(base_username, email)
+
+                    if not username:
+                        print(f"Skipping duplicate email: {email}")
+                        continue
+
+                    # Security: Generate Hash
+                    # Generating and hashing passwords.
+                    raw_password = self.generate_password()
+                    password_hash = self._hash_password(raw_password)
+
+                    # Time: Creation
+                    creation_date_obj = self.get_random_date_obj()
+                    creation_date_str = creation_date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                    # Base Document
+                    base_doc = {
+                        "_id": record_id,
+                        "username": username,
+                        "email": email,
+                        "password_hash": password_hash,
+                        "created_at": creation_date_str
+                    }
+
+                    # Specific Logic via Mapper
+                    specific_data = record_mapper(record, creation_date_obj)
+
+                    # Writing the final JSONL output.
+                    final_doc = {**base_doc, **specific_data}
+                    fw.write(json.dumps(final_doc, ensure_ascii=False) + "\n")
+
+            print(f"Successfully wrote {entity_name} to {output_path}")
+
+        except IOError as e:
+            print(f"Disk I/O Error writing {entity_name}: {e}")
+
+    def generate_users(self):
+        # Prepare data for bookmark logic
+        if self.papers:
+            # Create list of tuples: (id, title)
+            paper_keys = [
+                (p['_id'], p['title'])
+                for p in self.papers.values()
+                if p.get('_id') and p.get('title')
+            ]
+        else:
+            paper_keys = []
+
+        # Define specific User mapper
+        def user_mapper(record: Dict, creation_date: datetime) -> Dict:
+            return {
+                "full_name": record.get('name'),
+                "bookmarked_papers": self._generate_bookmarks(creation_date, paper_keys)
+            }
+
+        # Call generic processor
+        self._process_account_generation(
+            entity_name="Users",
+            input_path=FILE_USERS_RAW,
+            output_filename=FILE_OUTPUT_USERS,
+            id_prefix="U",
+            id_width=6,
+            username_suffix="",
+            record_mapper=user_mapper
+        )
+
+    def generate_admin(self):
+        # Define specific Admin mapper
+        def admin_mapper(record: Dict, creation_date: datetime) -> Dict:
+            # Permissions: Use class constant
+            total_perms = len(self.PERMISSIONS)
+            # Select at least 1 permission, up to the total number available
+            num_perms_to_assign = random.randint(1, total_perms)
+            return {
+                "permissions": random.sample(self.PERMISSIONS, num_perms_to_assign)
+            }
+
+        # Call generic processor
+        self._process_account_generation(
+            entity_name="Admins",
+            input_path=FILE_ADMIN_RAW,
+            output_filename=FILE_OUTPUT_ADMIN,
+            id_prefix="AD",
+            id_width=2,
+            username_suffix="_admin",
+            record_mapper=admin_mapper
+        )
+
 
 def main():
     """Runs the main integration pipeline."""
@@ -349,6 +613,8 @@ def main():
     pipeline.process_records()
     pipeline.resolve_citations_and_metrics()
     pipeline.write_mongodb_files()
+    pipeline.generate_users()
+    pipeline.generate_admin()
     pipeline.write_neo4j_files()
     print("Phase 3 Complete. Import files are ready in the 'import_files' directory.")
 

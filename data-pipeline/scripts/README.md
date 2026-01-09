@@ -52,7 +52,7 @@ source .venv/bin/activate
 
 Once activated, install the required libraries:
 ```bash
-pip install lxml requests tenacity python-dotenv pandas pymongo neo4j
+pip install lxml requests bcrypt tenacity python-dotenv pandas pymongo neo4j
 ```
 
 ### 3. Infrastructure
