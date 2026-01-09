@@ -410,13 +410,7 @@ class IntegrationPipeline:
                     passw = self.generate_password()
                     hashed_pass = bcrypt.hashpw(passw.encode('utf-8'),bcrypt.gensalt())
                     hash_str = hashed_pass.decode('utf-8')
-                    
-                    
-                    users_plain.append({
-                            "_id":user_id,
-                            "username":username,
-                            "password":passw
-                        })
+                
 
                     u_doc = self.get_random_date()
 
@@ -503,12 +497,6 @@ class IntegrationPipeline:
                     pw = self.generate_password()
                     hashed_pass = bcrypt.hashpw(pw.encode('utf-8'),bcrypt.gensalt())
                     a_pw = hashed_pass.decode('utf-8')
-
-                    admin_plain.append({
-                            "_id":a_id,
-                            "username":a_username,
-                            "password":pw
-                    })
 
                     a_doc = self.get_random_date()
 
