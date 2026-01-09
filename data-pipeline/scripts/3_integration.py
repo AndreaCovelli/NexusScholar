@@ -477,7 +477,7 @@ class IntegrationPipeline:
         permission_list = ["DELETE_PAPER","BAN_USER","TRIGGER_ETL_SYNC"]
 
         try:
-            with open(f"./{OUTPUT_DIR}/{MONGO_SUBDIR}/{FILE_OUTPUT_ADMIN}",'w',encoding='utf-8') as fw:
+            with open(os.path.join(OUTPUT_DIR, MONGO_SUBDIR, FILE_OUTPUT_ADMIN), 'w', encoding='utf-8') as fw:
                 for i,ra in enumerate(raw_admin):
                     a_id = f"AD{i+1:02d}"
 
