@@ -19,8 +19,6 @@ FILE_USERS_RAW = 'rawUsers.json'
 FILE_ADMIN_RAW = 'rawAdmin.json'
 FILE_OUTPUT_USERS = 'registeredUsers.jsonl'
 FILE_OUTPUT_ADMIN = 'admins.jsonl'
-FILE_USER_PLAIN = 'usersPlain.json'
-FILE_ADMIN_PLAIN = 'adminPlain.json'
 
 def clean_text(text):
     """
@@ -373,8 +371,6 @@ class IntegrationPipeline:
 
         print("Starting Register Users generator")
 
-        users_plain =[]
-
         try:
             with open(FILE_PAPER,'r',encoding='utf-8') as f:
                 # retrieve json data from the file, stored as list
@@ -463,9 +459,6 @@ class IntegrationPipeline:
                     user_line= json.dumps(user_doc)
                     fw.write(user_line+"\n")
 
-            with open(FILE_USER_PLAIN,'w',encoding='utf-8') as fw2:
-                fw2.write(json.dumps(users_plain,indent=4))
-
         
         except Exception as e:
             print(f"Error during save of user:\n{e}")
@@ -481,8 +474,6 @@ class IntegrationPipeline:
         
         print("Admin random generation started")
         print("Start generating admin")
-
-        admin_plain = []
 
         try:
 
@@ -537,9 +528,6 @@ class IntegrationPipeline:
 
                     fw.write(ad_line+"\n")
 
-
-            with open(FILE_ADMIN_PLAIN,'w',encoding='utf-8') as fw2:
-                fw2.write(json.dumps(admin_plain,indent=4))
 
         except Exception as e:
             print(f"Error during save of admin:\n{e}")
