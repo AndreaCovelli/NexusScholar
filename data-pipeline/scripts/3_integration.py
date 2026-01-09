@@ -6,6 +6,7 @@ import random
 import string
 import bcrypt
 import secrets
+from typing import Callable, Dict, List, Tuple
 from datetime import datetime, timedelta, timezone
 
 # --- CONFIGURATION ---
@@ -114,6 +115,15 @@ class IntegrationPipeline:
         self.seen_emails.add(email)
         self.seen_usernames.add(candidate)
         return candidate
+
+    @staticmethod
+    def _hash_password(password: str) -> str:
+        """
+        Hashes a password using bcrypt.
+        Low rounds (4) used for mock generation performance.
+        """
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=4))
+        return hashed.decode('utf-8')
 
     def get_topic_id(self, topic_name):
         cleaned_name = clean_text(topic_name)
@@ -392,6 +402,8 @@ class IntegrationPipeline:
             self.relationships['HAS_TOPIC']
         )
 
+    # --- ACCOUNT GENERATION HELPERS ---
+
     # function used to generate a date in last year
     @staticmethod
     def get_random_date_obj():
@@ -406,15 +418,143 @@ class IntegrationPipeline:
         random_date = start + (end - start) * random.random()
         return random_date
 
-    # function that generates password considering alphabet, digits and some spec. char.
     @staticmethod
     def generate_password(length=10):
+        """Generates a secure random password using letters, digits, and punctuation."""
         chars = string.ascii_letters + string.digits + string.punctuation
         return ''.join(secrets.choice(chars) for _ in range(length))
 
-    def generate_users(self):
-        print("Starting User Generation...")
+    @staticmethod
+    def _generate_bookmarks(creation_date_obj: datetime, paper_keys: List[Tuple[str, str]]) -> List[Dict]:
+        """
+        Logic: Bookmarks
+        Generates a list of random bookmarks occurring strictly after user creation.
+        """
+        bookmarks = []
+        if not paper_keys:
+            return bookmarks
 
+        # Use global constants
+        available_count = len(paper_keys)
+
+        # Guard against cases where fewer papers exist than the minimum requested
+        if available_count < MIN_BOOKMARKS:
+            num_bookmarks = available_count
+        else:
+            # Clamp the upper bound to the available count
+            upper_bound = min(MAX_BOOKMARKS, available_count)
+            num_bookmarks = random.randint(MIN_BOOKMARKS, upper_bound)
+
+        # Sample from lightweight list
+        selected_papers = random.sample(paper_keys, num_bookmarks)
+
+        now_utc = datetime.now(timezone.utc)
+        time_gap = (now_utc - creation_date_obj).total_seconds()
+        max_seconds = int(time_gap) if time_gap > 0 else 0
+
+        for p_id, p_title in selected_papers:
+            # Randomize bookmark time strictly between User Creation and Now
+            seconds_offset = random.randint(0, max_seconds)
+            saved_at_obj = creation_date_obj + timedelta(seconds=seconds_offset)
+
+            bookmarks.append({
+                "paper_id": p_id,
+                "title": p_title,
+                "saved_at": saved_at_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+            })
+
+        return bookmarks
+
+    def _process_account_generation(
+            self,
+            entity_name: str,
+            input_path: str,
+            output_filename: str,
+            id_prefix: str,
+            id_width: int,
+            username_suffix: str,
+            record_mapper: Callable[[Dict, datetime], Dict]
+    ):
+        """
+        Generic function to improve code reuse for users/admins.
+        Handles: I/O, ID generation, Uniqueness, Hashing, and Writing.
+        """
+        print(f"Starting {entity_name} Generation...")
+
+        # Checking for the existence of the input file.
+        if not os.path.exists(input_path):
+            print(f"Error: {input_path} not found. Skipping {entity_name} generation.")
+            return
+
+        # Reading and parsing the raw JSON data.
+        try:
+            with open(input_path, 'r', encoding='utf-8') as f:
+                raw_data = json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"Error: Failed to parse {input_path}: {e}")
+            return
+
+        # Opening the output file for writing.
+        output_path = os.path.join(self.mongo_dir, output_filename)
+        print(f"Generating {len(raw_data)} {entity_name.lower()} (JSONL)...")
+
+        try:
+            with open(output_path, 'w', encoding='utf-8') as fw:
+                # Iterating through records.
+                for i, record in enumerate(raw_data):
+                    # Validate required fields
+                    full_name = record.get('name')
+                    email = record.get('email')
+
+                    if not full_name or not email:
+                        continue
+
+                    # ID Generation
+                    record_id = f"{id_prefix}{i + 1:0{id_width}d}"
+
+                    # Uniqueness Check: Ensure safe username generation
+                    # Resolving unique identities (username/email).
+                    safe_name = clean_text(full_name).lower().replace(' ', '_') # type: ignore
+                    base_username = f"{safe_name}{username_suffix}"
+
+                    username = self._resolve_unique_identity(base_username, email)
+
+                    if not username:
+                        print(f"Skipping duplicate email: {email}")
+                        continue
+
+                    # Security: Generate Hash
+                    # Generating and hashing passwords.
+                    raw_password = self.generate_password()
+                    password_hash = self._hash_password(raw_password)
+
+                    # Time: Creation
+                    creation_date_obj = self.get_random_date_obj()
+                    creation_date_str = creation_date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                    # Base Document
+                    base_doc = {
+                        "_id": record_id,
+                        "username": username,
+                        "email": email,
+                        "password_hash": password_hash,
+                        "created_at": creation_date_str
+                    }
+
+                    # Specific Logic via Mapper
+                    specific_data = record_mapper(record, creation_date_obj)
+
+                    # Writing the final JSONL output.
+                    final_doc = {**base_doc, **specific_data}
+                    fw.write(json.dumps(final_doc, ensure_ascii=False) + "\n")
+
+            print(f"Successfully wrote {entity_name} to {output_path}")
+
+        except IOError as e:
+            print(f"Disk I/O Error writing {entity_name}: {e}")
+
+    def generate_users(self):
+        # Prepare data for bookmark logic
         if self.papers:
             # Create list of tuples: (id, title)
             paper_keys = [
@@ -425,170 +565,45 @@ class IntegrationPipeline:
         else:
             paper_keys = []
 
-        # Load raw user data
-        if not os.path.exists(FILE_USERS_RAW):
-            print(f"Error: {FILE_USERS_RAW} not found. Skipping user generation.")
-            return
+        # Define specific User mapper
+        def user_mapper(record: Dict, creation_date: datetime) -> Dict:
+            return {
+                "full_name": record.get('name'),
+                "bookmarked_papers": self._generate_bookmarks(creation_date, paper_keys)
+            }
 
-        try:
-            with open(FILE_USERS_RAW, 'r', encoding='utf-8') as f:
-                users_raw = json.load(f)
-        except json.JSONDecodeError as e:
-            print(f"Error: Failed to parse {FILE_USERS_RAW}: {e}")
-            return
-
-        user_output_path = os.path.join(self.mongo_dir, FILE_OUTPUT_USERS)
-        print(f"Generating {len(users_raw)} users (JSONL)...")
-
-        try:
-            with open(user_output_path, 'w', encoding='utf-8') as fw:
-                for i, user_raw in enumerate(users_raw):
-                    # Validate required fields
-                    full_name = user_raw.get('name')
-                    email = user_raw.get('email')
-
-                    if not full_name or not email:
-                        continue
-
-                    user_id = f"U{i+1:06d}"
-
-                    # Uniqueness Check: Generate safe username or skip if email invalid
-                    base_username = clean_text(full_name).lower().replace(' ', '_')
-                    username = self._resolve_unique_identity(base_username, email)
-
-                    if not username:
-                        print(f"Skipping duplicate email: {email}")
-                        continue
-
-                    # Security: Generate Hash
-                    raw_password = self.generate_password()
-                    # low bcrypt rounds just for user mocks
-                    hashed_pass = bcrypt.hashpw(raw_password.encode('utf-8'), bcrypt.gensalt(rounds=4))
-                    hash_str = hashed_pass.decode('utf-8')
-
-                    # Time: Creation
-                    creation_date_obj = self.get_random_date_obj()
-                    creation_date_str = creation_date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-                    # Logic: Bookmarks
-                    bookmarks = []
-                    if paper_keys:
-                        # Use global constants
-                        available_count = len(paper_keys)
-
-                        # Guard against cases where fewer papers exist than the minimum requested
-                        if available_count < MIN_BOOKMARKS:
-                            num_bookmarks = available_count
-                        else:
-                            # Clamp the upper bound to the available count
-                            upper_bound = min(MAX_BOOKMARKS, available_count)
-                            num_bookmarks = random.randint(MIN_BOOKMARKS, upper_bound)
-
-                        # Sample from lightweight list
-                        selected_papers = random.sample(paper_keys, num_bookmarks)
-
-                        now_utc = datetime.now(timezone.utc)
-                        time_gap = (now_utc - creation_date_obj).total_seconds()
-                        max_seconds = int(time_gap) if time_gap > 0 else 0
-
-                        for p_id, p_title in selected_papers:
-                            # Randomize bookmark time strictly between User Creation and Now
-                            seconds_offset = random.randint(0, max_seconds)
-                            saved_at_obj = creation_date_obj + timedelta(seconds=seconds_offset)
-
-                            bookmarks.append({
-                                "paper_id": p_id,
-                                "title": p_title,
-                                "saved_at": saved_at_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
-                            })
-
-                    user_doc = {
-                        "_id": user_id,
-                        "username": username,
-                        "email": email,
-                        "password_hash": hash_str,
-                        "created_at": creation_date_str,
-                        "full_name": full_name,
-                        "bookmarked_papers": bookmarks
-                    }
-
-                    # Write JSONL Line
-                    fw.write(json.dumps(user_doc, ensure_ascii=False) + "\n")
-
-            print(f"Successfully wrote users to {user_output_path}")
-
-        except IOError as e:
-            print(f"Disk I/O Error writing users: {e}")
+        # Call generic processor
+        self._process_account_generation(
+            entity_name="Users",
+            input_path=FILE_USERS_RAW,
+            output_filename=FILE_OUTPUT_USERS,
+            id_prefix="U",
+            id_width=6,
+            username_suffix="",
+            record_mapper=user_mapper
+        )
 
     def generate_admin(self):
-        print("Starting Admin Generation...")
+        # Define specific Admin mapper
+        def admin_mapper(record: Dict, creation_date: datetime) -> Dict:
+            # Permissions: Use class constant
+            total_perms = len(self.PERMISSIONS)
+            # Select at least 1 permission, up to the total number available
+            num_perms_to_assign = random.randint(1, total_perms)
+            return {
+                "permissions": random.sample(self.PERMISSIONS, num_perms_to_assign)
+            }
 
-        if not os.path.exists(FILE_ADMIN_RAW):
-            print(f"Error: {FILE_ADMIN_RAW} not found. Skipping admin generation.")
-            return
-
-        try:
-            with open(FILE_ADMIN_RAW, 'r', encoding='utf-8') as f:
-                raw_admin = json.load(f)
-        except json.JSONDecodeError as e:
-            print(f"Error: Failed to parse {FILE_ADMIN_RAW}: {e}")
-            return
-
-        admin_output_path = os.path.join(self.mongo_dir, FILE_OUTPUT_ADMIN)
-        print(f"Generating {len(raw_admin)} admins (JSONL)...")
-
-        try:
-            with open(admin_output_path, 'w', encoding='utf-8') as fw:
-                for i, ra in enumerate(raw_admin):
-                    admin_name = ra.get("name")
-                    email = ra.get("email")
-
-                    if not admin_name or not email:
-                        continue
-
-                    a_id = f"AD{i+1:02d}"
-
-                    # Uniqueness Check: Ensure safe username generation
-                    safe_name = clean_text(admin_name).lower().replace(' ', '_')
-                    base_username = f"{safe_name}_admin"
-
-                    a_username = self._resolve_unique_identity(base_username, email)
-
-                    if not a_username:
-                        print(f"Skipping duplicate email (Admin): {email}")
-                        continue
-
-                    # Security: Hash
-                    raw_pw = self.generate_password()
-                    hashed_pass = bcrypt.hashpw(raw_pw.encode('utf-8'), bcrypt.gensalt(rounds=4))
-                    a_pw_hash = hashed_pass.decode('utf-8')
-
-                    # Time
-                    a_date_obj = self.get_random_date_obj()
-                    a_date_str = a_date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-                    # Permissions: Use class constant
-                    total_perms = len(self.PERMISSIONS)
-                    # Select at least 1 permission, up to the total number available
-                    num_perms_to_assign = random.randint(1, total_perms)
-                    a_permissions = random.sample(self.PERMISSIONS, num_perms_to_assign)
-
-                    admin_doc = {
-                        "_id": a_id,
-                        "username": a_username,
-                        "email": email,
-                        "password_hash": a_pw_hash,
-                        "created_at": a_date_str,
-                        "permissions": a_permissions
-                    }
-
-                    # Write JSONL Line
-                    fw.write(json.dumps(admin_doc, ensure_ascii=False) + "\n")
-
-            print(f"Successfully wrote admins to {admin_output_path}")
-
-        except IOError as e:
-            print(f"Disk I/O Error writing admins: {e}")
+        # Call generic processor
+        self._process_account_generation(
+            entity_name="Admins",
+            input_path=FILE_ADMIN_RAW,
+            output_filename=FILE_OUTPUT_ADMIN,
+            id_prefix="AD",
+            id_width=2,
+            username_suffix="_admin",
+            record_mapper=admin_mapper
+        )
 
 
 def main():
