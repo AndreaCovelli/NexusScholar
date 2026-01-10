@@ -64,22 +64,22 @@ docker compose -f $COMPOSE_FILE run --rm mongo1 mongosh "$MONGO_CONN" --eval "
     print(' -> Index authorsIndex created.');
 
     // --- 3. Collection: registeredUser ---
-    print('Processing collection: registeredUser');
-    db.registeredUser.dropIndexes();
+    print('Processing collection: registeredUsers');
+    db.registeredUsers.dropIndexes();
 
     // Create ascending index on full_name
-    db.registeredUser.createIndex(
+    db.registeredUsers.createIndex(
         { full_name: 1 },
         { name: 'usersIndex' }
     );
     print(' -> Index usersIndex created.');
 
-    // --- 4. Collection: admin ---
+    // --- 4. Collection: admins ---
     print('Processing collection: admin');
-    db.admin.dropIndexes();
+    db.admins.dropIndexes();
 
     // Create ascending index on username
-    db.admin.createIndex(
+    db.admins.createIndex(
         { username: 1 },
         { name: 'adminIndex' }
     );
