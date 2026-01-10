@@ -1,18 +1,16 @@
-package it.unipi.nexusscholar.model.mongo;
+package it.unipi.nexusscholar.dto.mongo;
 
 import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 @EqualsAndHashCode(callSuper = false)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "admins")
-public class Admin extends User {
+public class AdminDTO extends UserDTO {
 
-  private List<Permission> permissions;
+    private List<PermissionDTO> permissions;
 }
