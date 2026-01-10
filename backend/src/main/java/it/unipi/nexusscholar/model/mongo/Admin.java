@@ -14,7 +14,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@Document(collection = "admins")
 public class Admin extends User {
 
-  @Builder.Default private List<Permission> permissions = new ArrayList<>();
+  private List<Permission> permissions;
 }
