@@ -460,7 +460,7 @@ class IntegrationPipeline:
             bookmarks.append({
                 "paper_id": p_id,
                 "title": p_title,
-                "saved_at": saved_at_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+                "saved_at": { "$date": saved_at_obj.strftime("%Y-%m-%dT%H:%M:%SZ") }
             })
 
         return bookmarks
