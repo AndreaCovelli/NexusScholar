@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +31,7 @@ public class PaperAnalysisController {
    * <p>Identifies emerging research trends (Hot Topics).
    */
   @GetMapping("/trend")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<TrendAnalysisDTO>> getTrendAnalysis() {
     List<TrendAnalysisDTO> result = paperAnalysisService.getTrendAnalysis();
     return new ResponseEntity<>(result, HttpStatus.OK);
@@ -41,6 +43,7 @@ public class PaperAnalysisController {
    * <p>Useful for identifying high-impact venues.
    */
   @GetMapping("/venue")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<VenueAnalysisDTO>> getVenueAnalysis() {
     List<VenueAnalysisDTO> result = paperAnalysisService.getVenueAnalysis();
     return new ResponseEntity<>(result, HttpStatus.OK);
@@ -51,6 +54,7 @@ public class PaperAnalysisController {
    * /api/papers/analysis/collaboration
    */
   @GetMapping("/collaboration")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<CollaborationEvolutionDTO>> getCollaborationEvolution() {
     List<CollaborationEvolutionDTO> result = paperAnalysisService.getCollaborationEvolution();
     return new ResponseEntity<>(result, HttpStatus.OK);

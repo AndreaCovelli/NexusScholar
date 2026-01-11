@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -44,7 +46,7 @@ public class GlobalExceptionHandler {
   /** Handles standard Java validation errors. Returns HTTP 400 (Bad Request). */
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, String>> handleIllegalArgumentException(
-      IllegalArgumentException ex) {
+          IllegalArgumentException ex) {
     Map<String, String> response = new HashMap<>();
     response.put("error", "Invalid Argument");
     response.put("details", ex.getMessage());
@@ -56,7 +58,7 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<Map<String, String>> handleValidationException(
-      ConstraintViolationException ex) {
+          ConstraintViolationException ex) {
     Map<String, String> response = new HashMap<>();
     response.put("error", "Validation Error");
     response.put("details", ex.getMessage());
@@ -69,21 +71,46 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<Map<String, String>> handleTypeMismatch(
-      MethodArgumentTypeMismatchException ex) {
+          MethodArgumentTypeMismatchException ex) {
     Map<String, String> response = new HashMap<>();
     String paramName = ex.getName();
     String invalidValue = (ex.getValue() != null) ? ex.getValue().toString() : "null";
     String requiredType =
-        (ex.getRequiredType() != null) ? ex.getRequiredType().getSimpleName() : "unknown";
+            (ex.getRequiredType() != null) ? ex.getRequiredType().getSimpleName() : "unknown";
 
     response.put("error", "Invalid Parameter Type");
     response.put(
-        "details",
-        String.format(
-            "Parameter '%s' should be of type '%s'. Provided: '%s'",
-            paramName, requiredType, invalidValue));
+            "details",
+            String.format(
+                    "Parameter '%s' should be of type '%s'. Provided: '%s'",
+                    paramName, requiredType, invalidValue));
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
+  /**
+   * Handles security access violations (e.g., missing role for @PreAuthorize). Returns HTTP 403
+   * (Forbidden).
+   */
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
+    Map<String, String> response = new HashMap<>();
+    response.put("error", "Access Denied");
+    response.put("details", "You do not have permission to access this resource.");
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+  }
+
+  /**
+   * Handles authentication failures (e.g., invalid token/credentials). Returns HTTP 401
+   * (Unauthorized).
+   */
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<Map<String, String>> handleAuthenticationException(
+          AuthenticationException ex) {
+    Map<String, String> response = new HashMap<>();
+    response.put("error", "Unauthorized");
+    response.put("details", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
   }
 
   /**

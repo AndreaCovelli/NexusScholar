@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ public class RegisteredUserAnalysisController {
      * <p>Uses MongoDB aggregation pipeline for efficient computation.
      */
     @GetMapping("/leaderboard")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<PaperLeaderboardDTO>> getPaperLeaderboard(
             @RequestParam(name = "year")
             @Min(value = 1900, message = "Year must be valid")

@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,7 @@ public class AuthorAnalysisController {
    * <p>Uses MongoDB aggregation pipeline for efficient computation.
    */
   @GetMapping("/prolific")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<ProlificAuthorDTO>> getProlificAuthors(
       @RequestParam(name = "minPublications", defaultValue = "10")
           @Min(value = 1, message = "minPublications must be at least 1")

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /** REST controller for Paper CRUD operations. Endpoints: /api/papers */
@@ -20,6 +21,7 @@ public class PaperController {
   // --- CREATE / UPDATE ---
 
   @PostMapping
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<PaperDTO> savePaper(@RequestBody PaperDTO paperDTO) {
     PaperDTO savedPaper = paperService.savePaper(paperDTO);
     return ResponseEntity.ok(savedPaper);
@@ -85,6 +87,7 @@ public class PaperController {
   // --- DELETE ---
 
   @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Void> deletePaper(@PathVariable String id) {
     paperService.deletePaper(id);
     return ResponseEntity.noContent().build();

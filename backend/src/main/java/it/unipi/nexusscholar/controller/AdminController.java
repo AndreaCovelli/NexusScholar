@@ -21,7 +21,6 @@ public class AdminController {
 
     // CREATE - POST
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdminDTO> createAdmin(@RequestBody AdminCreateDTO createDTO) {
         return ResponseEntity.ok(adminService.createAdmin(createDTO));
     }
