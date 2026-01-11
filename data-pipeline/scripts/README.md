@@ -10,7 +10,7 @@ The pipeline is divided into **4 sequential phases**:
 2.  **Enrichment:** Queries the Semantic Scholar API to fetch abstracts, citations, and topics.
 3.  **Integration:** Merges data, resolves internal IDs, and generates import files.
 4.  **Loading:** Bulk loads data into MongoDB (Replica Set) and Neo4j.
-
+5.  **Indexing:** Creates the indexes for MongoDB.
 ---
 
 ## Prerequisites & Setup
@@ -124,11 +124,12 @@ bash ../../deployment/scripts/init-mongo-replica.sh
     *   Temporarily **stops** the Neo4j container.
     *   Runs `neo4j-admin database import` for high-speed CSV loading.
     *   **Restarts** the Neo4j container.
-### Phase 5: Index creation
+### Phase 5: Index Creation
 *   **Action:** Uses Docker commands create indexes.
 
 1.  **Ensure Docker containers are running** (see Prerequisites).
-2.  Run the loader script:
+2.  **Ensure that you have already done the data loading.**(see Phase 4)
+2.  Run the create script:
     ```bash
     bash 5_create_index.sh
     ```

@@ -26,14 +26,26 @@ Create a new file: `src/main/resources/application-local.yaml`.
 spring:
   data:
     mongodb:
-      # Connects to localhost:27017 (exposed by Docker)
-      uri: mongodb://admin:password@localhost:27017/nexusscholar?authSource=admin
+      # ADDED: &replicaSet=rs0&directConnection=true
+      uri: mongodb://admin:secretpassword@localhost:27017/nexusscholar?authSource=admin&replicaSet=rs0&directConnection=true
   neo4j:
-    # Connects to localhost:7687 (exposed by Docker)
     uri: bolt://localhost:7687
     authentication:
       username: neo4j
-      password: <your .env file password>
+      password: secretpassword
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    it.unipi.nexusscholar: INFO
+
+# --- JWT CONFIGURATION ---
+jwt:
+  secret-key: mySuperSecretKey
+  validity-in-milliseconds: 3600000
+
 ```
 
 *> **Note:** Update the usernames/passwords to match your `.env` file if you changed the defaults.*
