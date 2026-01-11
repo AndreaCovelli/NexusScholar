@@ -538,7 +538,7 @@ class IntegrationPipeline:
                         "username": username,
                         "email": email,
                         "password_hash": password_hash,
-                        "created_at": creation_date_str
+                        "created_at": {"$date": creation_date_str}
                     }
 
                     # Specific Logic via Mapper

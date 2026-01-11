@@ -12,12 +12,8 @@ import org.springframework.data.annotation.Id;
 public abstract class UserDTO {
 
     @Id private String id;
-
     private String username;
-
     private String email;
-
-    private String password;
-
+    // Password field removed for security reasons (it is never returned in output)
     private LocalDateTime createdAt;
 }
