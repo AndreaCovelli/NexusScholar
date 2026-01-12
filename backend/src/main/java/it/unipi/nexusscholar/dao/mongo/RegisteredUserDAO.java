@@ -8,10 +8,13 @@ import java.util.Optional;
 
 @Repository
 public interface RegisteredUserDAO extends MongoRepository<RegisteredUser, String> {
-    Optional<RegisteredUser> findByUsername(String username);
-    //Optional<RegisteredUser> findByEmail(String email);
 
-    // Useful for validation in service layer
+    // Standard find methods
+    Optional<RegisteredUser> findByUsername(String username);
+
+    // Checks for existence (used during Registration)
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+
+    boolean existsByEmailAndIdNot(String email, String id);
 }

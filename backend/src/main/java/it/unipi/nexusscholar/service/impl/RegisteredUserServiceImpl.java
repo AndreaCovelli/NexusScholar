@@ -1,7 +1,10 @@
 package it.unipi.nexusscholar.service.impl;
 
+import it.unipi.nexusscholar.dao.mongo.PaperDAO;
 import it.unipi.nexusscholar.dao.mongo.RegisteredUserDAO;
 import it.unipi.nexusscholar.dto.mongo.*;
+import it.unipi.nexusscholar.model.mongo.BookmarkedPaper;
+import it.unipi.nexusscholar.model.mongo.Paper;
 import it.unipi.nexusscholar.model.mongo.RegisteredUser;
 import it.unipi.nexusscholar.service.RegisteredUserService;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +24,12 @@ import java.util.stream.Collectors;
 public class RegisteredUserServiceImpl implements RegisteredUserService {
 
     private final RegisteredUserDAO userDAO;
+    private final PaperDAO paperDAO;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public RegisteredUserDTO registerUser(RegisteredUserCreateDTO dto) {
-        // Validation
+        // Validation: Check if username or email already exists
         if (userDAO.existsByUsername(dto.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
@@ -52,12 +56,44 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
         RegisteredUser user = userDAO.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
-        if (dto.getFullName() != null) user.setFullName(dto.getFullName());
+        // 1. Email Update Check
+        if (dto.getEmail() != null && !dto.getEmail().equals(user.getEmail())) {
+            if (userDAO.existsByEmailAndIdNot(dto.getEmail(), id)) {
+                throw new IllegalArgumentException("Email already in use by another user");
+            }
+            user.setEmail(dto.getEmail());
+        }
 
-        // Update password if provided
+        // 2. Profile Info Update
+        if (dto.getFullName() != null) {
+            user.setFullName(dto.getFullName());
+        }
+
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        // 3. Bookmarks Update (STRICT LOGIC like addBookmark)
+        if (dto.getBookmarkedPapers() != null) {
+            List<BookmarkedPaper> validatedBookmarks = new ArrayList<>();
+
+            for (BookmarkedPaperDTO bookmarkDto : dto.getBookmarkedPapers()) {
+                // LOGIC: Don't trust the DTO title. Fetch the real Paper from DB.
+                Paper paper = paperDAO.findById(bookmarkDto.getPaperId())
+                        .orElseThrow(() -> new IllegalArgumentException("Paper not found with ID: " + bookmarkDto.getPaperId()));
+
+                BookmarkedPaper newBookmark = new BookmarkedPaper();
+                newBookmark.setPaperId(paper.getId());
+                newBookmark.setTitle(paper.getTitle()); // <--- This ensures consistency with DB
+
+                // Keep the date provided or set to now
+                newBookmark.setSavedAt(bookmarkDto.getSavedAt() != null ? bookmarkDto.getSavedAt() : LocalDateTime.now());
+
+                validatedBookmarks.add(newBookmark);
+            }
+
+            // Replace the old list with the validated one
+            user.setBookmarkedPapers(validatedBookmarks);
         }
 
         return mapToDTO(userDAO.save(user));
@@ -81,20 +117,50 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
         userDAO.deleteById(id);
     }
 
+    @Override
+    public RegisteredUserDTO addBookmark(String userId, String paperId) {
+        // 1. Fetch the user
+        RegisteredUser user = userDAO.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Fetch the paper to ensure it exists and to get the title
+        Paper paper = paperDAO.findById(paperId)
+                .orElseThrow(() -> new RuntimeException("Paper not found with ID: " + paperId));
+
+        // 3. Initialize the list if it's null
+        if (user.getBookmarkedPapers() == null) {
+            user.setBookmarkedPapers(new ArrayList<>());
+        }
+
+        // 4. Check for duplicates
+        boolean alreadyBookmarked = user.getBookmarkedPapers().stream()
+                .anyMatch(bp -> bp.getPaperId().equals(paperId));
+
+        if (alreadyBookmarked) {
+            throw new IllegalArgumentException("Paper is already bookmarked.");
+        }
+
+        // 5. Create the bookmark entry
+        BookmarkedPaper bookmark = new BookmarkedPaper();
+        bookmark.setPaperId(paper.getId());
+        bookmark.setTitle(paper.getTitle());
+        bookmark.setSavedAt(LocalDateTime.now());
+
+        // 6. Add and save
+        user.getBookmarkedPapers().add(bookmark);
+
+        return mapToDTO(userDAO.save(user));
+    }
+
     // --- Helper Mapping ---
     private RegisteredUserDTO mapToDTO(RegisteredUser user) {
         RegisteredUserDTO dto = new RegisteredUserDTO();
-        // Inherited fields from UserDTO
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setCreatedAt(user.getCreatedAt());
-
-        // Specific fields
         dto.setFullName(user.getFullName());
 
-        // Map Bookmarks
-        // Assuming RegisteredUser entity has a list of BookmarkedPaper (inner entity or POJO)
         if (user.getBookmarkedPapers() != null) {
             List<BookmarkedPaperDTO> bookmarkDTOs = user.getBookmarkedPapers().stream()
                     .map(bp -> new BookmarkedPaperDTO(

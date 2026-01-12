@@ -7,9 +7,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface RegisteredUserService {
-    RegisteredUserDTO registerUser(RegisteredUserCreateDTO dto);
-    RegisteredUserDTO updateUser(String id, RegisteredUserUpdateDTO dto);
+    RegisteredUserDTO registerUser(RegisteredUserCreateDTO createDTO);
+    RegisteredUserDTO updateUser(String id, RegisteredUserUpdateDTO updateDTO);
     RegisteredUserDTO getUserById(String id);
     Page<RegisteredUserDTO> getAllUsers(Pageable pageable);
     void deleteUser(String id);
+    RegisteredUserDTO addBookmark(String userId, String paperId);
 }

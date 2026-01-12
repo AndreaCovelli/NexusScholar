@@ -3,7 +3,9 @@ package it.unipi.nexusscholar.controller;
 import it.unipi.nexusscholar.dto.mongo.RegisteredUserCreateDTO;
 import it.unipi.nexusscholar.dto.mongo.RegisteredUserDTO;
 import it.unipi.nexusscholar.dto.mongo.RegisteredUserUpdateDTO;
+import it.unipi.nexusscholar.security.JwtTokenProvider;
 import it.unipi.nexusscholar.service.RegisteredUserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class RegisteredUserController {
 
     private final RegisteredUserService userService;
+    private final JwtTokenProvider jwtTokenProvider; // Injected to extract User ID from token
 
     // REGISTRATION (Public)
     @PostMapping("/register")
@@ -25,7 +28,7 @@ public class RegisteredUserController {
         return ResponseEntity.ok(userService.registerUser(createDTO));
     }
 
-    // UPDATE (Only the user themselves or Admin - simplified here as 'USER' or 'ADMIN')
+    // UPDATE (Only the user themselves or Admin)
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<RegisteredUserDTO> updateUser(@PathVariable String id, @RequestBody RegisteredUserUpdateDTO updateDTO) {
@@ -52,5 +55,25 @@ public class RegisteredUserController {
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Adds a bookmark for the current user.
+     * The user ID is extracted directly from the JWT token, so the user doesn't need to provide it.
+     */
+    @PostMapping("/bookmarks/{paperId}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<RegisteredUserDTO> addBookmark(
+            @PathVariable String paperId,
+            HttpServletRequest request) {
+
+        // 1. Resolve token from request header
+        String token = jwtTokenProvider.resolveToken(request);
+
+        // 2. Extract User ID from the token payload
+        String userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        // 3. Delegate to service
+        return ResponseEntity.ok(userService.addBookmark(userId, paperId));
     }
 }
