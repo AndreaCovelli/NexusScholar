@@ -43,10 +43,7 @@ public class AuthorController {
     return ResponseEntity.ok(author);
   }
 
-  /**
-   * Searches authors by name with pagination. GET
-   * /api/authors/search?name=Mario&page=0&size=10
-   */
+  /** Searches authors by name with pagination. GET /api/authors/search?name=Mario&page=0&size=10 */
   @GetMapping("/search")
   public ResponseEntity<Page<AuthorDTO>> searchAuthorsByName(
       @RequestParam String name, @PageableDefault(size = 10) Pageable pageable) {

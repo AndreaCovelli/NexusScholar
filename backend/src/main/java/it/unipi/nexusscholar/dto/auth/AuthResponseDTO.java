@@ -6,10 +6,10 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AuthResponseDTO {
-    private String accessToken;
-    private String tokenType = "Bearer";
+  private String accessToken;
+  private String tokenType = "Bearer";
 
-    public AuthResponseDTO(String accessToken) {
-        this.accessToken = accessToken;
-    }
+  public AuthResponseDTO(String accessToken) {
+    this.accessToken = accessToken;
+  }
 }

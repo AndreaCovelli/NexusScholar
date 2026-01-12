@@ -8,15 +8,15 @@ import org.springframework.data.domain.Pageable;
 
 public interface AdminService {
 
-    // Create: takes a CreateDTO (with password), returns an AdminDTO (without password)
-    AdminDTO createAdmin(AdminCreateDTO createDTO);
+  // Create: takes a CreateDTO (with password), returns an AdminDTO (without password)
+  AdminDTO createAdmin(AdminCreateDTO createDTO);
 
-    // Update: takes ID and UpdateDTO
-    AdminDTO updateAdmin(String id, AdminUpdateDTO updateDTO);
+  // Update: takes ID and UpdateDTO
+  AdminDTO updateAdmin(String id, AdminUpdateDTO updateDTO);
 
-    AdminDTO getAdminById(String id);
+  AdminDTO getAdminById(String id);
 
-    Page<AdminDTO> getAllAdmins(Pageable pageable);
+  Page<AdminDTO> getAllAdmins(Pageable pageable);
 
-    void deleteAdmin(String id);
+  void deleteAdmin(String id);
 }

@@ -2,8 +2,8 @@ package it.unipi.nexusscholar.dao.mongo;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import it.unipi.nexusscholar.dao.exception.DAOException;
@@ -47,10 +47,10 @@ class AuthorAnalysisDAOImplTest {
     List<ProlificAuthor> expectedList = List.of(testProlificAuthor);
 
     AggregationResults<ProlificAuthor> fakeResults =
-            new AggregationResults<>(expectedList, new Document());
+        new AggregationResults<>(expectedList, new Document());
 
     when(mongoTemplate.aggregate(any(Aggregation.class), eq("authors"), eq(ProlificAuthor.class)))
-            .thenReturn(fakeResults);
+        .thenReturn(fakeResults);
 
     // 2. Execute
     List<ProlificAuthor> result = authorAnalysisDAO.getProlificAuthors(5);
@@ -61,17 +61,17 @@ class AuthorAnalysisDAOImplTest {
     assertEquals("Mario Rossi", result.get(0).getAuthorName());
 
     verify(mongoTemplate)
-            .aggregate(any(Aggregation.class), eq("authors"), eq(ProlificAuthor.class));
+        .aggregate(any(Aggregation.class), eq("authors"), eq(ProlificAuthor.class));
   }
 
   @Test
   void getProlificAuthors_EmptyCollection() {
     // 1. Setup Empty Response
     AggregationResults<ProlificAuthor> emptyResults =
-            new AggregationResults<>(Collections.emptyList(), new Document());
+        new AggregationResults<>(Collections.emptyList(), new Document());
 
     when(mongoTemplate.aggregate(any(Aggregation.class), eq("authors"), eq(ProlificAuthor.class)))
-            .thenReturn(emptyResults);
+        .thenReturn(emptyResults);
 
     // 2. Execute
     List<ProlificAuthor> result = authorAnalysisDAO.getProlificAuthors(10);
@@ -85,15 +85,15 @@ class AuthorAnalysisDAOImplTest {
   void getProlificAuthors_ThrowsDAOException() {
     // 1. Setup Exception
     when(mongoTemplate.aggregate(any(Aggregation.class), anyString(), eq(ProlificAuthor.class)))
-            .thenThrow(new RuntimeException("Connection failed"));
+        .thenThrow(new RuntimeException("Connection failed"));
 
     // 2. Execute & Verify
     DAOException exception =
-            assertThrows(
-                    DAOException.class,
-                    () -> {
-                      authorAnalysisDAO.getProlificAuthors(5);
-                    });
+        assertThrows(
+            DAOException.class,
+            () -> {
+              authorAnalysisDAO.getProlificAuthors(5);
+            });
 
     assertTrue(exception.getMessage().contains("Error executing prolific authors aggregation"));
   }

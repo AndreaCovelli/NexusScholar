@@ -24,9 +24,7 @@ public interface PaperDAO extends MongoRepository<Paper, String> {
   /** Retrieves papers by publication year with pagination. */
   Page<Paper> findByYear(Integer year, Pageable pageable);
 
-  /**
-   * Performs a full-text search using MongoDB's $text operator.
-   */
+  /** Performs a full-text search using MongoDB's $text operator. */
   @Query("{'$text': {'$search': ?0}}")
   Page<Paper> findByTextSearch(String keyword, Pageable pageable);
 }

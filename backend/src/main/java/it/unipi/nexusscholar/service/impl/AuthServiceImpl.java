@@ -19,58 +19,56 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final AdminDAO adminDAO;
-    private final RegisteredUserDAO registeredUserDAO;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final PasswordEncoder passwordEncoder;
+  private final AdminDAO adminDAO;
+  private final RegisteredUserDAO registeredUserDAO;
+  private final JwtTokenProvider jwtTokenProvider;
+  private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public AuthResponseDTO loginAdmin(LoginRequestDTO loginRequest) {
-        String username = loginRequest.getUsername();
-        log.info("Attempting ADMIN login for: {}", username);
+  @Override
+  public AuthResponseDTO loginAdmin(LoginRequestDTO loginRequest) {
+    String username = loginRequest.getUsername();
+    log.info("Attempting ADMIN login for: {}", username);
 
-        // 1. Retrieve Admin
-        Admin admin = adminDAO.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Admin not found with username: " + username));
+    // 1. Retrieve Admin
+    Admin admin =
+        adminDAO
+            .findByUsername(username)
+            .orElseThrow(
+                () -> new BadCredentialsException("Admin not found with username: " + username));
 
-        // 2. Verify Password
-        if (!passwordEncoder.matches(loginRequest.getPassword(), admin.getPassword())) {
-            log.warn("Invalid password for admin: {}", username);
-            throw new BadCredentialsException("Invalid credentials");
-        }
-
-        // 3. Generate Token with ADMIN role
-        String token = jwtTokenProvider.createToken(
-                admin.getUsername(),
-                admin.getId(),
-                "ADMIN"
-        );
-
-        return new AuthResponseDTO(token);
+    // 2. Verify Password
+    if (!passwordEncoder.matches(loginRequest.getPassword(), admin.getPassword())) {
+      log.warn("Invalid password for admin: {}", username);
+      throw new BadCredentialsException("Invalid credentials");
     }
 
-    @Override
-    public AuthResponseDTO loginRegisteredUser(LoginRequestDTO loginRequest) {
-        String username = loginRequest.getUsername();
-        log.info("Attempting USER login for: {}", username);
+    // 3. Generate Token with ADMIN role
+    String token = jwtTokenProvider.createToken(admin.getUsername(), admin.getId(), "ADMIN");
 
-        // 1. Retrieve User
-        RegisteredUser user = registeredUserDAO.findByUsername(username)
-                .orElseThrow(() -> new BadCredentialsException("User not found with username: " + username));
+    return new AuthResponseDTO(token);
+  }
 
-        // 2. Verify Password
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            log.warn("Invalid password for user: {}", username);
-            throw new BadCredentialsException("Invalid credentials");
-        }
+  @Override
+  public AuthResponseDTO loginRegisteredUser(LoginRequestDTO loginRequest) {
+    String username = loginRequest.getUsername();
+    log.info("Attempting USER login for: {}", username);
 
-        // 3. Generate Token with USER role
-        String token = jwtTokenProvider.createToken(
-                user.getUsername(),
-                user.getId(),
-                "USER"
-        );
+    // 1. Retrieve User
+    RegisteredUser user =
+        registeredUserDAO
+            .findByUsername(username)
+            .orElseThrow(
+                () -> new BadCredentialsException("User not found with username: " + username));
 
-        return new AuthResponseDTO(token);
+    // 2. Verify Password
+    if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+      log.warn("Invalid password for user: {}", username);
+      throw new BadCredentialsException("Invalid credentials");
     }
+
+    // 3. Generate Token with USER role
+    String token = jwtTokenProvider.createToken(user.getUsername(), user.getId(), "USER");
+
+    return new AuthResponseDTO(token);
+  }
 }

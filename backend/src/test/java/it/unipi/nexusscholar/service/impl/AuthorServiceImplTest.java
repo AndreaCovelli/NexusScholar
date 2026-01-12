@@ -76,12 +76,12 @@ class AuthorServiceImplTest {
 
     when(authorDAO.findByS2AuthorId("s2-456")).thenReturn(Optional.empty());
     when(authorDAO.save(any(Author.class)))
-            .thenAnswer(
-                    invocation -> {
-                      Author saved = invocation.getArgument(0);
-                      saved.setId("new-id");
-                      return saved;
-                    });
+        .thenAnswer(
+            invocation -> {
+              Author saved = invocation.getArgument(0);
+              saved.setId("new-id");
+              return saved;
+            });
 
     AuthorDTO result = authorService.saveAuthor(newAuthorDTO);
 
@@ -130,8 +130,7 @@ class AuthorServiceImplTest {
     testAuthorDTO.setS2AuthorId("s2-conflict");
 
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
-    when(authorDAO.findByS2AuthorId("s2-conflict"))
-            .thenReturn(Optional.of(new Author()));
+    when(authorDAO.findByS2AuthorId("s2-conflict")).thenReturn(Optional.of(new Author()));
 
     assertThrows(BusinessException.class, () -> authorService.saveAuthor(testAuthorDTO));
   }
@@ -224,8 +223,7 @@ class AuthorServiceImplTest {
     Page<Author> page = new PageImpl<>(List.of(testAuthor));
 
     // MODIFICATO: Uso di findByNameStartsWith invece di findByNameContainingIgnoreCase
-    when(authorDAO.findByNameStartsWith(eq("John"), any(Pageable.class)))
-            .thenReturn(page);
+    when(authorDAO.findByNameStartsWith(eq("John"), any(Pageable.class))).thenReturn(page);
 
     Page<AuthorDTO> results = authorService.searchAuthorsByName("John", pageable);
 
@@ -237,7 +235,7 @@ class AuthorServiceImplTest {
   void searchAuthorsByName_EmptyResults() {
     // MODIFICATO: Uso di findByNameStartsWith invece di findByNameContainingIgnoreCase
     when(authorDAO.findByNameStartsWith(eq("NonExistent"), any(Pageable.class)))
-            .thenReturn(Page.empty());
+        .thenReturn(Page.empty());
 
     Page<AuthorDTO> results = authorService.searchAuthorsByName("NonExistent", pageable);
 

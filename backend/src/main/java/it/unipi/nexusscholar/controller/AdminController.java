@@ -17,40 +17,42 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final AdminService adminService;
+  private final AdminService adminService;
 
-    // CREATE - POST
-    @PostMapping
-    public ResponseEntity<AdminDTO> createAdmin(@RequestBody AdminCreateDTO createDTO) {
-        return ResponseEntity.ok(adminService.createAdmin(createDTO));
-    }
+  // CREATE - POST
+  @PostMapping
+  public ResponseEntity<AdminDTO> createAdmin(@RequestBody AdminCreateDTO createDTO) {
+    return ResponseEntity.ok(adminService.createAdmin(createDTO));
+  }
 
-    // UPDATE - PUT
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AdminDTO> updateAdmin(@PathVariable String id, @RequestBody AdminUpdateDTO updateDTO) {
-        return ResponseEntity.ok(adminService.updateAdmin(id, updateDTO));
-    }
+  // UPDATE - PUT
+  @PutMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<AdminDTO> updateAdmin(
+      @PathVariable String id, @RequestBody AdminUpdateDTO updateDTO) {
+    return ResponseEntity.ok(adminService.updateAdmin(id, updateDTO));
+  }
 
-    // READ - GET ID
-    @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<AdminDTO> getAdminById(@PathVariable String id) {
-        return ResponseEntity.ok(adminService.getAdminById(id));
-    }
+  // READ - GET ID
+  @GetMapping("/{id}")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<AdminDTO> getAdminById(@PathVariable String id) {
+    return ResponseEntity.ok(adminService.getAdminById(id));
+  }
 
-    // READ - GET LIST
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<AdminDTO>> getAllAdmins(@PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(adminService.getAllAdmins(pageable));
-    }
+  // READ - GET LIST
+  @GetMapping
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Page<AdminDTO>> getAllAdmins(
+      @PageableDefault(size = 20) Pageable pageable) {
+    return ResponseEntity.ok(adminService.getAllAdmins(pageable));
+  }
 
-    // DELETE
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteAdmin(@PathVariable String id) {
-        adminService.deleteAdmin(id);
-        return ResponseEntity.noContent().build();
-    }
+  // DELETE
+  @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Void> deleteAdmin(@PathVariable String id) {
+    adminService.deleteAdmin(id);
+    return ResponseEntity.noContent().build();
+  }
 }

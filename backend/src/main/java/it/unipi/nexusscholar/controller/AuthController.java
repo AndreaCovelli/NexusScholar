@@ -14,25 +14,19 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+  private final AuthService authService;
 
-    /**
-     * Dedicated endpoint for Admin login.
-     * Path: POST /api/auth/admin/login
-     */
-    @PostMapping("/admin/login")
-    public ResponseEntity<AuthResponseDTO> loginAdmin(@RequestBody LoginRequestDTO loginRequest) {
-        log.info("Received login request for ADMIN: {}", loginRequest.getUsername());
-        return ResponseEntity.ok(authService.loginAdmin(loginRequest));
-    }
+  /** Dedicated endpoint for Admin login. Path: POST /api/auth/admin/login */
+  @PostMapping("/admin/login")
+  public ResponseEntity<AuthResponseDTO> loginAdmin(@RequestBody LoginRequestDTO loginRequest) {
+    log.info("Received login request for ADMIN: {}", loginRequest.getUsername());
+    return ResponseEntity.ok(authService.loginAdmin(loginRequest));
+  }
 
-    /**
-     * Dedicated endpoint for Registered User login.
-     * Path: POST /api/auth/user/login
-     */
-    @PostMapping("/user/login")
-    public ResponseEntity<AuthResponseDTO> loginUser(@RequestBody LoginRequestDTO loginRequest) {
-        log.info("Received login request for USER: {}", loginRequest.getUsername());
-        return ResponseEntity.ok(authService.loginRegisteredUser(loginRequest));
-    }
+  /** Dedicated endpoint for Registered User login. Path: POST /api/auth/user/login */
+  @PostMapping("/user/login")
+  public ResponseEntity<AuthResponseDTO> loginUser(@RequestBody LoginRequestDTO loginRequest) {
+    log.info("Received login request for USER: {}", loginRequest.getUsername());
+    return ResponseEntity.ok(authService.loginRegisteredUser(loginRequest));
+  }
 }

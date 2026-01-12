@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
   /** Handles standard Java validation errors. Returns HTTP 400 (Bad Request). */
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, String>> handleIllegalArgumentException(
-          IllegalArgumentException ex) {
+      IllegalArgumentException ex) {
     Map<String, String> response = new HashMap<>();
     response.put("error", "Invalid Argument");
     response.put("details", ex.getMessage());
@@ -57,12 +57,12 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handles Bean Validation errors (@NotNull, @Size violations) on request parameters.
-   * Returns HTTP 400 (Bad Request).
+   * Handles Bean Validation errors (@NotNull, @Size violations) on request parameters. Returns HTTP
+   * 400 (Bad Request).
    */
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<Map<String, String>> handleValidationException(
-          ConstraintViolationException ex) {
+      ConstraintViolationException ex) {
     Map<String, String> response = new HashMap<>();
     response.put("error", "Validation Error");
     response.put("details", ex.getMessage());
@@ -70,12 +70,12 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handles DTO Validation errors (@Valid on @RequestBody).
-   * Aggregates all field errors into a single string. Returns HTTP 400 (Bad Request).
+   * Handles DTO Validation errors (@Valid on @RequestBody). Aggregates all field errors into a
+   * single string. Returns HTTP 400 (Bad Request).
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Map<String, String>> handleDtoValidationException(
-          MethodArgumentNotValidException ex) {
+      MethodArgumentNotValidException ex) {
     Map<String, String> response = new HashMap<>();
     response.put("error", "Validation Error");
 
@@ -94,19 +94,19 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<Map<String, String>> handleTypeMismatch(
-          MethodArgumentTypeMismatchException ex) {
+      MethodArgumentTypeMismatchException ex) {
     Map<String, String> response = new HashMap<>();
     String paramName = ex.getName();
     String invalidValue = (ex.getValue() != null) ? ex.getValue().toString() : "null";
     String requiredType =
-            (ex.getRequiredType() != null) ? ex.getRequiredType().getSimpleName() : "unknown";
+        (ex.getRequiredType() != null) ? ex.getRequiredType().getSimpleName() : "unknown";
 
     response.put("error", "Invalid Parameter Type");
     response.put(
-            "details",
-            String.format(
-                    "Parameter '%s' should be of type '%s'. Provided: '%s'",
-                    paramName, requiredType, invalidValue));
+        "details",
+        String.format(
+            "Parameter '%s' should be of type '%s'. Provided: '%s'",
+            paramName, requiredType, invalidValue));
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
@@ -124,12 +124,12 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handles specific authentication failure: Invalid credentials (password).
-   * Returns HTTP 401 (Unauthorized).
+   * Handles specific authentication failure: Invalid credentials (password). Returns HTTP 401
+   * (Unauthorized).
    */
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<Map<String, String>> handleBadCredentialsException(
-          BadCredentialsException ex) {
+      BadCredentialsException ex) {
     Map<String, String> response = new HashMap<>();
     response.put("error", "Invalid Credentials");
     response.put("details", "Invalid username or password.");
@@ -137,12 +137,11 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handles generic authentication failures (e.g., invalid token). Returns HTTP 401
-   * (Unauthorized).
+   * Handles generic authentication failures (e.g., invalid token). Returns HTTP 401 (Unauthorized).
    */
   @ExceptionHandler(AuthenticationException.class)
   public ResponseEntity<Map<String, String>> handleAuthenticationException(
-          AuthenticationException ex) {
+      AuthenticationException ex) {
     Map<String, String> response = new HashMap<>();
     response.put("error", "Unauthorized");
     response.put("details", ex.getMessage());

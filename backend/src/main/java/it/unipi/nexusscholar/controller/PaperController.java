@@ -59,7 +59,7 @@ public class PaperController {
   @GetMapping("/smart-search")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Page<PaperDTO>> smartSearch(
-          @RequestParam String keyword, @PageableDefault(size = 10) Pageable pageable) {
+      @RequestParam String keyword, @PageableDefault(size = 10) Pageable pageable) {
 
     Page<PaperDTO> papers = paperService.searchPapersByText(keyword, pageable);
 

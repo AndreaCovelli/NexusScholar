@@ -9,15 +9,15 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @OpenAPIDefinition(
-        info = @Info(title = "Nexus Scholar API", version = "1.0"),
-        security = @SecurityRequirement(name = "bearerAuth") // Applies security globally to all endpoints
-)
+    info = @Info(title = "Nexus Scholar API", version = "1.0"),
+    security =
+        @SecurityRequirement(name = "bearerAuth") // Applies security globally to all endpoints
+    )
 @SecurityScheme(
-        name = "bearerAuth",
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "JWT"
-)
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP,
+    scheme = "bearer",
+    bearerFormat = "JWT")
 public class OpenApiConfig {
-    // No bean methods needed here; the annotations handle the configuration
+  // No bean methods needed here; the annotations handle the configuration
 }

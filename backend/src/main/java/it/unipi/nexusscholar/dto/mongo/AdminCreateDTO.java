@@ -6,8 +6,8 @@ import lombok.Data;
 
 @Data
 public class AdminCreateDTO {
-    private String username;
-    private String email;
-    private String password; // Required for creation
-    private List<Permission> permissions;
+  private String username;
+  private String email;
+  private String password; // Required for creation
+  private List<Permission> permissions;
 }

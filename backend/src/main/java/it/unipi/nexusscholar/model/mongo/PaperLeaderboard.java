@@ -9,10 +9,11 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaperLeaderboard {
-    @Field("paper_id")
-    private String paperId;
+  @Field("paper_id")
+  private String paperId;
 
-    private String title;
-    @Field("bookmarked_received")
-    private int bookmarkedReceived;
+  private String title;
+
+  @Field("bookmarked_received")
+  private int bookmarkedReceived;
 }
