@@ -12,8 +12,11 @@ import org.springframework.data.mongodb.core.mapping.Field;
  * MongoDB document representing a standard registered user.
  * <p>
  * This class extends the base {@link User} class and adds fields specific to
- * registered members, such as their full name and a personal collection of
+ * regular members, such as their full name and a personal collection of
  * bookmarked papers.
+ * </p>
+ * <p>
+ * Data is stored in the "registeredUsers" collection.
  * </p>
  */
 @EqualsAndHashCode(callSuper = false)
@@ -30,7 +33,11 @@ public class RegisteredUser extends User {
   private String fullName;
 
   /**
-   * A list of papers saved/bookmarked by the user.
+   * A list of papers saved or bookmarked by the user.
+   * <p>
+   * Stores a summary of the papers (ID, title, date saved) to allow for
+   * quick retrieval without joining the main papers collection.
+   * </p>
    */
   @Field("bookmarked_papers")
   private List<BookmarkedPaper> bookmarkedPapers;
