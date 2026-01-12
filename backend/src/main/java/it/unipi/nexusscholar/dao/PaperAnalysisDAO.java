@@ -7,35 +7,45 @@ import it.unipi.nexusscholar.model.mongo.VenueAnalysis;
 import java.util.List;
 
 /**
- * Data access interface for paper-related analytical queries. These operations use MongoDB
- * aggregation pipelines for complex analytics.
+ * Interface defining complex analytical operations on Paper data.
+ * <p>
+ * These methods typically involve heavy aggregations and grouping operations
+ * that go beyond simple CRUD queries.
+ * </p>
  */
 public interface PaperAnalysisDAO {
 
   /**
-   * Trend Analysis (Hot Topics): Calculates paper counts per field of study per year. Identifies
-   * emerging research trends across time.
+   * Performs a "Hot Topics" analysis to identify trending fields of study.
+   * <p>
+   * Calculates the number of papers published per field of study for each year.
+   * </p>
    *
-   * @return List of trend analysis results ordered by year ascending
-   * @throws DAOException if database operation fails
+   * @return A list of {@link TrendAnalysis} results.
+   * @throws DAOException If the aggregation fails.
    */
   List<TrendAnalysis> getTrendAnalysis() throws DAOException;
 
   /**
-   * Venue Impact Analysis: Ranks venues by paper count per year. Useful for identifying high-impact
-   * publication venues.
+   * Performs a Venue Impact analysis.
+   * <p>
+   * Calculates the number of papers published in each venue for each year,
+   * helping to identify high-volume or prestigious venues.
+   * </p>
    *
-   * @return List of venue analysis results ordered by year and paper count
-   * @throws DAOException if database operation fails
+   * @return A list of {@link VenueAnalysis} results.
+   * @throws DAOException If the aggregation fails.
    */
   List<VenueAnalysis> getVenueAnalysis() throws DAOException;
 
   /**
-   * Collaboration Evolution: Computes average author count per paper by year. Tracks how research
-   * collaboration patterns evolve over time.
+   * Analyzes the evolution of collaboration patterns over time.
+   * <p>
+   * Calculates the average number of authors per paper for each year.
+   * </p>
    *
-   * @return List of collaboration metrics ordered by year ascending
-   * @throws DAOException if database operation fails
+   * @return A list of {@link CollaborationEvolution} results.
+   * @throws DAOException If the aggregation fails.
    */
   List<CollaborationEvolution> getCollaborationEvolution() throws DAOException;
 }
