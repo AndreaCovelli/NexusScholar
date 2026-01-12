@@ -12,6 +12,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+/**
+ * Component responsible for JWT (JSON Web Token) operations.
+ * <p>
+ * This class handles the generation of new tokens upon user login,
+ * validation of existing tokens during requests, and extraction of
+ * user details (authentication) from the token claims.
+ * </p>
+ */
 @Component
 public class JwtTokenProvider {
 
@@ -23,6 +31,11 @@ public class JwtTokenProvider {
 
   private Algorithm algorithm;
 
+  /**
+   * Initializes the signing algorithm.
+   * This method is executed after dependency injection is complete to ensure
+   * the secret key has been loaded from the application properties.
+   */
   @PostConstruct
   protected void init() {
     // Initialize the algorithm with the secret key defined in application.properties
@@ -30,23 +43,32 @@ public class JwtTokenProvider {
   }
 
   /**
-   * Generates the JWT token containing the Username, MongoDB ID, and Role. Note: This method
-   * appears "unused" until you call it in your AuthController (Login/Register).
+   * Generates a JWT token containing the Username, MongoDB ID, and User Role.
+   *
+   * @param username The username of the authenticated user.
+   * @param id       The unique MongoDB identifier of the user.
+   * @param role     The role of the user (e.g., ADMIN, REGISTERED_USER).
+   * @return A signed JWT string valid for the configured duration.
    */
   public String createToken(String username, String id, String role) {
     Date now = new Date();
     Date validity = new Date(now.getTime() + validityInMilliseconds);
 
     return JWT.create()
-        .withSubject(username) // Username is the main subject
-        .withClaim("id", id) // MongoDB ID (useful for queries)
-        .withClaim("role", role) // User Role (ADMIN or REGISTERED_USER)
-        .withIssuedAt(now)
-        .withExpiresAt(validity)
-        .sign(algorithm);
+            .withSubject(username) // Username is the main subject
+            .withClaim("id", id) // MongoDB ID (useful for queries)
+            .withClaim("role", role) // User Role (ADMIN or REGISTERED_USER)
+            .withIssuedAt(now)
+            .withExpiresAt(validity)
+            .sign(algorithm);
   }
 
-  /** Validates the token signature and expiration. */
+  /**
+   * Validates the token signature and checks if it has expired.
+   *
+   * @param token The JWT token string to validate.
+   * @return {@code true} if the token is valid and not expired; {@code false} otherwise.
+   */
   public boolean validateToken(String token) {
     try {
       JWT.require(algorithm).build().verify(token);
@@ -58,8 +80,10 @@ public class JwtTokenProvider {
   }
 
   /**
-   * Extracts the token from the HTTP Authorization header. Changed to NON-STATIC to align with
-   * Spring Component patterns.
+   * Extracts the JWT token from the HTTP "Authorization" header.
+   *
+   * @param request The incoming HTTP servlet request.
+   * @return The token string (without the "Bearer " prefix) if found; {@code null} otherwise.
    */
   public String resolveToken(HttpServletRequest request) {
     String bearerToken = request.getHeader("Authorization");
@@ -69,7 +93,16 @@ public class JwtTokenProvider {
     return null;
   }
 
-  /** Reconstructs the Spring Security authentication object from the token. */
+  /**
+   * Reconstructs the Spring Security authentication object from the token.
+   * <p>
+   * This method parses the token to retrieve the username and role, and then
+   * creates a {@link UsernamePasswordAuthenticationToken} to be stored in the security context.
+   * </p>
+   *
+   * @param token The valid JWT token.
+   * @return An Authentication object containing the user principal and authorities.
+   */
   public UsernamePasswordAuthenticationToken getAuthentication(String token) {
     DecodedJWT decodedJWT = JWT.require(algorithm).build().verify(token);
 
@@ -80,12 +113,18 @@ public class JwtTokenProvider {
     SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
     return new UsernamePasswordAuthenticationToken(
-        username, null, Collections.singletonList(authority));
+            username, null, Collections.singletonList(authority));
   }
 
   /**
-   * Utility method to extract the User ID directly from the token. Useful in Services/Controllers
-   * to identify the caller without querying the DB.
+   * Utility method to extract the User ID directly from the token.
+   * <p>
+   * This is useful in RegisteredUserController to identify the specific user
+   * performing an action without needing to query the database.
+   * </p>
+   *
+   * @param token The JWT token.
+   * @return The user's MongoDB ID as a string.
    */
   public String getUserIdFromToken(String token) {
     return JWT.require(algorithm).build().verify(token).getClaim("id").asString();

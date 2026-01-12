@@ -14,6 +14,17 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Implementation of the {@link AuthService} interface.
+ * <p>
+ * This class handles the business logic for authentication, including:
+ * <ul>
+ * <li>Retrieving user or admin entities from the database.</li>
+ * <li>Verifying raw passwords against stored encrypted passwords.</li>
+ * <li>Generating JWT tokens upon successful authentication using {@link JwtTokenProvider}.</li>
+ * </ul>
+ * </p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -24,6 +35,13 @@ public class AuthServiceImpl implements AuthService {
   private final JwtTokenProvider jwtTokenProvider;
   private final PasswordEncoder passwordEncoder;
 
+  /**
+   * Authenticates an Admin by verifying credentials and generating a token.
+   *
+   * @param loginRequest The DTO containing the admin's username and password.
+   * @return An {@link AuthResponseDTO} with the JWT token.
+   * @throws BadCredentialsException If the username is not found or the password is incorrect.
+   */
   @Override
   public AuthResponseDTO loginAdmin(LoginRequestDTO loginRequest) {
     String username = loginRequest.getUsername();
@@ -31,10 +49,10 @@ public class AuthServiceImpl implements AuthService {
 
     // 1. Retrieve Admin
     Admin admin =
-        adminDAO
-            .findByUsername(username)
-            .orElseThrow(
-                () -> new BadCredentialsException("Admin not found with username: " + username));
+            adminDAO
+                    .findByUsername(username)
+                    .orElseThrow(
+                            () -> new BadCredentialsException("Admin not found with username: " + username));
 
     // 2. Verify Password
     if (!passwordEncoder.matches(loginRequest.getPassword(), admin.getPassword())) {
@@ -48,6 +66,13 @@ public class AuthServiceImpl implements AuthService {
     return new AuthResponseDTO(token);
   }
 
+  /**
+   * Authenticates a Registered User by verifying credentials and generating a token.
+   *
+   * @param loginRequest The DTO containing the user's username and password.
+   * @return An {@link AuthResponseDTO} with the JWT token.
+   * @throws BadCredentialsException If the username is not found or the password is incorrect.
+   */
   @Override
   public AuthResponseDTO loginRegisteredUser(LoginRequestDTO loginRequest) {
     String username = loginRequest.getUsername();
@@ -55,10 +80,10 @@ public class AuthServiceImpl implements AuthService {
 
     // 1. Retrieve User
     RegisteredUser user =
-        registeredUserDAO
-            .findByUsername(username)
-            .orElseThrow(
-                () -> new BadCredentialsException("User not found with username: " + username));
+            registeredUserDAO
+                    .findByUsername(username)
+                    .orElseThrow(
+                            () -> new BadCredentialsException("User not found with username: " + username));
 
     // 2. Verify Password
     if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
