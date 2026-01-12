@@ -57,6 +57,7 @@ public class PaperController {
    * /api/papers/smart-search?keyword=Deep&page=0&size=10&sort=year,desc
    */
   @GetMapping("/smart-search")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Page<PaperDTO>> smartSearch(
           @RequestParam String keyword, @PageableDefault(size = 10) Pageable pageable) {
 

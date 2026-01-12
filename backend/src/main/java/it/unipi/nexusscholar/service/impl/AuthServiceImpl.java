@@ -11,7 +11,6 @@ import it.unipi.nexusscholar.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 1. Retrieve User
         RegisteredUser user = registeredUserDAO.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+                .orElseThrow(() -> new BadCredentialsException("User not found with username: " + username));
 
         // 2. Verify Password
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {

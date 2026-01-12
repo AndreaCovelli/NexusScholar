@@ -7,6 +7,7 @@ import it.unipi.nexusscholar.model.mongo.BookmarkedPaper;
 import it.unipi.nexusscholar.model.mongo.Paper;
 import it.unipi.nexusscholar.model.mongo.RegisteredUser;
 import it.unipi.nexusscholar.service.RegisteredUserService;
+import it.unipi.nexusscholar.service.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,7 +55,7 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
     @Override
     public RegisteredUserDTO updateUser(String id, RegisteredUserUpdateDTO dto) {
         RegisteredUser user = userDAO.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BusinessException("User not found"));
 
         // 1. Email Update Check
         if (dto.getEmail() != null && !dto.getEmail().equals(user.getEmail())) {
@@ -103,7 +104,7 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
     public RegisteredUserDTO getUserById(String id) {
         return userDAO.findById(id)
                 .map(this::mapToDTO)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BusinessException("User not found"));
     }
 
     @Override
@@ -113,7 +114,7 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
 
     @Override
     public void deleteUser(String id) {
-        if (!userDAO.existsById(id)) throw new RuntimeException("User not found");
+        if (!userDAO.existsById(id)) throw new BusinessException("User not found");
         userDAO.deleteById(id);
     }
 
@@ -121,11 +122,11 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
     public RegisteredUserDTO addBookmark(String userId, String paperId) {
         // 1. Fetch the user
         RegisteredUser user = userDAO.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BusinessException("User not found"));
 
         // 2. Fetch the paper to ensure it exists and to get the title
         Paper paper = paperDAO.findById(paperId)
-                .orElseThrow(() -> new RuntimeException("Paper not found with ID: " + paperId));
+                .orElseThrow(() -> new BusinessException("Paper not found with ID: " + paperId));
 
         // 3. Initialize the list if it's null
         if (user.getBookmarkedPapers() == null) {
