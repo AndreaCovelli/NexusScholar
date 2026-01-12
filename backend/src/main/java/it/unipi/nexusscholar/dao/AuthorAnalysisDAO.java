@@ -5,29 +5,29 @@ import it.unipi.nexusscholar.model.mongo.ProlificAuthor;
 import java.util.List;
 
 /**
- * Data access interface for author-related analytical queries. These operations use MongoDB
- * aggregation pipelines.
+ * Data access interface for performing complex analytical queries on Author data.
+ * <p>
+ * Unlike the standard {@code AuthorDAO}, this interface handles operations that require
+ * MongoDB Aggregation Pipelines (grouping, unwinding, etc.).
+ * </p>
  */
 public interface AuthorAnalysisDAO {
 
   /**
-   * Prolific Author Identification: Finds authors who have published more than the specified
-   * minimum number of papers.
+   * Identifies "Prolific Authors" based on their publication output within a single year.
+   * <p>
+   * This method executes an aggregation pipeline that:
+   * <ol>
+   * <li>Unwinds the publication history.</li>
+   * <li>Groups by Author and Year to count annual output.</li>
+   * <li>Filters for years where output exceeded the {@code minPublications} threshold.</li>
+   * <li>Groups back by Author to return unique individuals.</li>
+   * </ol>
    *
-   * <p>MongoDB Aggregation Pipeline:
    *
-   * <pre>
-   * db.authors.aggregate([
-   *   { $unwind: "$publications_summary" },
-   *   { $group: { _id: {_id: "$_id", name: "$name"}, paper_created: {$sum:1} } },
-   *   { $match: { paper_created: {$gt: minPublications} } },
-   *   { $group: { _id: "$_id._id", name: {$first: "$_id.name"} } }
-   * ])
-   * </pre>
-   *
-   * @param minPublications Minimum publication threshold
-   * @return List of prolific authors exceeding the threshold
-   * @throws DAOException if database operation fails
+   * @param minPublications The minimum number of publications in a given context (e.g., per year) required to be included.
+   * @return A list of {@link ProlificAuthor} objects representing the identified researchers.
+   * @throws DAOException If the database aggregation fails.
    */
   List<ProlificAuthor> getProlificAuthors(int minPublications) throws DAOException;
 }
