@@ -8,6 +8,6 @@ import lombok.Data;
 public class AdminCreateDTO {
   private String username;
   private String email;
-  private String password; // Required for creation
+  private String password;
   private List<Permission> permissions;
 }

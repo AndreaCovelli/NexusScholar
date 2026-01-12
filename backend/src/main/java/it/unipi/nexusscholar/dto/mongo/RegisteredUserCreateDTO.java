@@ -6,6 +6,6 @@ import lombok.Data;
 public class RegisteredUserCreateDTO {
   private String username;
   private String email;
-  private String password; // Mandatory for registration
+  private String password;
   private String fullName;
 }

@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 public class AdminUpdateDTO {
   private String email;
-  private String password; // Optional: if null, it won't be updated
+  private String password;
   private List<Permission> permissions;
 }

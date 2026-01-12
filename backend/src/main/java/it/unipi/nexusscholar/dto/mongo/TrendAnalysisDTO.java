@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** DTO for trend analysis results. Represents paper counts per field of study per year. */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

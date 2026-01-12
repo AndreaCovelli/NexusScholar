@@ -12,6 +12,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisteredUserDTO extends UserDTO {
   private String fullName;
-
   private List<BookmarkedPaperDTO> bookmarkedPapers;
 }

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** DTO for prolific author identification results. */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PaperLeaderboardDTO {
   private String paperId;
-
   private String title;
   private int bookmarkedReceived;
 }
