@@ -12,13 +12,9 @@ public interface AdminDAO extends MongoRepository<Admin, String> {
 
   Optional<Admin> findByUsername(String username);
 
-  // Optional<Admin> findByEmail(String email);
 
-  // Utile per validazioni nel service
   boolean existsByUsername(String username);
 
   boolean existsByEmail(String email);
 
-  // Esempio di ricerca paginata (simile a PaperDAO)
-  // Page<Admin> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
 }
