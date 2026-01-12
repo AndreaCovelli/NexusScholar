@@ -5,10 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-/**
- * Result object for the Collaboration Evolution aggregation pipeline. Tracks average number of
- * authors per paper over time.
- */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -5,10 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-/**
- * Result object for the Venue Impact Analysis aggregation pipeline. Ranks venues by paper count per
- * year.
- */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

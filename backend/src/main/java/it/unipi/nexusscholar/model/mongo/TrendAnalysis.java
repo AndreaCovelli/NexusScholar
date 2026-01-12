@@ -5,10 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-/**
- * Result object for the Trend Analysis aggregation pipeline. Tracks paper publication counts per
- * field of study per year.
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

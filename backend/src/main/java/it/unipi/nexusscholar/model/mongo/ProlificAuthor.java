@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-/** Result object for the Prolific Author Identification aggregation pipeline. */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
