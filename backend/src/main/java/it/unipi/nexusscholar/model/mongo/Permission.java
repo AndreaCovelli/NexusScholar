@@ -3,8 +3,8 @@ package it.unipi.nexusscholar.model.mongo;
 /**
  * Enumeration defining the specific granular permissions available to Administrators.
  *
- * <p>Permissions define specific authorized actions. These are stored within the {@link Admin} document to allow for fine-grained
- * access control over administrative operations.
+ * <p>Permissions define specific authorized actions. These are stored within the {@link Admin}
+ * document to allow for fine-grained access control over administrative operations.
  */
 public enum Permission {
 
