@@ -7,11 +7,9 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
-@ActiveProfiles("test") // Add this to use test profile
+@ActiveProfiles("test")
 class NexusScholarBackendApplicationTests {
 
   @Test
-  void contextLoads() {
-    // Context loads successfully if this test passes
-  }
+  void contextLoads() {}
 }
