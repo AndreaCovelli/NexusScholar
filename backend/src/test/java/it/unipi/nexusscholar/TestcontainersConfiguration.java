@@ -14,9 +14,7 @@ public class TestcontainersConfiguration {
   @Bean
   @ServiceConnection
   public MongoDBContainer mongoDbContainer() {
-    MongoDBContainer container =
-        new MongoDBContainer(DockerImageName.parse("mongo:8.2.3-noble"))
-            .withReuse(true); // Enable container reuse for faster tests
+    MongoDBContainer container = new MongoDBContainer(DockerImageName.parse("mongo:8.2.3-noble"));
     container.start();
     return container;
   }
@@ -27,8 +25,7 @@ public class TestcontainersConfiguration {
     Neo4jContainer<?> container =
         new Neo4jContainer<>(DockerImageName.parse("neo4j:2025.11.2-enterprise-bullseye"))
             .withLabsPlugins(Neo4jLabsPlugin.GRAPH_DATA_SCIENCE)
-            .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
-            .withReuse(true); // Enable container reuse
+            .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes");
     container.start();
     return container;
   }

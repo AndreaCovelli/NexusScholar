@@ -222,6 +222,16 @@ class PaperServiceImplTest {
   }
 
   @Test
+  void searchPapersByText_Success() {
+    Page<Paper> page = new PageImpl<>(List.of(testPaper));
+    when(paperDAO.findByTextSearch(eq("learning"), any(Pageable.class))).thenReturn(page);
+
+    Page<PaperDTO> result = paperService.searchPapersByText("learning", pageable);
+    assertEquals(1, result.getTotalElements());
+    assertEquals("AI Research", result.getContent().get(0).getTitle());
+  }
+
+  @Test
   void getPapersByYear_Success() {
     Page<Paper> page = new PageImpl<>(List.of(testPaper));
     when(paperDAO.findByYear(eq(2023), any(Pageable.class))).thenReturn(page);
