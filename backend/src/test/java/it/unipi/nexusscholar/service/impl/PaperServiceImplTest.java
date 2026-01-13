@@ -350,14 +350,6 @@ class PaperServiceImplTest {
   }
 
   @Test
-  void toPaperDTO_Null() {
-    // Reflection or simple call if accessible
-    // Since it's private, we trust main flows.
-    // savePaper calls toPaper, toPaperDTO.
-    // toPaperDTO(null) return null.
-  }
-
-  @Test
   void toPaperDTO_HandlesNullLists() {
     testPaper.setFieldsOfStudy(null);
     testPaper.setAuthors(null);
