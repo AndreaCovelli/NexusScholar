@@ -64,6 +64,21 @@ class LeidenCommunityTest {
   }
 
   @Test
+  void testToJson_Failure() {
+    // Anonymous subclass overriding getter to throw exception
+    LeidenCommunity faultyCommunity =
+        new LeidenCommunity(1) {
+          @Override
+          public int getCommunityId() {
+            throw new RuntimeException("Force serialization error");
+          }
+        };
+
+    String json = faultyCommunity.toJson();
+    assertEquals("{}", json);
+  }
+
+  @Test
   void testGetCommunityId() {
     LeidenCommunity community = new LeidenCommunity(42);
 

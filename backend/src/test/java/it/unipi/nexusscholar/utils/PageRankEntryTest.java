@@ -71,4 +71,19 @@ class PageRankEntryTest {
     assertNotNull(json);
     assertTrue(json.contains("Paper with"));
   }
+
+  @Test
+  void testToJson_Failure() {
+    // Anonymous subclass overriding getter to throw exception
+    PageRankEntry faultyEntry =
+        new PageRankEntry(1.0, "Title") {
+          @Override
+          public String getPaperTitle() {
+            throw new RuntimeException("Force serialization error");
+          }
+        };
+
+    RuntimeException ex = assertThrows(RuntimeException.class, faultyEntry::toJson);
+    assertTrue(ex.getMessage().contains("Failed to serialize PageRankEntry to JSON"));
+  }
 }

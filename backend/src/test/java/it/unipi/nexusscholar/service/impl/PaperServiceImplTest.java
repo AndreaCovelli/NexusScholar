@@ -14,6 +14,7 @@ import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.model.mongo.Author;
 import it.unipi.nexusscholar.model.mongo.Paper;
 import it.unipi.nexusscholar.model.mongo.PaperAuthor;
+import it.unipi.nexusscholar.model.mongo.PublicationSummary;
 import it.unipi.nexusscholar.service.exception.BusinessException;
 import java.util.ArrayList;
 import java.util.List;
@@ -330,6 +331,27 @@ class PaperServiceImplTest {
 
     verify(authorDAO, atLeastOnce()).findAllById(any());
     verify(authorDAO, atLeastOnce()).saveAll(any());
+  }
+
+  @Test
+  void deletePaper_RemovesPublicationSummaryFromAuthors() {
+    // Setup
+    when(paperDAO.findById("paper-1"))
+        .thenReturn(Optional.of(testPaper)); // testPaper has authorJohn
+
+    // authorJohn has the summary
+    PublicationSummary summary = new PublicationSummary();
+    summary.setPaperId("paper-1");
+    authorJohn.setPublicationsSummary(new ArrayList<>(List.of(summary)));
+    authorJohn.setTotalPublications(1);
+
+    // Execute
+    paperService.deletePaper("paper-1");
+
+    // Assert
+    assertEquals(0, authorJohn.getTotalPublications());
+    assertTrue(authorJohn.getPublicationsSummary().isEmpty());
+    verify(authorDAO).saveAll(any());
   }
 
   @Test

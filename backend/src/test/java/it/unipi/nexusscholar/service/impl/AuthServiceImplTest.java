@@ -59,4 +59,28 @@ class AuthServiceImplTest {
 
     assertThrows(BadCredentialsException.class, () -> authService.loginRegisteredUser(req));
   }
+
+  @Test
+  void loginAdmin_UsernameNotFound_ThrowsBadCredentials() {
+    LoginRequestDTO req = new LoginRequestDTO("unknown_admin", "password");
+
+    when(adminDAO.findByUsername("unknown_admin")).thenReturn(java.util.Optional.empty());
+
+    BadCredentialsException ex =
+        assertThrows(BadCredentialsException.class, () -> authService.loginAdmin(req));
+
+    assertTrue(ex.getMessage().contains("Admin not found"));
+  }
+
+  @Test
+  void loginUser_UsernameNotFound_ThrowsBadCredentials() {
+    LoginRequestDTO req = new LoginRequestDTO("unknown_user", "password");
+
+    when(userDAO.findByUsername("unknown_user")).thenReturn(java.util.Optional.empty());
+
+    BadCredentialsException ex =
+        assertThrows(BadCredentialsException.class, () -> authService.loginRegisteredUser(req));
+
+    assertTrue(ex.getMessage().contains("User not found"));
+  }
 }
