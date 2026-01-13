@@ -6,9 +6,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
- * DTO representing the evolution of scientific collaboration.
+ * Class representing the evolution of scientific collaboration.
  *
- * <p>specific metrics regarding the average number of authors per paper for a given year.
+ * <p>Specific metrics regarding the average number of authors per paper for a given year.
  */
 @Data
 @AllArgsConstructor

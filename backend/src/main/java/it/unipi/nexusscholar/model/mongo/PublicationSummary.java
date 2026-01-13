@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
- * Lightweight DTO representing a summary of a publication.
+ * Lightweight Class representing a summary of a publication.
  *
  * <p>Used when a full paper object is not required, for example in lists or brief citations.
  */
