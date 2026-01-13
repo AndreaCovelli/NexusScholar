@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 /**
  * MongoDB implementation of the {@link AuthorAnalysisDAO} interface.
  *
- * <p>uses {@link MongoTemplate} to construct and execute aggregation pipelines for analytical tasks
+ * <p>Uses {@link MongoTemplate} to construct and execute aggregation pipelines for analytical tasks
  * regarding authors.
  */
 @Repository

@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
- * DTO representing the result of a "Hot Topics" trend analysis.
+ * Class representing the result of a "Hot Topics" trend analysis.
  *
  * <p>Aggregates data to show the volume of papers published in a specific field of study during a
  * specific year.
