@@ -3,11 +3,13 @@ package it.unipi.nexusscholar.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unipi.nexusscholar.dto.mongo.AuthorDTO;
+import it.unipi.nexusscholar.security.JwtTokenProvider;
 import it.unipi.nexusscholar.service.AuthorService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -26,8 +29,10 @@ class AuthorControllerTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
   @MockitoBean private AuthorService authorService;
+  @MockitoBean private JwtTokenProvider jwtTokenProvider;
 
   @Test
+  @WithMockUser(roles = "USER")
   void saveAuthor_ReturnsOk() throws Exception {
     AuthorDTO authorDTO = new AuthorDTO();
     authorDTO.setName("John Doe");
@@ -43,6 +48,7 @@ class AuthorControllerTest {
     mockMvc
         .perform(
             post("/api/authors")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(authorDTO)))
         .andExpect(status().isOk())
@@ -51,6 +57,7 @@ class AuthorControllerTest {
   }
 
   @Test
+  @WithMockUser // Add this annotation
   void getAuthorByS2Id_ReturnsOk() throws Exception {
     AuthorDTO authorDTO = new AuthorDTO();
     authorDTO.setId("author-1");
@@ -66,32 +73,30 @@ class AuthorControllerTest {
   }
 
   @Test
+  @WithMockUser // Add this annotation
   void searchAuthorsByName_ReturnsOk() throws Exception {
     AuthorDTO authorDTO = new AuthorDTO();
     authorDTO.setName("John Doe");
 
-    // Wrap the result in a Page object
     Page<AuthorDTO> page = new PageImpl<>(List.of(authorDTO));
 
-    // Match string "John" and any Pageable object
     when(authorService.searchAuthorsByName(eq("John"), any(Pageable.class))).thenReturn(page);
 
     mockMvc
         .perform(
             get("/api/authors/search").param("name", "John").param("page", "0").param("size", "10"))
         .andExpect(status().isOk())
-        // In Page responses, the list is inside the "content" field
         .andExpect(jsonPath("$.content[0].name").value("John Doe"))
         .andExpect(jsonPath("$.totalElements").value(1));
   }
 
   @Test
+  @WithMockUser // Add this annotation
   void getAuthorsWithMinPublications_ReturnsOk() throws Exception {
     AuthorDTO authorDTO = new AuthorDTO();
     authorDTO.setName("Prolific Author");
     authorDTO.setTotalPublications(15);
 
-    // Wrap the result in a Page object
     Page<AuthorDTO> page = new PageImpl<>(List.of(authorDTO));
 
     when(authorService.getAuthorsWithMinPublications(eq(10), any(Pageable.class))).thenReturn(page);
@@ -104,11 +109,11 @@ class AuthorControllerTest {
   }
 
   @Test
+  @WithMockUser(roles = "USER")
   void deleteAuthorById_ReturnsOk() throws Exception {
-    // Note: Updated to delete by ID (not S2 ID) based on the Controller implementation
     doNothing().when(authorService).deleteAuthorById("author-1");
 
-    mockMvc.perform(delete("/api/authors/author-1")).andExpect(status().isOk());
+    mockMvc.perform(delete("/api/authors/author-1").with(csrf())).andExpect(status().isOk());
 
     verify(authorService).deleteAuthorById("author-1");
   }
