@@ -182,4 +182,43 @@ class BetweennessEntryTest {
     assertTrue(str.contains("Test"));
     assertTrue(str.contains("123.4567"));
   }
+
+  @Test
+  void testEquals_EdgeCases() {
+    BetweennessEntry entry = new BetweennessEntry("P1", "Title", 10.0);
+
+    assertFalse(entry.equals(null));
+    assertFalse(entry.equals("Some String"));
+    assertTrue(entry.equals(entry));
+  }
+
+  @Test
+  void testEquals_PartialDifferences() {
+    BetweennessEntry base = new BetweennessEntry("P1", "Title", 10.0);
+
+    BetweennessEntry diffScore = new BetweennessEntry("P1", "Title", 20.0);
+    assertNotEquals(base, diffScore);
+
+    BetweennessEntry diffId = new BetweennessEntry("P2", "Title", 10.0);
+    assertNotEquals(base, diffId);
+
+    BetweennessEntry diffTitle = new BetweennessEntry("P1", "Other Title", 10.0);
+    assertNotEquals(base, diffTitle);
+  }
+
+  @Test
+  void testToJson_Failure() {
+    // Create an anonymous subclass that throws exception on getter access
+    // This forces ObjectMapper to catch the exception inside toJson
+    BetweennessEntry faultyEntry =
+        new BetweennessEntry() {
+          @Override
+          public String getTitle() {
+            throw new RuntimeException("Force serialization error");
+          }
+        };
+
+    RuntimeException ex = assertThrows(RuntimeException.class, faultyEntry::toJson);
+    assertTrue(ex.getMessage().contains("Failed to serialize BetweennessEntry to JSON"));
+  }
 }

@@ -211,6 +211,36 @@ class PaperServiceImplTest {
   }
 
   @Test
+  void savePaper_Update_AddAuthor_SummaryAlreadyExists_DoesNotDuplicateSummary() {
+    // Setup
+    testPaperDTO.setId("paper-1");
+    testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-john", "John Doe")));
+
+    // Existing paper has no authors currently
+    testPaper.setAuthors(new ArrayList<>());
+
+    // The Author OBJECT already has a summary for this paper (data inconsistency scenario or
+    // re-add)
+    PublicationSummary existingSummary = new PublicationSummary();
+    existingSummary.setPaperId("paper-1");
+    authorJohn.setPublicationsSummary(new ArrayList<>(List.of(existingSummary)));
+
+    when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
+    when(paperDAO.save(any(Paper.class))).thenReturn(testPaper);
+    when(graphDAO.savePaperNode(any())).thenReturn(true);
+
+    // Execute
+    paperService.savePaper(testPaperDTO);
+
+    // Assert
+    // Total publications incremented (logic in service), but summary list size remains 1 (no
+    // duplicate added)
+    assertEquals(2, authorJohn.getTotalPublications());
+    assertEquals(1, authorJohn.getPublicationsSummary().size());
+    verify(authorDAO, atLeastOnce()).saveAll(any());
+  }
+
+  @Test
   void savePaper_Update_RemoveAuthor_DecrementCount() {
     // Paper has John. Update to remove John.
     testPaperDTO.setId("paper-1");
@@ -330,6 +360,27 @@ class PaperServiceImplTest {
 
     verify(authorDAO, atLeastOnce()).findAllById(any());
     verify(authorDAO, atLeastOnce()).saveAll(any());
+  }
+
+  @Test
+  void deletePaper_RemovesPublicationSummaryFromAuthors() {
+    // Setup
+    when(paperDAO.findById("paper-1"))
+        .thenReturn(Optional.of(testPaper)); // testPaper has authorJohn
+
+    // authorJohn has the summary
+    PublicationSummary summary = new PublicationSummary();
+    summary.setPaperId("paper-1");
+    authorJohn.setPublicationsSummary(new ArrayList<>(List.of(summary)));
+    authorJohn.setTotalPublications(1);
+
+    // Execute
+    paperService.deletePaper("paper-1");
+
+    // Assert
+    assertEquals(0, authorJohn.getTotalPublications());
+    assertTrue(authorJohn.getPublicationsSummary().isEmpty());
+    verify(authorDAO).saveAll(any());
   }
 
   @Test

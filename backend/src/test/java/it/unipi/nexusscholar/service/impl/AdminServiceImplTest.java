@@ -142,6 +142,17 @@ class AdminServiceImplTest {
   }
 
   @Test
+  void updateAdmin_IdNotFound_ThrowsException() {
+    AdminUpdateDTO dto = new AdminUpdateDTO();
+    when(adminDAO.findById("missing-id")).thenReturn(Optional.empty());
+
+    RuntimeException ex =
+        assertThrows(RuntimeException.class, () -> adminService.updateAdmin("missing-id", dto));
+
+    assertEquals("Admin not found", ex.getMessage());
+  }
+
+  @Test
   void getAdminById_Success() {
     when(adminDAO.findById("a1")).thenReturn(Optional.of(testAdmin));
     AdminDTO result = adminService.getAdminById("a1");

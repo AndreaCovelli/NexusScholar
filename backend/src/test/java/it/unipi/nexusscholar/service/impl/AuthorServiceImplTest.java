@@ -291,6 +291,61 @@ class AuthorServiceImplTest {
   }
 
   @Test
+  void deleteAuthorById_RemovesAuthorFromPaper_PaperStillHasAuthors_SavesPaper() {
+    // Setup: Author to delete
+    when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
+
+    // Setup: Paper linked to author
+    PublicationSummary pub = new PublicationSummary("paper-id-1", 2023, "Title");
+    testAuthor.setPublicationsSummary(List.of(pub));
+
+    Paper paper = new Paper();
+    paper.setId("paper-id-1");
+    // Paper has the author to be deleted AND another author
+    List<PaperAuthor> paperAuthors = new ArrayList<>();
+    paperAuthors.add(new PaperAuthor("author-id-1", "John"));
+    paperAuthors.add(new PaperAuthor("author-id-2", "Jane"));
+    paper.setAuthors(paperAuthors);
+
+    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(paper));
+
+    // Execute
+    authorService.deleteAuthorById("author-id-1");
+
+    // Assert: Paper should be saved (updated), not deleted, because it still has "Jane"
+    verify(paperDAO).save(paper);
+    verify(paperDAO, never()).delete(paper);
+    assertEquals(1, paper.getAuthors().size());
+    assertEquals("author-id-2", paper.getAuthors().get(0).getId());
+  }
+
+  @Test
+  void deleteAuthorById_RemovesAuthorFromPaper_PaperBecomesEmpty_DeletesPaper() {
+    // Setup: Author to delete
+    when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
+
+    // Setup: Paper linked to author
+    PublicationSummary pub = new PublicationSummary("paper-id-1", 2023, "Title");
+    testAuthor.setPublicationsSummary(List.of(pub));
+
+    Paper paper = new Paper();
+    paper.setId("paper-id-1");
+    // Paper ONLY has the author to be deleted
+    List<PaperAuthor> paperAuthors = new ArrayList<>();
+    paperAuthors.add(new PaperAuthor("author-id-1", "John"));
+    paper.setAuthors(paperAuthors);
+
+    when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(paper));
+
+    // Execute
+    authorService.deleteAuthorById("author-id-1");
+
+    // Assert: Paper should be deleted because authors list is now empty
+    verify(paperDAO).delete(paper);
+    verify(paperDAO, never()).save(paper);
+  }
+
+  @Test
   void deleteAuthorById_NotFound_ThrowsException() {
     when(authorDAO.findById("non-existent")).thenReturn(Optional.empty());
 

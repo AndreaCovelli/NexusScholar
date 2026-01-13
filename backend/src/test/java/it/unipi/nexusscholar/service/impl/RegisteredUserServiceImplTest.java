@@ -172,6 +172,27 @@ class RegisteredUserServiceImplTest {
   }
 
   @Test
+  void addBookmark_NullBookmarkList_InitializesAndAdds() {
+    // Setup
+    testUser.setBookmarkedPapers(null);
+    Paper paper = new Paper();
+    paper.setId("p1");
+    paper.setTitle("Title");
+
+    when(userDAO.findById("u1")).thenReturn(Optional.of(testUser));
+    when(paperDAO.findById("p1")).thenReturn(Optional.of(paper));
+
+    when(userDAO.save(any(RegisteredUser.class))).thenAnswer(i -> i.getArgument(0));
+
+    // Execute
+    RegisteredUserDTO result = userService.addBookmark("u1", "p1");
+
+    // Assert
+    assertNotNull(testUser.getBookmarkedPapers());
+    assertEquals(1, testUser.getBookmarkedPapers().size());
+  }
+
+  @Test
   void addBookmark_UserNotFound() {
     when(userDAO.findById("u1")).thenReturn(Optional.empty());
     assertThrows(BusinessException.class, () -> userService.addBookmark("u1", "p1"));
