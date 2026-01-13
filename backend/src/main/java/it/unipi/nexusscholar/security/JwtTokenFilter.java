@@ -14,11 +14,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Custom filter that executes once per request to validate JWT tokens.
- * <p>
- * This filter intercepts incoming HTTP requests, extracts the JWT token from the header,
- * validates it using {@link JwtTokenProvider}, and sets the authentication in the
- * {@link SecurityContextHolder} if the token is valid.
- * </p>
+ *
+ * <p>This filter intercepts incoming HTTP requests, extracts the JWT token from the header,
+ * validates it using {@link JwtTokenProvider}, and sets the authentication in the {@link
+ * SecurityContextHolder} if the token is valid.
  */
 @Component
 @RequiredArgsConstructor // Uses Lombok for clean constructor injection
@@ -29,18 +28,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
   /**
    * Core filter logic to resolve and validate the token.
    *
-   * @param request     The incoming HTTP request.
-   * @param response    The outgoing HTTP response.
+   * @param request The incoming HTTP request.
+   * @param response The outgoing HTTP response.
    * @param filterChain The chain of filters to proceed with.
    * @throws ServletException If a servlet-specific error occurs.
-   * @throws IOException      If an I/O error occurs.
+   * @throws IOException If an I/O error occurs.
    */
   @Override
   protected void doFilterInternal(
-          @NonNull HttpServletRequest request,
-          @NonNull HttpServletResponse response,
-          @NonNull FilterChain filterChain)
-          throws ServletException, IOException {
+      @NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain)
+      throws ServletException, IOException {
 
     // Use the injected instance 'jwtTokenProvider' to extract the token
     String token = jwtTokenProvider.resolveToken(request);

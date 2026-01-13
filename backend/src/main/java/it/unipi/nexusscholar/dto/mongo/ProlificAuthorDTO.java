@@ -7,26 +7,25 @@ import lombok.NoArgsConstructor;
 
 /**
  * Data Transfer Object representing the result of a "Prolific Author" analysis.
- * <p>
- * This lightweight class is used to return a list of high-output researchers
- * without including their full publication history.
- * </p>
+ *
+ * <p>This lightweight class is used to return a list of high-output researchers without including
+ * their full publication history.
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "Data Transfer Object representing the result of a 'Prolific Author' analysis (high-output researchers).")
+@Schema(
+    description =
+        "Data Transfer Object representing the result of a 'Prolific Author' analysis (high-output researchers).")
 public class ProlificAuthorDTO {
 
-  /**
-   * The unique identifier of the author.
-   */
-  @Schema(description = "The unique identifier of the author.", example = "507f1f77bcf86cd799439011")
+  /** The unique identifier of the author. */
+  @Schema(
+      description = "The unique identifier of the author.",
+      example = "507f1f77bcf86cd799439011")
   private String authorId;
 
-  /**
-   * The name of the author.
-   */
+  /** The name of the author. */
   @Schema(description = "The name of the author.", example = "Yoshua Bengio")
   private String authorName;
 }

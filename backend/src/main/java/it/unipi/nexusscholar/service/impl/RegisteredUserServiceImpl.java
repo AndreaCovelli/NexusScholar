@@ -21,10 +21,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * Implementation of {@link RegisteredUserService}.
- * <p>
- * Handles core business logic including password hashing, uniqueness validation,
- * and interaction with the data access layer.
- * </p>
+ *
+ * <p>Handles core business logic including password hashing, uniqueness validation, and interaction
+ * with the data access layer.
  */
 @Service
 @RequiredArgsConstructor
@@ -56,7 +55,9 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
 
   @Override
   public RegisteredUserDTO updateUser(String id, RegisteredUserUpdateDTO updateDTO) {
-    RegisteredUser user = userDAO.findById(id)
+    RegisteredUser user =
+        userDAO
+            .findById(id)
             .orElseThrow(() -> new BusinessException("User not found with id: " + id));
 
     if (updateDTO.getEmail() != null && !updateDTO.getEmail().equals(user.getEmail())) {
@@ -89,17 +90,17 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
     if (namePrefix == null || namePrefix.trim().isEmpty()) {
       return Collections.emptyList();
     }
-    return userDAO.findByFullNameStartingWith(namePrefix)
-            .stream()
-            .map(this::mapToDTO)
-            .collect(Collectors.toList());
+    return userDAO.findByFullNameStartingWith(namePrefix).stream()
+        .map(this::mapToDTO)
+        .collect(Collectors.toList());
   }
 
   @Override
   public RegisteredUserDTO getUserById(String id) {
-    return userDAO.findById(id)
-            .map(this::mapToDTO)
-            .orElseThrow(() -> new BusinessException("User not found with id: " + id));
+    return userDAO
+        .findById(id)
+        .map(this::mapToDTO)
+        .orElseThrow(() -> new BusinessException("User not found with id: " + id));
   }
 
   @Override
@@ -117,17 +118,19 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
 
   @Override
   public RegisteredUserDTO addBookmark(String userId, String paperId) {
-    RegisteredUser user = userDAO.findById(userId)
-            .orElseThrow(() -> new BusinessException("User not found"));
-    Paper paper = paperDAO.findById(paperId)
+    RegisteredUser user =
+        userDAO.findById(userId).orElseThrow(() -> new BusinessException("User not found"));
+    Paper paper =
+        paperDAO
+            .findById(paperId)
             .orElseThrow(() -> new BusinessException("Paper not found with id: " + paperId));
 
     if (user.getBookmarkedPapers() == null) {
       user.setBookmarkedPapers(new ArrayList<>());
     }
 
-    boolean alreadyBookmarked = user.getBookmarkedPapers().stream()
-            .anyMatch(bp -> bp.getPaperId().equals(paperId));
+    boolean alreadyBookmarked =
+        user.getBookmarkedPapers().stream().anyMatch(bp -> bp.getPaperId().equals(paperId));
 
     if (alreadyBookmarked) {
       throw new IllegalArgumentException("Paper is already bookmarked.");
@@ -151,7 +154,8 @@ public class RegisteredUserServiceImpl implements RegisteredUserService {
     dto.setFullName(user.getFullName());
 
     if (user.getBookmarkedPapers() != null) {
-      dto.setBookmarkedPapers(user.getBookmarkedPapers().stream()
+      dto.setBookmarkedPapers(
+          user.getBookmarkedPapers().stream()
               .map(bp -> new BookmarkedPaperDTO(bp.getPaperId(), bp.getTitle(), bp.getSavedAt()))
               .collect(Collectors.toList()));
     } else {

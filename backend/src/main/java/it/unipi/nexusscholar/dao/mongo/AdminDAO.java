@@ -8,10 +8,9 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Data Access Object (DAO) for managing {@link Admin} entities.
- * <p>
- * Extends {@link MongoRepository} to provide standard CRUD operations
- * and custom query methods for the "admins" collection in MongoDB.
- * </p>
+ *
+ * <p>Extends {@link MongoRepository} to provide standard CRUD operations and custom query methods
+ * for the "admins" collection in MongoDB.
  */
 @Repository
 public interface AdminDAO extends MongoRepository<Admin, String> {
@@ -26,10 +25,9 @@ public interface AdminDAO extends MongoRepository<Admin, String> {
 
   /**
    * Finds admins whose username starts with the given prefix.
-   * <p>
-   * This method translates to a MongoDB regex query: <code>{ username: /^prefix/ }</code>.
-   * It leverages the index <code>{ username: 1 }</code> for performance.
-   * </p>
+   *
+   * <p>This method translates to a MongoDB regex query: <code>{ username: /^prefix/ }</code>. It
+   * leverages the index <code>{ username: 1 }</code> for performance.
    *
    * @param prefix The prefix of the username.
    * @return A list of matching Admins.

@@ -7,25 +7,23 @@ import lombok.NoArgsConstructor;
 
 /**
  * Data Transfer Object representing an author associated with a specific paper.
- * <p>
- * This contains a subset of author information typically embedded within a {@link PaperDTO}.
- * </p>
+ *
+ * <p>This contains a subset of author information typically embedded within a {@link PaperDTO}.
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "Data Transfer Object representing an author associated with a specific paper.")
+@Schema(
+    description = "Data Transfer Object representing an author associated with a specific paper.")
 public class PaperAuthorDTO {
 
-  /**
-   * The unique identifier of the author.
-   */
-  @Schema(description = "The unique identifier of the author.", example = "507f1f77bcf86cd799439011")
+  /** The unique identifier of the author. */
+  @Schema(
+      description = "The unique identifier of the author.",
+      example = "507f1f77bcf86cd799439011")
   private String id;
 
-  /**
-   * The full name of the author.
-   */
+  /** The full name of the author. */
   @Schema(description = "The full name of the author.", example = "Grace Hopper")
   private String name;
 }

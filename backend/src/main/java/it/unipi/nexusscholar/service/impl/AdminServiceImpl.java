@@ -19,10 +19,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * Implementation of the {@link AdminService} interface.
- * <p>
- * Handles business logic for Admin management, including unique constraint checks
- * for username and email updates.
- * </p>
+ *
+ * <p>Handles business logic for Admin management, including unique constraint checks for username
+ * and email updates.
  */
 @Service
 @RequiredArgsConstructor
@@ -53,11 +52,12 @@ public class AdminServiceImpl implements AdminService {
 
   @Override
   public AdminDTO updateAdmin(String id, AdminUpdateDTO dto) {
-    Admin admin = adminDAO.findById(id)
-            .orElseThrow(() -> new RuntimeException("Admin not found"));
+    Admin admin = adminDAO.findById(id).orElseThrow(() -> new RuntimeException("Admin not found"));
 
     // 1. Email Uniqueness Check
-    if (dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(admin.getEmail())) {
+    if (dto.getEmail() != null
+        && !dto.getEmail().isBlank()
+        && !dto.getEmail().equals(admin.getEmail())) {
       if (adminDAO.existsByEmail(dto.getEmail())) {
         throw new IllegalArgumentException("Email already in use by another admin");
       }
@@ -65,7 +65,9 @@ public class AdminServiceImpl implements AdminService {
     }
 
     // 2. Username Uniqueness Check
-    if (dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(admin.getUsername())) {
+    if (dto.getUsername() != null
+        && !dto.getUsername().isBlank()
+        && !dto.getUsername().equals(admin.getUsername())) {
       if (adminDAO.existsByUsername(dto.getUsername())) {
         throw new IllegalArgumentException("Username already exists");
       }
@@ -87,8 +89,7 @@ public class AdminServiceImpl implements AdminService {
 
   @Override
   public AdminDTO getAdminById(String id) {
-    Admin admin = adminDAO.findById(id)
-            .orElseThrow(() -> new RuntimeException("Admin not found"));
+    Admin admin = adminDAO.findById(id).orElseThrow(() -> new RuntimeException("Admin not found"));
     return mapToDTO(admin);
   }
 
@@ -100,10 +101,9 @@ public class AdminServiceImpl implements AdminService {
   @Override
   public List<AdminDTO> searchAdmins(String usernamePrefix) {
     // Uses the custom DAO method that leverages the { username: 1 } index via regex
-    return adminDAO.findByUsernameStartingWith(usernamePrefix)
-            .stream()
-            .map(this::mapToDTO)
-            .collect(Collectors.toList());
+    return adminDAO.findByUsernameStartingWith(usernamePrefix).stream()
+        .map(this::mapToDTO)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -124,7 +124,8 @@ public class AdminServiceImpl implements AdminService {
     dto.setCreatedAt(admin.getCreatedAt());
 
     if (admin.getPermissions() != null) {
-      List<PermissionDTO> permDTOs = admin.getPermissions().stream()
+      List<PermissionDTO> permDTOs =
+          admin.getPermissions().stream()
               .map(p -> PermissionDTO.valueOf(p.name()))
               .collect(Collectors.toList());
       dto.setPermissions(permDTOs);

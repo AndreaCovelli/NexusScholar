@@ -7,10 +7,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * DTO (Data Transfer Object) representing an entry in the paper leaderboard.
- * <p>
- * This class is used to map the results of aggregation queries that calculate
- * the popularity of papers based on bookmarks.
- * </p>
+ *
+ * <p>This class is used to map the results of aggregation queries that calculate the popularity of
+ * papers based on bookmarks.
  */
 @Data
 @AllArgsConstructor
@@ -22,9 +21,7 @@ public class PaperLeaderboard {
 
   private String title;
 
-  /**
-   * The total number of bookmarks this paper has received in the queried period.
-   */
+  /** The total number of bookmarks this paper has received in the queried period. */
   @Field("bookmarked_received")
   private int bookmarkedReceived;
 }

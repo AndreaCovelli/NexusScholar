@@ -7,29 +7,21 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * DTO representing the result of a Venue Impact analysis.
- * <p>
- * Shows the publication volume of a specific venue (Conference or Journal)
- * for a given year.
- * </p>
+ *
+ * <p>Shows the publication volume of a specific venue (Conference or Journal) for a given year.
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class VenueAnalysis {
 
-  /**
-   * The name of the publication venue.
-   */
+  /** The name of the publication venue. */
   private String venue;
 
-  /**
-   * The year of analysis.
-   */
+  /** The year of analysis. */
   private Integer year;
 
-  /**
-   * The number of papers published in this venue during this year.
-   */
+  /** The number of papers published in this venue during this year. */
   @Field("paper_created")
   private Integer paperCreated;
 }

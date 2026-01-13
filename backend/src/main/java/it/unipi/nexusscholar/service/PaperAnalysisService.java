@@ -7,10 +7,9 @@ import java.util.List;
 
 /**
  * Service interface for paper-related analytical operations.
- * <p>
- * Decouples the controller from the complex aggregation logic implemented in the DAO layer.
+ *
+ * <p>Decouples the controller from the complex aggregation logic implemented in the DAO layer.
  * Transforms raw statistical data into DTOs suitable for charts and reports.
- * </p>
  */
 public interface PaperAnalysisService {
 

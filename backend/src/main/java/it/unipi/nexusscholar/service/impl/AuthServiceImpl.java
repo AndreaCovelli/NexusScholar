@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service;
 
 /**
  * Implementation of the {@link AuthService} interface.
- * <p>
- * This class handles the business logic for authentication, including:
+ *
+ * <p>This class handles the business logic for authentication, including:
+ *
  * <ul>
- * <li>Retrieving user or admin entities from the database.</li>
- * <li>Verifying raw passwords against stored encrypted passwords.</li>
- * <li>Generating JWT tokens upon successful authentication using {@link JwtTokenProvider}.</li>
+ *   <li>Retrieving user or admin entities from the database.
+ *   <li>Verifying raw passwords against stored encrypted passwords.
+ *   <li>Generating JWT tokens upon successful authentication using {@link JwtTokenProvider}.
  * </ul>
- * </p>
  */
 @Slf4j
 @Service
@@ -49,10 +49,10 @@ public class AuthServiceImpl implements AuthService {
 
     // 1. Retrieve Admin
     Admin admin =
-            adminDAO
-                    .findByUsername(username)
-                    .orElseThrow(
-                            () -> new BadCredentialsException("Admin not found with username: " + username));
+        adminDAO
+            .findByUsername(username)
+            .orElseThrow(
+                () -> new BadCredentialsException("Admin not found with username: " + username));
 
     // 2. Verify Password
     if (!passwordEncoder.matches(loginRequest.getPassword(), admin.getPassword())) {
@@ -80,10 +80,10 @@ public class AuthServiceImpl implements AuthService {
 
     // 1. Retrieve User
     RegisteredUser user =
-            registeredUserDAO
-                    .findByUsername(username)
-                    .orElseThrow(
-                            () -> new BadCredentialsException("User not found with username: " + username));
+        registeredUserDAO
+            .findByUsername(username)
+            .orElseThrow(
+                () -> new BadCredentialsException("User not found with username: " + username));
 
     // 2. Verify Password
     if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {

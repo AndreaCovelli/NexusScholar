@@ -10,11 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * MongoDB document representing an academic Author.
- * <p>
- * This class maps to the {@code authors} collection in the database. It stores
- * the author's personal details, external identifiers, and a summary of their
- * publications to optimize read operations (denormalization).
- * </p>
+ *
+ * <p>This class maps to the {@code authors} collection in the database. It stores the author's
+ * personal details, external identifiers, and a summary of their publications to optimize read
+ * operations (denormalization).
  */
 @Data
 @AllArgsConstructor
@@ -22,42 +21,34 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = "authors")
 public class Author {
 
-  /**
-   * The unique identifier for the author (MongoDB ObjectId).
-   */
-  @Id
-  private String id;
+  /** The unique identifier for the author (MongoDB ObjectId). */
+  @Id private String id;
 
-  /**
-   * The full name of the author.
-   */
+  /** The full name of the author. */
   private String name;
 
   /**
    * The external identifier provided by Semantic Scholar (S2).
-   * <p>
-   * Used for data ingestion, deduplication, and linking to external datasets.
-   * </p>
+   *
+   * <p>Used for data ingestion, deduplication, and linking to external datasets.
    */
   @Field("s2_author_id")
   private String s2AuthorId;
 
   /**
    * The total number of publications associated with this author.
-   * <p>
-   * This is a pre-calculated counter to allow efficient sorting and filtering
-   * without aggregating the entire {@code publications_summary} list.
-   * </p>
+   *
+   * <p>This is a pre-calculated counter to allow efficient sorting and filtering without
+   * aggregating the entire {@code publications_summary} list.
    */
   @Field("total_publications")
   private Integer totalPublications;
 
   /**
    * A denormalized list of publication summaries.
-   * <p>
-   * Contains a subset of data (e.g., title, year, venue) for the papers
-   * written by this author, avoiding the need for complex joins with the Papers collection.
-   * </p>
+   *
+   * <p>Contains a subset of data (e.g., title, year, venue) for the papers written by this author,
+   * avoiding the need for complex joins with the Papers collection.
    */
   @Field("publications_summary")
   private List<PublicationSummary> publicationsSummary;

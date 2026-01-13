@@ -10,10 +10,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * Implementation of the {@link RegisteredUserAnalysisService}.
- * <p>
- * This class coordinates the retrieval of raw aggregation results from the DAO
- * and transforms them into Data Transfer Objects (DTOs) suitable for the API response.
- * </p>
+ *
+ * <p>This class coordinates the retrieval of raw aggregation results from the DAO and transforms
+ * them into Data Transfer Objects (DTOs) suitable for the API response.
  */
 @Service
 @RequiredArgsConstructor
@@ -23,15 +22,14 @@ public class RegisteredUserAnalysisServiceImpl implements RegisteredUserAnalysis
 
   /**
    * {@inheritDoc}
-   * <p>
-   * This implementation fetches the raw aggregation data from MongoDB and maps
-   * each {@link PaperLeaderboard} entity to a {@link PaperLeaderboardDTO}.
-   * </p>
+   *
+   * <p>This implementation fetches the raw aggregation data from MongoDB and maps each {@link
+   * PaperLeaderboard} entity to a {@link PaperLeaderboardDTO}.
    */
   @Override
   public List<PaperLeaderboardDTO> getPaperLeaderboard(int year, int month) {
     List<PaperLeaderboard> leaderboard =
-            registeredUserAnalysisDAO.getMostBookmarkedPapers(year, month);
+        registeredUserAnalysisDAO.getMostBookmarkedPapers(year, month);
     return leaderboard.stream().map(this::toPaperLeaderboardDTO).toList();
   }
 

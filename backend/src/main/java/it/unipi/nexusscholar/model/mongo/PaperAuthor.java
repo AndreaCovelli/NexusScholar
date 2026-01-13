@@ -7,24 +7,19 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * Represents an author embedded within a {@link Paper} document.
- * <p>
- * This is a simplified representation of an author used specifically for
- * the context of a single paper.
- * </p>
+ *
+ * <p>This is a simplified representation of an author used specifically for the context of a single
+ * paper.
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaperAuthor {
 
-  /**
-   * The unique identifier of the author.
-   */
+  /** The unique identifier of the author. */
   @Field("id")
   private String id;
 
-  /**
-   * The name of the author.
-   */
+  /** The name of the author. */
   private String name;
 }

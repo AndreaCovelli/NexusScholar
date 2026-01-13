@@ -7,24 +7,18 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * DTO representing the evolution of scientific collaboration.
- * <p>
- * specific metrics regarding the average number of authors per paper
- * for a given year.
- * </p>
+ *
+ * <p>specific metrics regarding the average number of authors per paper for a given year.
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class CollaborationEvolution {
 
-  /**
-   * The average number of authors per paper in the specified year.
-   */
+  /** The average number of authors per paper in the specified year. */
   @Field("avg_authors")
   private double avgAuthors;
 
-  /**
-   * The year of analysis.
-   */
+  /** The year of analysis. */
   private int year;
 }

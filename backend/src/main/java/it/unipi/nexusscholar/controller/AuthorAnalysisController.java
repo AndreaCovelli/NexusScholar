@@ -23,9 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for author analytical queries.
- * <p>
- * Provides endpoints to analyze author performance and statistics using MongoDB aggregation pipelines.
- * </p>
+ *
+ * <p>Provides endpoints to analyze author performance and statistics using MongoDB aggregation
+ * pipelines.
  */
 @RestController
 @RequestMapping("/api/authors/analysis")
@@ -38,32 +38,38 @@ public class AuthorAnalysisController {
 
   /**
    * Identifies prolific authors based on a publication count threshold.
-   * <p>
-   * This endpoint aggregates publication data to find authors who have published
-   * more papers than the specified minimum in a year.
-   * </p>
+   *
+   * <p>This endpoint aggregates publication data to find authors who have published more papers
+   * than the specified minimum in a year.
    *
    * @param minPublications The minimum number of publications required (default: 10).
    * @return A list of authors meeting the criteria.
    */
   @Operation(
-          summary = "Identify prolific authors",
-          description = "Retrieves a list of authors who have published more than the specified number of papers."
-  )
-  @ApiResponses(value = {
-          @ApiResponse(
-                  responseCode = "200",
-                  description = "Successfully retrieved the list of prolific authors",
-                  content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProlificAuthorDTO.class))
-          ),
-          @ApiResponse(responseCode = "204", description = "No authors found exceeding the threshold"),
-          @ApiResponse(responseCode = "400", description = "Invalid minimum publications value provided"),
-          @ApiResponse(responseCode = "401", description = "Unauthorized - User is not authenticated")
-  })
+      summary = "Identify prolific authors",
+      description =
+          "Retrieves a list of authors who have published more than the specified number of papers.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved the list of prolific authors",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProlificAuthorDTO.class))),
+        @ApiResponse(
+            responseCode = "204",
+            description = "No authors found exceeding the threshold"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid minimum publications value provided"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - User is not authenticated")
+      })
   @GetMapping("/prolific")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<ProlificAuthorDTO>> getProlificAuthors(
-          @Parameter(description = "Minimum publication count threshold", example = "5")
+      @Parameter(description = "Minimum publication count threshold", example = "5")
           @RequestParam(name = "minPublications", defaultValue = "10")
           @Min(value = 1, message = "minPublications must be at least 1")
           int minPublications) {

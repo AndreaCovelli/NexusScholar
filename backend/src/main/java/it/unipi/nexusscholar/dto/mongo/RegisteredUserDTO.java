@@ -9,10 +9,9 @@ import lombok.NoArgsConstructor;
 
 /**
  * DTO representing a fully registered user sent in API responses.
- * <p>
- * Extends {@link UserDTO} to include specific fields for registered members,
- * such as their full name and their collection of bookmarked papers.
- * </p>
+ *
+ * <p>Extends {@link UserDTO} to include specific fields for registered members, such as their full
+ * name and their collection of bookmarked papers.
  */
 @EqualsAndHashCode(callSuper = false)
 @Data
@@ -21,15 +20,11 @@ import lombok.NoArgsConstructor;
 @Schema(description = "DTO representing a fully registered user sent in API responses.")
 public class RegisteredUserDTO extends UserDTO {
 
-  /**
-   * The user's full name.
-   */
+  /** The user's full name. */
   @Schema(description = "The user's full name.", example = "Mario Rossi")
   private String fullName;
 
-  /**
-   * The list of papers saved by the user.
-   */
+  /** The list of papers saved by the user. */
   @Schema(description = "The list of papers saved by the user.")
   private List<BookmarkedPaperDTO> bookmarkedPapers;
 }

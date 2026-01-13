@@ -10,10 +10,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * Implementation of the {@link AuthorAnalysisService}.
- * <p>
- * This class acts as a bridge between the REST controller and the DAO layer.
- * It retrieves raw analysis data from the database and maps it to DTOs for the client.
- * </p>
+ *
+ * <p>This class acts as a bridge between the REST controller and the DAO layer. It retrieves raw
+ * analysis data from the database and maps it to DTOs for the client.
  */
 @Service
 @RequiredArgsConstructor
@@ -21,9 +20,7 @@ public class AuthorAnalysisServiceImpl implements AuthorAnalysisService {
 
   private final AuthorAnalysisDAO authorAnalysisDAO;
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public List<ProlificAuthorDTO> getProlificAuthors(int minPublications) {
     List<ProlificAuthor> prolificAuthors = authorAnalysisDAO.getProlificAuthors(minPublications);

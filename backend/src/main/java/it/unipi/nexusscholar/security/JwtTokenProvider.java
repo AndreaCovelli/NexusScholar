@@ -18,10 +18,9 @@ import org.springframework.stereotype.Component;
 
 /**
  * Component responsible for JWT (JSON Web Token) lifecycle management.
- * <p>
- * Handles token generation, validation, and parsing. Includes a security check against
- * the database to ensure tokens belong to currently active (non-deleted) users.
- * </p>
+ *
+ * <p>Handles token generation, validation, and parsing. Includes a security check against the
+ * database to ensure tokens belong to currently active (non-deleted) users.
  */
 @Component
 @RequiredArgsConstructor
@@ -41,9 +40,7 @@ public class JwtTokenProvider {
 
   private Algorithm algorithm;
 
-  /**
-   * Initializes the signing algorithm with the configured secret key.
-   */
+  /** Initializes the signing algorithm with the configured secret key. */
   @PostConstruct
   protected void init() {
     algorithm = Algorithm.HMAC256(secretKey);
@@ -53,22 +50,22 @@ public class JwtTokenProvider {
    * Creates a new JWT token for the authenticated user.
    *
    * @param username The username (subject).
-   * @param role     The user's role.
-   * @param userId   The user's unique ID (stored as a claim).
+   * @param role The user's role.
+   * @param userId The user's unique ID (stored as a claim).
    * @return The signed JWT string.
    */
-  public String createToken(String username, String role, String userId) {
+  public String createToken(String username, String userId, String role) {
     Date now = new Date();
     Date validity = new Date(now.getTime() + validityInMilliseconds);
 
     return JWT.create()
-            .withSubject(username)
-            .withClaim("role", role)
-            .withClaim("id", userId)
-            .withClaim("username", username)
-            .withIssuedAt(now)
-            .withExpiresAt(validity)
-            .sign(algorithm);
+        .withSubject(username)
+        .withClaim("role", role)
+        .withClaim("id", userId)
+        .withClaim("username", username)
+        .withIssuedAt(now)
+        .withExpiresAt(validity)
+        .sign(algorithm);
   }
 
   /**
@@ -87,10 +84,10 @@ public class JwtTokenProvider {
 
   /**
    * Validates the token's signature, expiration, and the existence of the user.
-   * <p>
-   * <strong>Security Note:</strong> This method queries the database to ensure the user
-   * associated with the token still exists. If the user has been deleted, the token is considered invalid.
-   * </p>
+   *
+   * <p><strong>Security Note:</strong> This method queries the database to ensure the user
+   * associated with the token still exists. If the user has been deleted, the token is considered
+   * invalid.
    *
    * @param token The JWT token to validate.
    * @return {@code true} if valid and user/admin exists; {@code false} otherwise.
@@ -131,7 +128,8 @@ public class JwtTokenProvider {
 
     SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
-    return new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
+    return new UsernamePasswordAuthenticationToken(
+        username, null, Collections.singletonList(authority));
   }
 
   /**

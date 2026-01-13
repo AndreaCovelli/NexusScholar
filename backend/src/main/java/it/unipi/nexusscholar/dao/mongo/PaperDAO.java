@@ -10,9 +10,8 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Spring Data MongoDB repository for managing {@link Paper} documents.
- * <p>
- * Provides standard CRUD operations and custom finder methods with pagination support.
- * </p>
+ *
+ * <p>Provides standard CRUD operations and custom finder methods with pagination support.
  */
 @Repository
 public interface PaperDAO extends MongoRepository<Paper, String> {
@@ -28,7 +27,7 @@ public interface PaperDAO extends MongoRepository<Paper, String> {
   /**
    * Searches for papers whose title contains the specified string (case-insensitive).
    *
-   * @param title    The keyword to search for in the title.
+   * @param title The keyword to search for in the title.
    * @param pageable Pagination information.
    * @return A page of matching papers.
    */
@@ -37,7 +36,7 @@ public interface PaperDAO extends MongoRepository<Paper, String> {
   /**
    * Retrieves all papers published in a specific year.
    *
-   * @param year     The publication year.
+   * @param year The publication year.
    * @param pageable Pagination information.
    * @return A page of papers published in that year.
    */
@@ -45,12 +44,11 @@ public interface PaperDAO extends MongoRepository<Paper, String> {
 
   /**
    * Performs a full-text search on the papers collection.
-   * <p>
-   * This method relies on a MongoDB Text Index being created on the relevant fields
-   * (e.g., title, abstract).
-   * </p>
    *
-   * @param keyword  The text to search for.
+   * <p>This method relies on a MongoDB Text Index being created on the relevant fields (e.g.,
+   * title, abstract).
+   *
+   * @param keyword The text to search for.
    * @param pageable Pagination information.
    * @return A page of papers matching the text query.
    */

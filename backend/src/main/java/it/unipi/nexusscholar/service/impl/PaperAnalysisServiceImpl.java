@@ -14,10 +14,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * Implementation of {@link PaperAnalysisService}.
- * <p>
- * Bridges the gap between the DAO's raw aggregation results (Entity/Model objects)
- * and the API's required format (DTOs).
- * </p>
+ *
+ * <p>Bridges the gap between the DAO's raw aggregation results (Entity/Model objects) and the API's
+ * required format (DTOs).
  */
 @Service
 @RequiredArgsConstructor
@@ -25,27 +24,21 @@ public class PaperAnalysisServiceImpl implements PaperAnalysisService {
 
   private final PaperAnalysisDAO paperAnalysisDAO;
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public List<TrendAnalysisDTO> getTrendAnalysis() {
     List<TrendAnalysis> trends = paperAnalysisDAO.getTrendAnalysis();
     return trends.stream().map(this::toTrendAnalysisDTO).toList();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public List<VenueAnalysisDTO> getVenueAnalysis() {
     List<VenueAnalysis> venues = paperAnalysisDAO.getVenueAnalysis();
     return venues.stream().map(this::toVenueAnalysisDTO).toList();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public List<CollaborationEvolutionDTO> getCollaborationEvolution() {
     List<CollaborationEvolution> collabs = paperAnalysisDAO.getCollaborationEvolution();

@@ -8,18 +8,16 @@ import java.util.List;
 
 /**
  * Interface defining complex analytical operations on Paper data.
- * <p>
- * These methods typically involve heavy aggregations and grouping operations
- * that go beyond simple CRUD queries.
- * </p>
+ *
+ * <p>These methods typically involve heavy aggregations and grouping operations that go beyond
+ * simple CRUD queries.
  */
 public interface PaperAnalysisDAO {
 
   /**
    * Performs a "Hot Topics" analysis to identify trending fields of study.
-   * <p>
-   * Calculates the number of papers published per field of study for each year.
-   * </p>
+   *
+   * <p>Calculates the number of papers published per field of study for each year.
    *
    * @return A list of {@link TrendAnalysis} results.
    * @throws DAOException If the aggregation fails.
@@ -28,10 +26,9 @@ public interface PaperAnalysisDAO {
 
   /**
    * Performs a Venue Impact analysis.
-   * <p>
-   * Calculates the number of papers published in each venue for each year,
-   * helping to identify high-volume or prestigious venues.
-   * </p>
+   *
+   * <p>Calculates the number of papers published in each venue for each year, helping to identify
+   * high-volume or prestigious venues.
    *
    * @return A list of {@link VenueAnalysis} results.
    * @throws DAOException If the aggregation fails.
@@ -40,9 +37,8 @@ public interface PaperAnalysisDAO {
 
   /**
    * Analyzes the evolution of collaboration patterns over time.
-   * <p>
-   * Calculates the average number of authors per paper for each year.
-   * </p>
+   *
+   * <p>Calculates the average number of authors per paper for each year.
    *
    * @return A list of {@link CollaborationEvolution} results.
    * @throws DAOException If the aggregation fails.

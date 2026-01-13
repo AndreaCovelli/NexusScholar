@@ -17,40 +17,43 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Controller responsible for handling authentication requests.
- * <p>
- * This controller exposes public endpoints for logging in Administrators and
- * Registered Users. Upon successful authentication, it returns a JWT token
- * that must be included in subsequent requests to protected resources.
- * </p>
+ *
+ * <p>This controller exposes public endpoints for logging in Administrators and Registered Users.
+ * Upon successful authentication, it returns a JWT token that must be included in subsequent
+ * requests to protected resources.
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication API", description = "Endpoints for managing user and admin login sessions")
+@Tag(
+    name = "Authentication API",
+    description = "Endpoints for managing user and admin login sessions")
 public class AuthController {
 
   private final AuthService authService;
 
   /**
    * Authenticates an Administrator.
-   * <p>
-   * Accepts admin credentials, validates them against the database, and returns
-   * a JWT token with ADMIN role permissions.
-   * </p>
+   *
+   * <p>Accepts admin credentials, validates them against the database, and returns a JWT token with
+   * ADMIN role permissions.
    *
    * @param loginRequest The DTO containing the admin's username and password.
    * @return A {@link ResponseEntity} containing the JWT token if successful.
    */
   @Operation(
-          summary = "Admin Login",
-          description = "Authenticates an administrator using username and password. Returns a JWT token with ADMIN privileges."
-  )
-  @ApiResponses(value = {
-          @ApiResponse(responseCode = "200", description = "Authentication successful, token returned"),
-          @ApiResponse(responseCode = "401", description = "Invalid username or password"),
-          @ApiResponse(responseCode = "400", description = "Malformed request body")
-  })
+      summary = "Admin Login",
+      description =
+          "Authenticates an administrator using username and password. Returns a JWT token with ADMIN privileges.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Authentication successful, token returned"),
+        @ApiResponse(responseCode = "401", description = "Invalid username or password"),
+        @ApiResponse(responseCode = "400", description = "Malformed request body")
+      })
   @PostMapping("/admin/login")
   public ResponseEntity<AuthResponseDTO> loginAdmin(@RequestBody LoginRequestDTO loginRequest) {
     log.info("Received login request for ADMIN: {}", loginRequest.getUsername());
@@ -59,23 +62,25 @@ public class AuthController {
 
   /**
    * Authenticates a Registered User.
-   * <p>
-   * Accepts user credentials, validates them against the database, and returns
-   * a JWT token with USER role permissions.
-   * </p>
+   *
+   * <p>Accepts user credentials, validates them against the database, and returns a JWT token with
+   * USER role permissions.
    *
    * @param loginRequest The DTO containing the user's username and password.
    * @return A {@link ResponseEntity} containing the JWT token if successful.
    */
   @Operation(
-          summary = "User Login",
-          description = "Authenticates a registered user using username and password. Returns a JWT token with standard USER privileges."
-  )
-  @ApiResponses(value = {
-          @ApiResponse(responseCode = "200", description = "Authentication successful, token returned"),
-          @ApiResponse(responseCode = "401", description = "Invalid username or password"),
-          @ApiResponse(responseCode = "400", description = "Malformed request body")
-  })
+      summary = "User Login",
+      description =
+          "Authenticates a registered user using username and password. Returns a JWT token with standard USER privileges.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Authentication successful, token returned"),
+        @ApiResponse(responseCode = "401", description = "Invalid username or password"),
+        @ApiResponse(responseCode = "400", description = "Malformed request body")
+      })
   @PostMapping("/user/login")
   public ResponseEntity<AuthResponseDTO> loginUser(@RequestBody LoginRequestDTO loginRequest) {
     log.info("Received login request for USER: {}", loginRequest.getUsername());

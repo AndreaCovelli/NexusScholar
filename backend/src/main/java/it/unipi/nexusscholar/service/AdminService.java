@@ -9,10 +9,9 @@ import org.springframework.data.domain.Pageable;
 
 /**
  * Service interface for managing Administrator entities.
- * <p>
- * Defines the business logic for the lifecycle of administrative accounts,
- * including creation, updates, retrieval, search, and deletion.
- * </p>
+ *
+ * <p>Defines the business logic for the lifecycle of administrative accounts, including creation,
+ * updates, retrieval, search, and deletion.
  */
 public interface AdminService {
 
@@ -27,12 +26,11 @@ public interface AdminService {
 
   /**
    * Updates an existing Administrator's profile.
-   * <p>
-   * Allows modifying the username, email, password, or permission set.
-   * Checks uniqueness if username or email are changed.
-   * </p>
    *
-   * @param id        The unique identifier of the admin to update.
+   * <p>Allows modifying the username, email, password, or permission set. Checks uniqueness if
+   * username or email are changed.
+   *
+   * @param id The unique identifier of the admin to update.
    * @param updateDTO The DTO containing the updated fields.
    * @return The updated admin details.
    * @throws RuntimeException If the admin is not found.
@@ -57,9 +55,8 @@ public interface AdminService {
 
   /**
    * Searches for administrators by username prefix.
-   * <p>
-   * Uses a regex-based search to find admins whose username starts with the query.
-   * </p>
+   *
+   * <p>Uses a regex-based search to find admins whose username starts with the query.
    *
    * @param usernamePrefix The starting characters of the username.
    * @return A list of matching AdminDTOs.
@@ -68,10 +65,9 @@ public interface AdminService {
 
   /**
    * Permanently deletes an Administrator from the system.
-   * <p>
-   * <b>Note:</b> Deleting the admin will automatically invalidate their active JWT tokens
-   * due to the database existence check in the security filter.
-   * </p>
+   *
+   * <p><b>Note:</b> Deleting the admin will automatically invalidate their active JWT tokens due to
+   * the database existence check in the security filter.
    *
    * @param id The unique identifier of the admin to delete.
    */
