@@ -369,11 +369,11 @@ public class GraphDAO {
                                 MERGE (p:Paper{paperID:$paperID})
                                 SET p.title = $title
                                 WITH p
-                                OPTIONAL MATCH p <- [r:AUTHORED] - (:Author)
+                                OPTIONAL MATCH (p)<-[r:AUTHORED]-(:Author)
                                 DELETE r
                                 WITH p
                                 UNWIND $authors as author
-                                MERGE (a:Author {id: author.id})
+                                MERGE (a:Author {authorId: author.id})
                                 SET a.name = author.name
                                 MERGE (p)<-[:AUTHORED]-(a)
                                 """,
