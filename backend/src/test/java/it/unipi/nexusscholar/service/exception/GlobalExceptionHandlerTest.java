@@ -1,17 +1,27 @@
 package it.unipi.nexusscholar.service.exception;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import it.unipi.nexusscholar.dao.exception.DAOException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 class GlobalExceptionHandlerTest {
@@ -70,6 +80,38 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
+  void handleDtoValidationException_ReturnsBadRequest_WithFieldErrors() {
+    // Mocking the complex structure of MethodArgumentNotValidException
+    MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
+    BindingResult bindingResult = mock(BindingResult.class);
+    FieldError fieldError = new FieldError("userDTO", "email", "must be a valid email");
+
+    when(ex.getBindingResult()).thenReturn(bindingResult);
+    when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
+
+    ResponseEntity<Map<String, String>> response = handler.handleDtoValidationException(ex);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertEquals("Validation Error", response.getBody().get("error"));
+    assertTrue(response.getBody().get("details").contains("email"));
+    assertTrue(response.getBody().get("details").contains("must be a valid email"));
+  }
+
+  @Test
+  void handleDtoValidationException_ReturnsBadRequest_EmptyErrors() {
+    MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
+    BindingResult bindingResult = mock(BindingResult.class);
+
+    when(ex.getBindingResult()).thenReturn(bindingResult);
+    when(bindingResult.getFieldErrors()).thenReturn(Collections.emptyList());
+
+    ResponseEntity<Map<String, String>> response = handler.handleDtoValidationException(ex);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertEquals("", response.getBody().get("details"));
+  }
+
+  @Test
   void handleTypeMismatch_ReturnsBadRequest() {
     MethodArgumentTypeMismatchException ex =
         new MethodArgumentTypeMismatchException(
@@ -104,6 +146,41 @@ class GlobalExceptionHandlerTest {
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertTrue(response.getBody().get("details").contains("unknown"));
+  }
+
+  @Test
+  void handleAccessDeniedException_ReturnsForbidden() {
+    AccessDeniedException ex = new AccessDeniedException("Access is denied");
+
+    ResponseEntity<Map<String, String>> response = handler.handleAccessDeniedException(ex);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertEquals("Access Denied", response.getBody().get("error"));
+    assertEquals(
+        "You do not have permission to access this resource.", response.getBody().get("details"));
+  }
+
+  @Test
+  void handleBadCredentialsException_ReturnsUnauthorized() {
+    BadCredentialsException ex = new BadCredentialsException("Bad credentials");
+
+    ResponseEntity<Map<String, String>> response = handler.handleBadCredentialsException(ex);
+
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertEquals("Invalid Credentials", response.getBody().get("error"));
+    assertEquals("Invalid username or password.", response.getBody().get("details"));
+  }
+
+  @Test
+  void handleAuthenticationException_ReturnsUnauthorized() {
+    AuthenticationException ex =
+        new InsufficientAuthenticationException("Full authentication is required");
+
+    ResponseEntity<Map<String, String>> response = handler.handleAuthenticationException(ex);
+
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    assertEquals("Unauthorized", response.getBody().get("error"));
+    assertEquals("Full authentication is required", response.getBody().get("details"));
   }
 
   @Test

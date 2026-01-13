@@ -55,7 +55,7 @@ class PaperControllerTest {
   }
 
   @Test
-  @WithMockUser // Add this annotation
+  @WithMockUser
   void getPaperById_ReturnsOk() throws Exception {
     PaperDTO paperDTO = new PaperDTO();
     paperDTO.setId("paper-1");
@@ -70,7 +70,7 @@ class PaperControllerTest {
   }
 
   @Test
-  @WithMockUser // Add this annotation
+  @WithMockUser
   void searchPapersByTitle_ReturnsOk() throws Exception {
     PaperDTO paperDTO = new PaperDTO();
     paperDTO.setTitle("Deep Learning");
@@ -88,18 +88,38 @@ class PaperControllerTest {
   }
 
   @Test
-  @WithMockUser // Add this annotation
-  void searchPapersByTitle_EmptyResults_ReturnsNoContent() throws Exception {
-    when(paperService.searchPapersByTitle(eq("NonExistent"), any(Pageable.class)))
+  @WithMockUser(roles = "USER")
+  void smartSearch_ReturnsOk() throws Exception {
+    PaperDTO paperDTO = new PaperDTO();
+    paperDTO.setTitle("Smart AI");
+
+    Page<PaperDTO> page = new PageImpl<>(List.of(paperDTO));
+
+    when(paperService.searchPapersByText(eq("AI"), any(Pageable.class))).thenReturn(page);
+
+    mockMvc
+        .perform(
+            get("/api/papers/smart-search")
+                .param("keyword", "AI")
+                .param("page", "0")
+                .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content[0].title").value("Smart AI"));
+  }
+
+  @Test
+  @WithMockUser(roles = "USER")
+  void smartSearch_EmptyResults_ReturnsNoContent() throws Exception {
+    when(paperService.searchPapersByText(eq("Unknown"), any(Pageable.class)))
         .thenReturn(Page.empty());
 
     mockMvc
-        .perform(get("/api/papers/search").param("title", "NonExistent"))
+        .perform(get("/api/papers/smart-search").param("keyword", "Unknown"))
         .andExpect(status().isNoContent());
   }
 
   @Test
-  @WithMockUser // Add this annotation
+  @WithMockUser
   void getPapersByYear_ReturnsOk() throws Exception {
     PaperDTO paperDTO = new PaperDTO();
     paperDTO.setTitle("Paper 2023");
@@ -116,7 +136,7 @@ class PaperControllerTest {
   }
 
   @Test
-  @WithMockUser // Add this annotation
+  @WithMockUser
   void getPapersByYear_EmptyResults_ReturnsNoContent() throws Exception {
     when(paperService.getPapersByYear(eq(1900), any(Pageable.class))).thenReturn(Page.empty());
 
