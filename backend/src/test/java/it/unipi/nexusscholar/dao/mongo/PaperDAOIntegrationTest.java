@@ -35,7 +35,7 @@ class PaperDAOIntegrationTest {
             .onField("title", 10F)
             .onField("abstract", 3F)
             .build();
-    mongoTemplate.indexOps("papers").ensureIndex(textIndex);
+    mongoTemplate.indexOps("papers").createIndex(textIndex);
 
     // Seed data
     Paper p1 = new Paper();
