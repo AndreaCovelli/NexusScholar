@@ -1,5 +1,6 @@
 package it.unipi.nexusscholar.dto.mongo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "DTO representing an Administrator sent in API responses. Extends UserDTO to include admin-specific fields.")
 public class AdminDTO extends UserDTO {
 
   /**
@@ -25,5 +27,6 @@ public class AdminDTO extends UserDTO {
    * Uses {@link PermissionDTO} to decouple the API response from the internal model enum.
    * </p>
    */
+  @Schema(description = "The list of permissions granted to this administrator.")
   private List<PermissionDTO> permissions;
 }
