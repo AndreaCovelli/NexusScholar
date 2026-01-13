@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
- * An entry in the paper leaderboard.
+ * Represents an entry in the paper leaderboard.
  *
  * <p>This class is used to map the results of aggregation queries that calculate the popularity of
  * papers based on bookmarks.
