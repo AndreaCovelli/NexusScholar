@@ -1,6 +1,7 @@
 package it.unipi.nexusscholar.dao.mongo;
 
 import it.unipi.nexusscholar.model.mongo.Admin;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
@@ -24,10 +25,19 @@ public interface AdminDAO extends MongoRepository<Admin, String> {
   Optional<Admin> findByUsername(String username);
 
   /**
-   * Checks if an Admin with the specified username already exists.
+   * Finds admins whose username starts with the given prefix.
    * <p>
-   * Useful for validation during the creation of new administrators.
+   * This method translates to a MongoDB regex query: <code>{ username: /^prefix/ }</code>.
+   * It leverages the index <code>{ username: 1 }</code> for performance.
    * </p>
+   *
+   * @param prefix The prefix of the username.
+   * @return A list of matching Admins.
+   */
+  List<Admin> findByUsernameStartingWith(String prefix);
+
+  /**
+   * Checks if an Admin with the specified username already exists.
    *
    * @param username The username to check.
    * @return {@code true} if the username exists, {@code false} otherwise.
@@ -36,9 +46,6 @@ public interface AdminDAO extends MongoRepository<Admin, String> {
 
   /**
    * Checks if an Admin with the specified email address already exists.
-   * <p>
-   * Useful for validation to ensure unique email addresses across the system.
-   * </p>
    *
    * @param email The email address to check.
    * @return {@code true} if the email is already in use, {@code false} otherwise.

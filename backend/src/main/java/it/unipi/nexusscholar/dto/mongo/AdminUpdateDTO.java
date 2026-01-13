@@ -8,12 +8,18 @@ import lombok.Data;
 /**
  * DTO used for updating an existing Administrator's profile.
  * <p>
- * Allows changing sensitive information such as the password or the assigned permissions.
+ * Allows changing sensitive information such as the password, permissions, and username.
  * </p>
  */
 @Data
-@Schema(description = "DTO used for updating an existing Administrator's profile. Allows changing sensitive information such as the password or permissions.")
+@Schema(description = "DTO used for updating an existing Administrator's profile. Allows changing sensitive information such as the password, permissions, or username.")
 public class AdminUpdateDTO {
+
+  /**
+   * The new username. Must be unique in the system.
+   */
+  @Schema(description = "The new username. Must be unique.", example = "admin_updater")
+  private String username;
 
   /**
    * The new email address.

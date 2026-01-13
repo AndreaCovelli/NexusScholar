@@ -3,6 +3,7 @@ package it.unipi.nexusscholar.service;
 import it.unipi.nexusscholar.dto.mongo.AdminCreateDTO;
 import it.unipi.nexusscholar.dto.mongo.AdminDTO;
 import it.unipi.nexusscholar.dto.mongo.AdminUpdateDTO;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -10,21 +11,16 @@ import org.springframework.data.domain.Pageable;
  * Service interface for managing Administrator entities.
  * <p>
  * Defines the business logic for the lifecycle of administrative accounts,
- * including creation, updates, retrieval, and deletion. It acts as the bridge
- * between the controller layer and the persistence layer (DAO).
+ * including creation, updates, retrieval, search, and deletion.
  * </p>
  */
 public interface AdminService {
 
   /**
    * Creates and registers a new Administrator.
-   * <p>
-   * This method is responsible for validating the uniqueness of credentials
-   * and securely hashing the password before storage.
-   * </p>
    *
-   * @param createDTO The DTO containing the initial admin data (username, email, raw password, permissions).
-   * @return The created admin details as a {@link AdminDTO} (excluding the password).
+   * @param createDTO The DTO containing the initial admin data.
+   * @return The created admin details as a {@link AdminDTO}.
    * @throws IllegalArgumentException If the username or email is already in use.
    */
   AdminDTO createAdmin(AdminCreateDTO createDTO);
@@ -32,8 +28,8 @@ public interface AdminService {
   /**
    * Updates an existing Administrator's profile.
    * <p>
-   * Allows modifying the email, password, or permission set.
-   * Password updates are optional; if provided, the new password will be hashed.
+   * Allows modifying the username, email, password, or permission set.
+   * Checks uniqueness if username or email are changed.
    * </p>
    *
    * @param id        The unique identifier of the admin to update.
@@ -48,26 +44,36 @@ public interface AdminService {
    *
    * @param id The unique identifier.
    * @return The found admin details.
-   * @throws RuntimeException If no admin is found with the given ID.
    */
   AdminDTO getAdminById(String id);
 
   /**
-   * Retrieves a paginated list of all Administrators in the system.
-   * <p>
-   * Useful for back-office management dashboards.
-   * </p>
+   * Retrieves a paginated list of all Administrators.
    *
-   * @param pageable The pagination information (page number, size, sorting).
+   * @param pageable The pagination information.
    * @return A page of {@link AdminDTO} objects.
    */
   Page<AdminDTO> getAllAdmins(Pageable pageable);
 
   /**
+   * Searches for administrators by username prefix.
+   * <p>
+   * Uses a regex-based search to find admins whose username starts with the query.
+   * </p>
+   *
+   * @param usernamePrefix The starting characters of the username.
+   * @return A list of matching AdminDTOs.
+   */
+  List<AdminDTO> searchAdmins(String usernamePrefix);
+
+  /**
    * Permanently deletes an Administrator from the system.
+   * <p>
+   * <b>Note:</b> Deleting the admin will automatically invalidate their active JWT tokens
+   * due to the database existence check in the security filter.
+   * </p>
    *
    * @param id The unique identifier of the admin to delete.
-   * @throws RuntimeException If the admin does not exist.
    */
   void deleteAdmin(String id);
 }

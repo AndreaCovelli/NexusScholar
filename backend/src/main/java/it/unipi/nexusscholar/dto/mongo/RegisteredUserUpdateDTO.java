@@ -7,40 +7,45 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO used for updating an existing user's profile.
+ * Data Transfer Object (DTO) for updating an existing user's profile.
  * <p>
- * Contains fields that are modifiable by the user. Fields that are null
- * in the request are typically ignored by the service (partial update) or
- * handled according to specific business rules.
+ * This class encapsulates the fields that a user is allowed to modify. Fields that are null
+ * in the request indicate that no change is requested for that specific property.
  * </p>
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "DTO used for updating an existing user's profile. Fields that are null are typically ignored (partial update).")
+@Schema(description = "DTO used for updating an existing user's profile. Null fields are ignored during the update process.")
 public class RegisteredUserUpdateDTO {
 
   /**
-   * The new email address. Must not conflict with existing users.
+   * The new email address.
    */
-  @Schema(description = "The new email address. Must not conflict with existing users.", example = "new_email@example.com")
+  @Schema(description = "The new email address. Must be unique within the system.", example = "new_email@example.com")
   private String email;
 
   /**
-   * The new password. If provided, it will be re-hashed.
+   * The new username.
    */
-  @Schema(description = "The new password. If provided, it will be re-hashed.", example = "NewSecurePass!23")
+  @Schema(description = "The new username. Must be unique within the system.", example = "cool_scholar_99")
+  private String username;
+
+  /**
+   * The new password.
+   */
+  @Schema(description = "The new password. If provided, it will be encrypted and stored securely.", example = "NewSecurePass!23")
   private String password;
 
   /**
    * The updated full name.
    */
-  @Schema(description = "The updated full name.", example = "Luigi Verdi")
+  @Schema(description = "The updated full legal name or display name.", example = "Luigi Verdi")
   private String fullName;
 
   /**
-   * The updated list of bookmarks (optional, usually managed via specific endpoints).
+   * The updated list of bookmarks.
    */
-  @Schema(description = "The updated list of bookmarks (optional, usually managed via specific endpoints).")
+  @Schema(description = "The updated list of bookmarked papers. Usually managed via dedicated endpoints.")
   private List<BookmarkedPaperDTO> bookmarkedPapers;
 }
