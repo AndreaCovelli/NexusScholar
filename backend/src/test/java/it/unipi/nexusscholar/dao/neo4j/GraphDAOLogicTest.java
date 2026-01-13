@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.neo4j.driver.*;
+import org.neo4j.driver.Record;
 
 @ExtendWith(MockitoExtension.class)
 class GraphDAOLogicTest {
@@ -37,7 +38,7 @@ class GraphDAOLogicTest {
             invocation -> {
               TransactionCallback cb = invocation.getArgument(0);
               // We need to mock the Transaction and Result for the 'exists' check
-              Transaction tx = mock(Transaction.class);
+              TransactionContext tx = mock(TransactionContext.class);
               when(tx.run(contains("gds.graph.exists"))).thenReturn(result);
               when(result.single()).thenReturn(record);
               when(record.get("exists")).thenReturn(value);
@@ -65,7 +66,7 @@ class GraphDAOLogicTest {
         .thenAnswer(
             invocation -> {
               TransactionCallback cb = invocation.getArgument(0);
-              Transaction tx = mock(Transaction.class);
+              TransactionContext tx = mock(TransactionContext.class);
               when(tx.run(contains("gds.graph.exists"))).thenReturn(result);
               when(result.single()).thenReturn(record);
               when(record.get("exists")).thenReturn(value);

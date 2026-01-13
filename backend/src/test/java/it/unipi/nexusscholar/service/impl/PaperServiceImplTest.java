@@ -14,6 +14,7 @@ import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.model.mongo.Author;
 import it.unipi.nexusscholar.model.mongo.Paper;
 import it.unipi.nexusscholar.model.mongo.PaperAuthor;
+import it.unipi.nexusscholar.model.mongo.PublicationSummary;
 import it.unipi.nexusscholar.service.exception.BusinessException;
 import java.util.ArrayList;
 import java.util.List;
