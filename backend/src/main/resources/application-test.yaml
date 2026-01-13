@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: NexusScholarBackendTest
+
+  # Override production settings for tests
+  data:
+    mongodb:
+      # Testcontainers will override this via @ServiceConnection
+      uri: mongodb://localhost:27017/test
+
+  neo4j:
+    # Testcontainers will override these via @ServiceConnection
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: testpassword
+
+# Use test-specific JWT configuration
+jwt:
+  secret-key: test-secret-key-for-unit-tests-only-not-production-safe
+  validity-in-milliseconds: 3600000
+
+# Disable unnecessary auto-configurations for faster tests
+logging:
+  level:
+    root: WARN
+    it.unipi.nexusscholar: DEBUG
+    org.springframework: WARN
+    org.testcontainers: INFO

@@ -2,6 +2,7 @@ package it.unipi.nexusscholar.dao.mongo;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -34,16 +35,17 @@ class AuthorAnalysisDAOImplTest {
     testProlificAuthor = new ProlificAuthor();
     testProlificAuthor.setAuthorId("auth-1");
     testProlificAuthor.setAuthorName("Mario Rossi");
-    // Se ProlificAuthor ha altri campi (es. count), settali qui
   }
+
+  // ----------------------------------------------------------------
+  // Tests for getProlificAuthors (Aggregation)
+  // ----------------------------------------------------------------
 
   @Test
   void getProlificAuthors_ReturnsResults() {
     // 1. Setup Mock Response
     List<ProlificAuthor> expectedList = List.of(testProlificAuthor);
 
-    // AggregationResults è la classe wrapper di Spring Data Mongo.
-    // Dobbiamo crearne un'istanza fake da far ritornare al mock.
     AggregationResults<ProlificAuthor> fakeResults =
         new AggregationResults<>(expectedList, new Document());
 
@@ -58,7 +60,6 @@ class AuthorAnalysisDAOImplTest {
     assertEquals(1, result.size());
     assertEquals("Mario Rossi", result.get(0).getAuthorName());
 
-    // Verifichiamo che aggregate sia stato chiamato con la collection "authors"
     verify(mongoTemplate)
         .aggregate(any(Aggregation.class), eq("authors"), eq(ProlificAuthor.class));
   }
@@ -83,7 +84,6 @@ class AuthorAnalysisDAOImplTest {
   @Test
   void getProlificAuthors_ThrowsDAOException() {
     // 1. Setup Exception
-    // Simuliamo che MongoTemplate lanci una RuntimeException (es. DB giù)
     when(mongoTemplate.aggregate(any(Aggregation.class), anyString(), eq(ProlificAuthor.class)))
         .thenThrow(new RuntimeException("Connection failed"));
 

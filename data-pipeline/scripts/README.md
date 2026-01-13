@@ -4,13 +4,13 @@ This directory contains the ETL (Extract, Transform, Load) pipeline for NexusSch
 
 ## Pipeline Overview
 
-The pipeline is divided into **4 sequential phases**:
+The pipeline is divided into **5 sequential phases**:
 
 1.  **Parsing:** Extracts AI/ML conference papers from the massive DBLP XML dump.
 2.  **Enrichment:** Queries the Semantic Scholar API to fetch abstracts, citations, and topics.
 3.  **Integration:** Merges data, resolves internal IDs, and generates import files.
 4.  **Loading:** Bulk loads data into MongoDB (Replica Set) and Neo4j.
-
+5.  **Indexing:** Creates the indexes for MongoDB to ensure query performance.
 ---
 
 ## Prerequisites & Setup
@@ -124,10 +124,28 @@ bash ../../deployment/scripts/init-mongo-replica.sh
     *   Temporarily **stops** the Neo4j container.
     *   Runs `neo4j-admin database import` for high-speed CSV loading.
     *   **Restarts** the Neo4j container.
+### Phase 5: Index Creation
+*   **Action:** Creates performance and uniqueness indexes in MongoDB.
+
+1.  **Ensure Docker containers are running** (see Prerequisites).
+2.  **Ensure that you have already done completed Phase 4 (Data Loading).**
+3.  Run the create script:
+    ```bash
+    bash 5_create_index.sh
+    ```
+    **Note:** This script is **safe to re-run**. It automatically drops existing indexes before creating new ones. If you need to update your indexing strategy, simply modify the script and run it again.
+
 
 ---
 
 ## Maintenance & Reset
+
+### Updating Indexes
+If you modify `5_create_index.sh` to add or remove indexes, you do **not** need to reload the data. Simply run the script again:
+```bash
+bash 5_create_index.sh
+```
+### Full Reset
 
 If you need to wipe the databases and start fresh (e.g., if Phase 4 failed partway or you want to reload data):
 
@@ -152,4 +170,8 @@ If you need to wipe the databases and start fresh (e.g., if Phase 4 failed partw
     ```bash
     cd data-pipeline/scripts
     bash 4_load_data.sh
+    ```
+5.  **Re-run Phase 5:**
+    ```bash
+    bash 5_create_index.sh
     ```

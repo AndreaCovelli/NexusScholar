@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -52,7 +57,8 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * Handles Bean Validation errors (@NotNull, @Size violations). Returns HTTP 400 (Bad Request).
+   * Handles Bean Validation errors (@NotNull, @Size violations) on request parameters. Returns HTTP
+   * 400 (Bad Request).
    */
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<Map<String, String>> handleValidationException(
@@ -60,6 +66,25 @@ public class GlobalExceptionHandler {
     Map<String, String> response = new HashMap<>();
     response.put("error", "Validation Error");
     response.put("details", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
+  /**
+   * Handles DTO Validation errors (@Valid on @RequestBody). Aggregates all field errors into a
+   * single string. Returns HTTP 400 (Bad Request).
+   */
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<Map<String, String>> handleDtoValidationException(
+      MethodArgumentNotValidException ex) {
+    Map<String, String> response = new HashMap<>();
+    response.put("error", "Validation Error");
+
+    StringBuilder details = new StringBuilder();
+    for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+      details.append(String.format("[%s: %s] ", error.getField(), error.getDefaultMessage()));
+    }
+    response.put("details", details.toString().trim());
+
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
 
@@ -84,6 +109,43 @@ public class GlobalExceptionHandler {
             paramName, requiredType, invalidValue));
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
+  /**
+   * Handles security access violations (e.g., missing role for @PreAuthorize). Returns HTTP 403
+   * (Forbidden).
+   */
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
+    Map<String, String> response = new HashMap<>();
+    response.put("error", "Access Denied");
+    response.put("details", "You do not have permission to access this resource.");
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+  }
+
+  /**
+   * Handles specific authentication failure: Invalid credentials (password). Returns HTTP 401
+   * (Unauthorized).
+   */
+  @ExceptionHandler(BadCredentialsException.class)
+  public ResponseEntity<Map<String, String>> handleBadCredentialsException(
+      BadCredentialsException ex) {
+    Map<String, String> response = new HashMap<>();
+    response.put("error", "Invalid Credentials");
+    response.put("details", "Invalid username or password.");
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+  }
+
+  /**
+   * Handles generic authentication failures (e.g., invalid token). Returns HTTP 401 (Unauthorized).
+   */
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<Map<String, String>> handleAuthenticationException(
+      AuthenticationException ex) {
+    Map<String, String> response = new HashMap<>();
+    response.put("error", "Unauthorized");
+    response.put("details", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
   }
 
   /**

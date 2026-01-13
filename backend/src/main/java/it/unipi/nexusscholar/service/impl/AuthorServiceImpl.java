@@ -181,7 +181,7 @@ public class AuthorServiceImpl implements AuthorService {
   @Override
   public Page<AuthorDTO> searchAuthorsByName(String name, Pageable pageable) {
     // Direct pass-through of Pageable to DAO
-    return authorDAO.findByNameContainingIgnoreCase(name, pageable).map(this::toAuthorDTO);
+    return authorDAO.findByNameStartsWith(name, pageable).map(this::toAuthorDTO);
   }
 
   @Override

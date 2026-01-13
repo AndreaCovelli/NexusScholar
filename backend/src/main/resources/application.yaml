@@ -26,3 +26,12 @@ logging:
   level:
     root: INFO
     it.unipi.nexusscholar: INFO
+
+# --- JWT CONFIGURATION ---
+jwt:
+  # Reads the JWT_SECRET_KEY environment variable.
+  # If missing, the app will fail to start (security best practice to avoid default hardcoded keys).
+  secret-key: ${JWT_SECRET_KEY}
+
+  # Reads the variable, otherwise uses default: 3600000 ms (1 hour)
+  validity-in-milliseconds: ${JWT_VALIDITY_IN_MILLISECONDS:3600000}

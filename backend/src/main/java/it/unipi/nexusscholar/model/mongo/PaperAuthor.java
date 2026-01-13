@@ -6,16 +6,20 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
- * Embedded document representing an author reference within a Paper document. This lightweight
- * object enables efficient denormalized storage while maintaining referential integrity via the
- * author ID.
+ * Represents an author embedded within a {@link Paper} document.
+ *
+ * <p>This is a simplified representation of an author used specifically for the context of a single
+ * paper.
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaperAuthor {
+
+  /** The unique identifier of the author. */
   @Field("id")
   private String id;
 
+  /** The name of the author. */
   private String name;
 }

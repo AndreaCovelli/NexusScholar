@@ -47,7 +47,7 @@ public interface AuthorService {
   /**
    * Searches for authors by name with pagination.
    *
-   * @param name The name (or partial name) to search for.
+   * @param name The name to search for.
    * @param pageable The pagination information.
    * @return A page of authors matching the criteria.
    */

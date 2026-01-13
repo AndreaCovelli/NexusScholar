@@ -460,7 +460,7 @@ class IntegrationPipeline:
             bookmarks.append({
                 "paper_id": p_id,
                 "title": p_title,
-                "saved_at": saved_at_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+                "saved_at": { "$date": saved_at_obj.strftime("%Y-%m-%dT%H:%M:%SZ") }
             })
 
         return bookmarks
@@ -538,7 +538,7 @@ class IntegrationPipeline:
                         "username": username,
                         "email": email,
                         "password_hash": password_hash,
-                        "created_at": creation_date_str
+                        "created_at": {"$date": creation_date_str}
                     }
 
                     # Specific Logic via Mapper

@@ -13,8 +13,10 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.stereotype.Repository;
 
 /**
- * MongoDB implementation of paper analysis operations. Implements complex aggregation pipelines for
- * research analytics.
+ * Implementation of {@link PaperAnalysisDAO} using MongoDB Aggregation Framework.
+ *
+ * <p>This class uses {@link MongoTemplate} to construct and execute multi-stage aggregation
+ * pipelines.
  */
 @Repository
 @RequiredArgsConstructor
@@ -22,6 +24,19 @@ public class PaperAnalysisDAOImpl implements PaperAnalysisDAO {
 
   private final MongoTemplate mongoTemplate;
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p><b>Pipeline Logic:</b>
+   *
+   * <ol>
+   *   <li><b>Unwind:</b> Deconstructs the 'fields_of_study' array so each topic becomes a separate
+   *       document.
+   *   <li><b>Group:</b> Groups by 'fields_of_study' and 'year', counting the occurrences.
+   *   <li><b>Project:</b> Formats the output to match the {@link TrendAnalysis} structure.
+   *   <li><b>Sort:</b> Sorts primarily by year (ASC) and secondarily by count (DESC).
+   * </ol>
+   */
   @Override
   public List<TrendAnalysis> getTrendAnalysis() throws DAOException {
     try {
@@ -41,8 +56,10 @@ public class PaperAnalysisDAOImpl implements PaperAnalysisDAO {
                   .as("year")
                   .andExclude("_id"),
 
-              // 4. Sort by year ascending for time-series analysis
-              Aggregation.sort(Sort.Direction.ASC, "year"));
+              // 4. Sort results
+              Aggregation.sort(
+                  Sort.by(Sort.Direction.ASC, "year")
+                      .and(Sort.by(Sort.Direction.DESC, "paper_created"))));
 
       return mongoTemplate.aggregate(aggregation, "papers", TrendAnalysis.class).getMappedResults();
 
@@ -51,6 +68,18 @@ public class PaperAnalysisDAOImpl implements PaperAnalysisDAO {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p><b>Pipeline Logic:</b>
+   *
+   * <ol>
+   *   <li><b>Unwind:</b> Deconstructs the 'venue' array.
+   *   <li><b>Group:</b> Groups by 'venue' and 'year', counting the papers.
+   *   <li><b>Project:</b> Formats the output to match the {@link VenueAnalysis} structure.
+   *   <li><b>Sort:</b> Sorts primarily by year (ASC) and secondarily by volume (DESC).
+   * </ol>
+   */
   @Override
   public List<VenueAnalysis> getVenueAnalysis() throws DAOException {
     try {
@@ -62,7 +91,7 @@ public class PaperAnalysisDAOImpl implements PaperAnalysisDAO {
               // 2. Group by venue and year
               Aggregation.group("venue", "year").count().as("paper_created"),
 
-              // 3. Project to flatten the composite _id
+              // 3. Project to flatten
               Aggregation.project("paper_created")
                   .and("_id.venue")
                   .as("venue")
@@ -70,7 +99,7 @@ public class PaperAnalysisDAOImpl implements PaperAnalysisDAO {
                   .as("year")
                   .andExclude("_id"),
 
-              // 4. Sort by year ascending, then by paper count descending
+              // 4. Sort
               Aggregation.sort(
                   Sort.by(Sort.Direction.ASC, "year")
                       .and(Sort.by(Sort.Direction.DESC, "paper_created"))));
@@ -82,6 +111,18 @@ public class PaperAnalysisDAOImpl implements PaperAnalysisDAO {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p><b>Pipeline Logic:</b>
+   *
+   * <ol>
+   *   <li><b>Project:</b> Calculates the size of the 'authors' array for each paper.
+   *   <li><b>Group:</b> Groups by 'year' and calculates the average of the author counts.
+   *   <li><b>Project:</b> Formats the output to match {@link CollaborationEvolution}.
+   *   <li><b>Sort:</b> Sorts by year (ASC).
+   * </ol>
+   */
   @Override
   public List<CollaborationEvolution> getCollaborationEvolution() throws DAOException {
     try {

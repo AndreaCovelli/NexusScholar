@@ -7,11 +7,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import it.unipi.nexusscholar.dto.mongo.CollaborationEvolutionDTO;
 import it.unipi.nexusscholar.dto.mongo.TrendAnalysisDTO;
 import it.unipi.nexusscholar.dto.mongo.VenueAnalysisDTO;
+import it.unipi.nexusscholar.security.JwtTokenProvider;
 import it.unipi.nexusscholar.service.PaperAnalysisService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -20,8 +22,10 @@ class PaperAnalysisControllerTest {
 
   @Autowired private MockMvc mockMvc;
   @MockitoBean private PaperAnalysisService paperAnalysisService;
+  @MockitoBean private JwtTokenProvider jwtTokenProvider;
 
   @Test
+  @WithMockUser(roles = "USER")
   void getTrendAnalysis_ReturnsOk() throws Exception {
     TrendAnalysisDTO trend = new TrendAnalysisDTO("Machine Learning", 2023, 150);
 
@@ -36,6 +40,7 @@ class PaperAnalysisControllerTest {
   }
 
   @Test
+  @WithMockUser(roles = "USER")
   void getVenueAnalysis_ReturnsOk() throws Exception {
     VenueAnalysisDTO venue = new VenueAnalysisDTO("NeurIPS", 2023, 500);
 
@@ -49,6 +54,7 @@ class PaperAnalysisControllerTest {
   }
 
   @Test
+  @WithMockUser(roles = "USER")
   void getCollaborationEvolution_ReturnsOk() throws Exception {
     CollaborationEvolutionDTO collab = new CollaborationEvolutionDTO(3.5, 2023);
 

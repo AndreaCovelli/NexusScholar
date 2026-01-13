@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class GraphController {
 
   // Request for Pagerank computations
   @GetMapping("/pagerank")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Page<PageRankDTO>> callPageRank(
       @PageableDefault(size = 20, sort = "rank", direction = Sort.Direction.DESC)
           Pageable pageable) {
@@ -29,6 +31,7 @@ public class GraphController {
   }
 
   @GetMapping("/shortestPath")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<ShortestPathDTO> callShortestPath(
       @RequestParam String a1, @RequestParam String a2) {
     ShortestPathDTO res = graphService.collabPath(a1, a2);
@@ -37,11 +40,13 @@ public class GraphController {
   }
 
   @GetMapping("/leidenCommunities")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Page<LeidenDTO>> callLeiden(@PageableDefault(size = 20) Pageable pageable) {
     return ResponseEntity.ok(graphService.hiddenCommunities(pageable));
   }
 
   @GetMapping("/betweenness")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Page<BetweennessDTO>> callBetweenness(
       @PageableDefault(size = 20, sort = "betweenness", direction = Sort.Direction.DESC)
           Pageable pageable) {
