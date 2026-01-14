@@ -8,15 +8,12 @@ export MSYS_NO_PATHCONV=1
 
 set -e # Exit immediately if a command exits with a non-zero status.
 
-# Configuration
-COMPOSE_FILE="../../deployment/docker-compose.local.yml"
-# Absolute path for the MongoDB import files on the host machine
-MONGO_IMPORT_DIR="$(pwd)/import_files/mongodb"
-# Path inside the Neo4j container (as defined in docker-compose)
-NEO4J_IMPORT_DIR="/var/lib/neo4j/import"
+# Allow overriding config via ENV variables for remote execution
+: "${COMPOSE_FILE:=../../deployment/docker-compose.local.yml}"
+: "${ENV_FILE:=../../.env}"
+: "${MONGO_IMPORT_DIR:=$(pwd)/import_files/mongodb}"
+: "${NEO4J_IMPORT_DIR:=/var/lib/neo4j/import}" # Internal container path
 
-# Load environment variables (for credentials) from the project root
-ENV_FILE="../../.env"
 if [ -f "${ENV_FILE}" ]; then
   # Export variables from .env file safely
   set -a

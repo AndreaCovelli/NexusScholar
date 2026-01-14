@@ -2,8 +2,8 @@ export MSYS_NO_PATHCONV=1
 
 set -e
 
-# Load environment variables
-ENV_FILE="../../.env"
+# Allow overriding config via ENV variables for remote execution
+: "${ENV_FILE:=../../.env}"
 if [ -f "${ENV_FILE}" ]; then
   set -a
   source "${ENV_FILE}"
