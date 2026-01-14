@@ -1,0 +1,110 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.0 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.3.0">
+  <diagram id="NexusScholarArch" name="NexusScholar Architecture">
+    <mxGraphModel dx="1188" dy="708" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="520" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;fontColor=#333333;" value="NexusScholar High-Level Architecture" vertex="1">
+          <mxGeometry height="40" width="400" x="260" y="1" as="geometry" />
+        </mxCell>
+        <mxCell id="group_etl" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#2196f3;strokeWidth=1;dashed=1;arcSize=5;verticalAlign=top;" value="" vertex="1">
+          <mxGeometry height="349" width="200" x="30" y="51" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_etl" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#1565c0;fontStyle=1;fontSize=14;" value="Data Sources &amp; ETL" vertex="1">
+          <mxGeometry height="20" width="200" x="30" y="61" as="geometry" />
+        </mxCell>
+        <mxCell id="dblp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;shadow=1;" value="&lt;b&gt;DBLP (XML Dump)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #666666;&quot;&gt;Raw Metadata&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="160" x="50" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="semscholar" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1565c0;shadow=1;" value="&lt;b&gt;Semantic Scholar API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #666666;&quot;&gt;Enrichment (Citations)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="160" x="50" y="176" as="geometry" />
+        </mxCell>
+        <mxCell id="python_etl" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ff9800;shadow=1;align=center;" value="&lt;b style=&quot;color: #ef6c00;&quot;&gt;Python ETL Pipeline&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;1. Parse &amp;amp; Filter&lt;br&gt;2. Enrich &amp;amp; Cache&lt;br&gt;3. Integration&lt;/font&gt;&lt;div&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;b&gt;Output: JSONL / CSV&lt;/b&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="160" x="50" y="261" as="geometry" />
+        </mxCell>
+        <mxCell id="group_db" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=1;dashed=1;arcSize=5;" value="" vertex="1">
+          <mxGeometry height="180" width="460" x="280" y="181" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl_db" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#2e7d32;fontStyle=1;fontSize=14;" value="Polyglot Persistence Layer (Docker)" vertex="1">
+          <mxGeometry height="20" width="480" x="280" y="191" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo_box" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4caf50;shadow=1;" value="" vertex="1">
+          <mxGeometry height="120" width="200" x="300" y="221" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo_lbl" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=12;" value="MongoDB Replica Set" vertex="1">
+          <mxGeometry height="20" width="200" x="300" y="226" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo_prim" parent="1" style="shape=rect;fillColor=#a5d6a7;strokeColor=#2e7d32;rotation=-90;whiteSpace=wrap;html=1;fontSize=9;" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Primary&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="60" x="310" y="261" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo_sec1" parent="1" style="shape=rect;fillColor=#c8e6c9;strokeColor=#2e7d32;rotation=-90;whiteSpace=wrap;html=1;fontSize=9;" value="&lt;font style=&quot;font-size: 11px;&quot;&gt;Secondary&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="60" x="370" y="261" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo_sec2" parent="1" style="shape=rect;fillColor=#c8e6c9;strokeColor=#2e7d32;rotation=-90;whiteSpace=wrap;html=1;fontSize=9;" value="&lt;font style=&quot;font-size: 11px;&quot;&gt;Tertiary&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="60" x="430" y="261" as="geometry" />
+        </mxCell>
+        <mxCell id="neo_box" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#039be5;shadow=1;" value="" vertex="1">
+          <mxGeometry height="120" width="180" x="540" y="221" as="geometry" />
+        </mxCell>
+        <mxCell id="neo_lbl" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=12;" value="Neo4j Graph DB" vertex="1">
+          <mxGeometry height="20" width="180" x="540" y="231" as="geometry" />
+        </mxCell>
+        <mxCell id="neo_node1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b3e5fc;strokeColor=#0277bd;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="575" y="266" as="geometry" />
+        </mxCell>
+        <mxCell id="neo_node2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b3e5fc;strokeColor=#0277bd;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="655" y="266" as="geometry" />
+        </mxCell>
+        <mxCell id="neo_edge" edge="1" parent="1" source="neo_node1" style="endArrow=none;html=1;strokeColor=#333333;strokeWidth=2;entryX=0;entryY=0.5;exitX=1;exitY=0.5;" target="neo_node2" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry" />
+        </mxCell>
+        <mxCell id="neo_sub" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;" value="GDS &amp; APOC Plugins" vertex="1">
+          <mxGeometry height="20" width="180" x="540" y="311" as="geometry" />
+        </mxCell>
+        <mxCell id="group_back" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#8e24aa;strokeWidth=1;dashed=1;arcSize=5;" value="" vertex="1">
+          <mxGeometry height="100" width="340" x="350" y="401" as="geometry" />
+        </mxCell>
+        <mxCell id="spring" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8e24aa;shadow=1;" value="&lt;b style=&quot;color: #6a1b9a; font-size: 14px;&quot;&gt;Spring Boot Backend&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;REST API - Security (JWT) - DAOs&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="280" x="380" y="421" as="geometry" />
+        </mxCell>
+        <mxCell id="client" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#333333;fontStyle=1;fontSize=12;shadow=1;" value="Client" vertex="1">
+          <mxGeometry height="80" width="80" x="740" y="51" as="geometry" />
+        </mxCell>
+        <mxCell id="bulk_load" edge="1" parent="1" source="python_etl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#ff9800;strokeWidth=2;dashed=1;fontColor=#ef6c00;fontSize=10;" target="mongo_box" value="Bulk Load">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="250" y="321" />
+              <mxPoint x="250" y="281" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="back_mongo" edge="1" parent="1" source="spring" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=2;exitX=0.25;exitY=0;entryX=0.5;entryY=1;" target="mongo_box" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry" />
+        </mxCell>
+        <mxCell id="back_neo" edge="1" parent="1" source="spring" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=2;exitX=0.75;exitY=0;entryX=0.5;entryY=1;" target="neo_box" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry" />
+        </mxCell>
+        <mxCell id="client_back" edge="1" parent="1" source="client" style="edgeStyle=elbowEdgeStyle;elbow=vertical;html=1;strokeColor=#333333;strokeWidth=2;exitX=0.5;exitY=1;entryX=1;entryY=0.5;labelBackgroundColor=#ffffff;" target="spring" value="HTTP / JSON">
+          <mxGeometry relative="1" x="-0.8682" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="720" y="451" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Knju_1GQXpN0ZwuU9dOI-3" edge="1" parent="1" source="semscholar" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="python_etl" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="120" y="271" as="sourcePoint" />
+            <mxPoint x="170" y="221" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Knju_1GQXpN0ZwuU9dOI-4" edge="1" parent="1" source="dblp" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="semscholar" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="129.86" y="151" as="sourcePoint" />
+            <mxPoint x="130" y="171" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
