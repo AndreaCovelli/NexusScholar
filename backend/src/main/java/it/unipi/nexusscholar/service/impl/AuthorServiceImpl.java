@@ -1,8 +1,12 @@
 package it.unipi.nexusscholar.service.impl;
 
+import it.unipi.nexusscholar.dao.exception.DAOException;
 import it.unipi.nexusscholar.dao.mongo.AuthorDAO;
 import it.unipi.nexusscholar.dao.mongo.PaperDAO;
+import it.unipi.nexusscholar.dao.neo4j.GraphDAO;
 import it.unipi.nexusscholar.dto.mongo.AuthorDTO;
+import it.unipi.nexusscholar.dto.mongo.PaperAuthorDTO;
+import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.dto.mongo.PublicationSummaryDTO;
 import it.unipi.nexusscholar.model.mongo.Author;
 import it.unipi.nexusscholar.model.mongo.Paper;
@@ -28,6 +32,7 @@ public class AuthorServiceImpl implements AuthorService {
 
   private final AuthorDAO authorDAO;
   private final PaperDAO paperDAO;
+  private final GraphDAO graphDAO;
 
   @Override
   @Transactional
@@ -127,6 +132,12 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     Author savedEntity = authorDAO.save(authorToSave);
+
+    // Sync: Create or Update Author node in Graph
+    if (!graphDAO.saveAuthorNode(savedEntity.getId(), savedEntity.getName())) {
+      throw new DAOException("Failed to save author node in graph database");
+    }
+
     return toAuthorDTO(savedEntity);
   }
 
@@ -143,7 +154,12 @@ public class AuthorServiceImpl implements AuthorService {
     if (!alreadyInPaper) {
       PaperAuthor newPaperAuthor = new PaperAuthor(author.getId(), author.getName());
       paper.getAuthors().add(newPaperAuthor);
-      paperDAO.save(paper);
+      Paper savedPaper = paperDAO.save(paper);
+
+      // Sync: Update graph topology
+      if (!graphDAO.savePaperNode(toPaperDTO(savedPaper))) {
+        throw new DAOException("Failed to update graph for paper ID: " + paper.getId());
+      }
     }
   }
 
@@ -157,9 +173,19 @@ public class AuthorServiceImpl implements AuthorService {
 
                 if (removed) {
                   if (paper.getAuthors().isEmpty()) {
-                    paperDAO.delete(paper); // Delete if empty
+                    // Sync: Delete paper node from graph if empty
+                    if (!graphDAO.deletePaperNode(paperId)) {
+                      throw new DAOException(
+                          "Failed to delete paper node in graph for empty paper ID: " + paperId);
+                    }
+                    paperDAO.delete(paper);
                   } else {
-                    paperDAO.save(paper); // Update if just reduced
+                    Paper savedPaper = paperDAO.save(paper);
+                    // Sync: Update graph topology
+                    if (!graphDAO.savePaperNode(toPaperDTO(savedPaper))) {
+                      throw new DAOException(
+                          "Failed to update graph for paper ID: " + paper.getId());
+                    }
                   }
                 }
               }
@@ -204,6 +230,11 @@ public class AuthorServiceImpl implements AuthorService {
                 () -> new BusinessException("Cannot delete: Author with ID " + id + " not found!"));
 
     performDelete(author);
+
+    // Sync: Delete author node from graph
+    if (!graphDAO.deleteAuthorNode(id)) {
+      throw new DAOException("Failed to delete author node in graph for ID: " + id);
+    }
   }
 
   /**
@@ -269,5 +300,35 @@ public class AuthorServiceImpl implements AuthorService {
     summary.setYear(dto.getYear());
     summary.setTitle(dto.getTitle());
     return summary;
+  }
+
+  private PaperDTO toPaperDTO(Paper paper) {
+    if (paper == null) return null;
+
+    PaperDTO dto = new PaperDTO();
+    dto.setId(paper.getId());
+    dto.setTitle(paper.getTitle());
+    dto.setYear(paper.getYear());
+    dto.setDblpKey(paper.getDblpKey());
+    dto.setDoi(paper.getDoi());
+    dto.setAbstractText(paper.getAbstractText());
+
+    dto.setFieldsOfStudy(
+        paper.getFieldsOfStudy() != null
+            ? new ArrayList<>(paper.getFieldsOfStudy())
+            : new ArrayList<>());
+
+    if (paper.getAuthors() != null) {
+      List<PaperAuthorDTO> authorDTOs =
+          paper.getAuthors().stream()
+              .map(a -> new PaperAuthorDTO(a.getId(), a.getName()))
+              .collect(Collectors.toList());
+      dto.setAuthors(authorDTOs);
+    } else {
+      dto.setAuthors(new ArrayList<>());
+    }
+
+    dto.setVenue(paper.getVenue() != null ? new ArrayList<>(paper.getVenue()) : new ArrayList<>());
+    return dto;
   }
 }

@@ -6,7 +6,9 @@ import static org.mockito.Mockito.*;
 
 import it.unipi.nexusscholar.dao.mongo.AuthorDAO;
 import it.unipi.nexusscholar.dao.mongo.PaperDAO;
+import it.unipi.nexusscholar.dao.neo4j.GraphDAO;
 import it.unipi.nexusscholar.dto.mongo.AuthorDTO;
+import it.unipi.nexusscholar.dto.mongo.PaperDTO;
 import it.unipi.nexusscholar.dto.mongo.PublicationSummaryDTO;
 import it.unipi.nexusscholar.model.mongo.Author;
 import it.unipi.nexusscholar.model.mongo.Paper;
@@ -33,6 +35,7 @@ class AuthorServiceImplTest {
 
   @Mock private AuthorDAO authorDAO;
   @Mock private PaperDAO paperDAO;
+  @Mock private GraphDAO graphDAO;
 
   @InjectMocks private AuthorServiceImpl authorService;
 
@@ -66,8 +69,6 @@ class AuthorServiceImplTest {
     pageable = PageRequest.of(0, 10);
   }
 
-  // --- SAVE TESTS ---
-
   @Test
   void saveAuthor_CreateNewAuthor_Success() {
     AuthorDTO newAuthorDTO = new AuthorDTO();
@@ -82,12 +83,14 @@ class AuthorServiceImplTest {
               saved.setId("new-id");
               return saved;
             });
+    when(graphDAO.saveAuthorNode(anyString(), anyString())).thenReturn(true);
 
     AuthorDTO result = authorService.saveAuthor(newAuthorDTO);
 
     assertNotNull(result);
     assertEquals("Jane Doe", result.getName());
     verify(authorDAO).save(any(Author.class));
+    verify(graphDAO).saveAuthorNode("new-id", "Jane Doe");
   }
 
   @Test
@@ -118,11 +121,13 @@ class AuthorServiceImplTest {
 
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
     when(authorDAO.save(any(Author.class))).thenReturn(testAuthor);
+    when(graphDAO.saveAuthorNode(anyString(), anyString())).thenReturn(true);
 
     AuthorDTO result = authorService.saveAuthor(testAuthorDTO);
 
     assertNotNull(result);
     verify(authorDAO).save(any(Author.class));
+    verify(graphDAO).saveAuthorNode("author-id-1", "Updated Name");
   }
 
   @Test
@@ -153,11 +158,14 @@ class AuthorServiceImplTest {
     when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
     when(paperDAO.save(any(Paper.class))).thenReturn(testPaper);
     when(authorDAO.save(any(Author.class))).thenReturn(testAuthor);
+    when(graphDAO.saveAuthorNode(anyString(), anyString())).thenReturn(true);
+    when(graphDAO.savePaperNode(any(PaperDTO.class))).thenReturn(true);
 
     AuthorDTO result = authorService.saveAuthor(testAuthorDTO);
 
     assertNotNull(result);
     verify(paperDAO).save(any(Paper.class));
+    verify(graphDAO).savePaperNode(any(PaperDTO.class));
   }
 
   @Test
@@ -192,14 +200,13 @@ class AuthorServiceImplTest {
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
     when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(testPaper));
     when(authorDAO.save(any(Author.class))).thenReturn(testAuthor);
+    when(graphDAO.saveAuthorNode(anyString(), anyString())).thenReturn(true);
 
     AuthorDTO result = authorService.saveAuthor(testAuthorDTO);
 
     assertNotNull(result);
     verify(paperDAO, never()).save(any(Paper.class));
   }
-
-  // --- READ TESTS ---
 
   @Test
   void getAuthorByS2Id_Found_Success() {
@@ -222,7 +229,6 @@ class AuthorServiceImplTest {
   void searchAuthorsByName_ReturnsResults() {
     Page<Author> page = new PageImpl<>(List.of(testAuthor));
 
-    // MODIFICATO: Uso di findByNameStartsWith invece di findByNameContainingIgnoreCase
     when(authorDAO.findByNameStartsWith(eq("John"), any(Pageable.class))).thenReturn(page);
 
     Page<AuthorDTO> results = authorService.searchAuthorsByName("John", pageable);
@@ -233,7 +239,7 @@ class AuthorServiceImplTest {
 
   @Test
   void searchAuthorsByName_EmptyResults() {
-    // MODIFICATO: Uso di findByNameStartsWith invece di findByNameContainingIgnoreCase
+
     when(authorDAO.findByNameStartsWith(eq("NonExistent"), any(Pageable.class)))
         .thenReturn(Page.empty());
 
@@ -259,16 +265,16 @@ class AuthorServiceImplTest {
     assertEquals("Prolific Author", results.getContent().get(0).getName());
   }
 
-  // --- DELETE TESTS ---
-
   @Test
   void deleteAuthorById_Success() {
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
     doNothing().when(authorDAO).delete(testAuthor);
+    when(graphDAO.deleteAuthorNode("author-id-1")).thenReturn(true);
 
     assertDoesNotThrow(() -> authorService.deleteAuthorById("author-id-1"));
 
     verify(authorDAO).delete(testAuthor);
+    verify(graphDAO).deleteAuthorNode("author-id-1");
   }
 
   @Test
@@ -283,66 +289,71 @@ class AuthorServiceImplTest {
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
     when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(paper));
     doNothing().when(paperDAO).delete(paper);
+    when(graphDAO.deleteAuthorNode("author-id-1")).thenReturn(true);
+    when(graphDAO.deletePaperNode("paper-id-1")).thenReturn(true);
 
     authorService.deleteAuthorById("author-id-1");
 
     verify(paperDAO).delete(paper);
     verify(authorDAO).delete(testAuthor);
+    verify(graphDAO).deleteAuthorNode("author-id-1");
+    verify(graphDAO).deletePaperNode("paper-id-1");
   }
 
   @Test
   void deleteAuthorById_RemovesAuthorFromPaper_PaperStillHasAuthors_SavesPaper() {
-    // Setup: Author to delete
+
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
 
-    // Setup: Paper linked to author
     PublicationSummary pub = new PublicationSummary("paper-id-1", 2023, "Title");
     testAuthor.setPublicationsSummary(List.of(pub));
 
     Paper paper = new Paper();
     paper.setId("paper-id-1");
-    // Paper has the author to be deleted AND another author
+
     List<PaperAuthor> paperAuthors = new ArrayList<>();
     paperAuthors.add(new PaperAuthor("author-id-1", "John"));
     paperAuthors.add(new PaperAuthor("author-id-2", "Jane"));
     paper.setAuthors(paperAuthors);
 
     when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(paper));
+    when(graphDAO.deleteAuthorNode("author-id-1")).thenReturn(true);
+    when(graphDAO.savePaperNode(any(PaperDTO.class))).thenReturn(true);
 
-    // Execute
     authorService.deleteAuthorById("author-id-1");
 
-    // Assert: Paper should be saved (updated), not deleted, because it still has "Jane"
     verify(paperDAO).save(paper);
     verify(paperDAO, never()).delete(paper);
     assertEquals(1, paper.getAuthors().size());
     assertEquals("author-id-2", paper.getAuthors().get(0).getId());
+    verify(graphDAO).deleteAuthorNode("author-id-1");
+    verify(graphDAO).savePaperNode(any(PaperDTO.class));
   }
 
   @Test
   void deleteAuthorById_RemovesAuthorFromPaper_PaperBecomesEmpty_DeletesPaper() {
-    // Setup: Author to delete
+
     when(authorDAO.findById("author-id-1")).thenReturn(Optional.of(testAuthor));
 
-    // Setup: Paper linked to author
     PublicationSummary pub = new PublicationSummary("paper-id-1", 2023, "Title");
     testAuthor.setPublicationsSummary(List.of(pub));
 
     Paper paper = new Paper();
     paper.setId("paper-id-1");
-    // Paper ONLY has the author to be deleted
+
     List<PaperAuthor> paperAuthors = new ArrayList<>();
     paperAuthors.add(new PaperAuthor("author-id-1", "John"));
     paper.setAuthors(paperAuthors);
 
     when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(paper));
+    when(graphDAO.deleteAuthorNode("author-id-1")).thenReturn(true);
+    when(graphDAO.deletePaperNode("paper-id-1")).thenReturn(true);
 
-    // Execute
     authorService.deleteAuthorById("author-id-1");
-
-    // Assert: Paper should be deleted because authors list is now empty
     verify(paperDAO).delete(paper);
     verify(paperDAO, never()).save(paper);
+    verify(graphDAO).deleteAuthorNode("author-id-1");
+    verify(graphDAO).deletePaperNode("paper-id-1");
   }
 
   @Test
@@ -351,8 +362,6 @@ class AuthorServiceImplTest {
 
     assertThrows(BusinessException.class, () -> authorService.deleteAuthorById("non-existent"));
   }
-
-  // --- MAPPING TESTS ---
 
   @Test
   void toAuthorDTO_WithPublicationsSummary() {
