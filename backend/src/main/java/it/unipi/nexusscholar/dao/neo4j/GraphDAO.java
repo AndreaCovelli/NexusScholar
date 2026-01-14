@@ -22,7 +22,7 @@ import org.springframework.stereotype.Repository;
  * Science (GDS) algorithms, including PageRank, Shortest Path, Leiden Community Detection, and
  * Betweenness Centrality.
  */
-@Slf4j // Add Lombok annotation
+@Slf4j
 @Repository
 public class GraphDAO {
 
@@ -90,15 +90,19 @@ public class GraphDAO {
       List<org.neo4j.driver.Record> lr =
           session.executeRead(
               tx -> {
+                // OPTIMIZATION: Defer property lookup. Sort using lightweight ID/Score first.
                 Result res =
                     tx.run(
                         """
                                                 CALL gds.pageRank.stream('paperCitations')
-                                                YIELD nodeId,score
-                                                RETURN gds.util.asNode(nodeId).title as title, round(score,4) as rank
+                                                YIELD nodeId, score
+                                                WITH nodeId, score
                                                 ORDER BY score DESC
                                                 SKIP $s
-                                                LIMIT $l;""",
+                                                LIMIT $l
+                                                // Fetch properties only for the paginated results (Minimizes Disk I/O)
+                                                RETURN gds.util.asNode(nodeId).title as title, round(score, 4) as rank
+                                                """,
                         Map.of("s", skip, "l", limit));
                 return res.list();
               });
@@ -118,43 +122,13 @@ public class GraphDAO {
    */
   public int pageRankCount() {
     try (Session session = driver.session()) {
-      boolean ex =
-          session.executeRead(
-              tx -> {
-                Result res =
-                    tx.run("CALL gds.graph.exists('paperCitations') YIELD exists RETURN exists");
-                return res.single().get("exists").asBoolean();
-              });
-
-      if (!ex) {
-        session.executeWriteWithoutResult(
-            tx -> {
-              tx.run(
-                  """
-                                    CALL gds.graph.project(
-                                      'paperCitations',
-                                      'Paper',
-                                      'CITES'
-                                    );
-                                    """);
-            });
-      }
-
+      // OPTIMIZATION: Avoid graph projection check for count.
+      // Since the graph projection contains all Papers, counting nodes in the store is O(1) and
+      // correct.
       return session.executeRead(
-          tx -> {
-            // FIX: Use gds.graph.list to get metadata count instead of invalid stream yield
-            Result res =
-                tx.run(
-                    """
-                                        CALL gds.graph.list('paperCitations')
-                                        YIELD nodeCount
-                                        RETURN nodeCount;
-                                        """);
-            return res.hasNext() ? res.single().get("nodeCount").asInt() : 0;
-          });
-
+          tx -> tx.run("MATCH (:Paper) RETURN count(*) AS c").single().get("c").asInt());
     } catch (Exception e) {
-      log.error("PageRank calculation failed", e);
+      log.error("PageRank count failed", e);
       return -1;
     }
   }
@@ -175,17 +149,15 @@ public class GraphDAO {
       Record r =
           session.executeRead(
               tx -> {
+                // OPTIMIZATION: Limit traversal depth to 10 to prevent "Small World"
+                // explosion/timeouts.
                 Result res =
                     tx.run(
                         """
-                                                MATCH (a1:Author{name:$a1Name}),
-                                                      (a2:Author{name:$a2Name}),
-                                                      path=shortestPath(
-                                                        (a1) - [:AUTHORED*] - (a2)
-                                                      )
-                                                RETURN path,
-                                                       length(path)/2 as DegreeSeparation
-                                                ORDER BY DegreeSeparation ASC
+                                                MATCH (a1:Author {name: $a1Name})
+                                                MATCH (a2:Author {name: $a2Name})
+                                                MATCH path = shortestPath((a1)-[:AUTHORED*..10]-(a2))
+                                                RETURN path, length(path)/2 as DegreeSeparation
                                                 LIMIT 1
                                                 """,
                         Map.of("a1Name", author1, "a2Name", author2));
@@ -361,6 +333,7 @@ public class GraphDAO {
       List<Record> records =
           session.executeRead(
               tx -> {
+                // OPTIMIZATION: Defer property lookup.
                 Result res =
                     tx.run(
                         """
@@ -369,11 +342,12 @@ public class GraphDAO {
                                                     samplingSeed: 42
                                                 })
                                                 YIELD nodeId, score
-                                                RETURN gds.util.asNode(nodeId).title AS title,
-                                                       round(score, 4) AS betweenness
+                                                WITH nodeId, score
                                                 ORDER BY score DESC
                                                 SKIP $skip
                                                 LIMIT $limit
+                                                RETURN gds.util.asNode(nodeId).title AS title,
+                                                       round(score, 4) AS betweenness
                                                 """,
                         Map.of("skip", skip, "limit", limit));
                 return res.list();
@@ -392,43 +366,8 @@ public class GraphDAO {
    * @return The node count, or -1 in case of error.
    */
   public int betweennessCount() {
-    try (Session session = driver.session()) {
-      boolean ex =
-          session.executeRead(
-              tx -> {
-                Result res =
-                    tx.run("CALL gds.graph.exists('paperCitations') YIELD exists RETURN exists");
-                return res.single().get("exists").asBoolean();
-              });
-
-      if (!ex) {
-        session.executeWriteWithoutResult(
-            tx -> {
-              tx.run(
-                  """
-                                                      CALL gds.graph.project(
-                                                        'paperCitations',
-                                                        'Paper',
-                                                        'CITES'
-                                                      );
-                                                      """);
-            });
-      }
-      return session.executeRead(
-          tx -> {
-            Result res =
-                tx.run(
-                    """
-                                                            CALL gds.graph.list('paperCitations')
-                                                            YIELD nodeCount
-                                                            RETURN nodeCount;
-                                                            """);
-            return res.hasNext() ? res.single().get("nodeCount").asInt() : 0;
-          });
-    } catch (Exception e) {
-      log.error("Count for betweenness not achievable", e);
-      return -1;
-    }
+    // OPTIMIZATION: Reuse O(1) store count.
+    return pageRankCount();
   }
 
   /**
@@ -443,17 +382,28 @@ public class GraphDAO {
     try (Session session = driver.session()) {
       session.executeWriteWithoutResult(
           tx -> {
+            // OPTIMIZATION: Use "Delta" approach to reduce transaction log churn.
+            // 1. MERGE Paper
+            // 2. Delete ONLY obsolete relationships (authors NOT in the new list)
+            // 3. MERGE new authors and relationships
             tx.run(
                 """
-                                MERGE (p:Paper{paperID:$paperID})
+                                MERGE (p:Paper {paperID: $paperID})
                                 SET p.title = $title
+
                                 WITH p
-                                OPTIONAL MATCH (p)<-[r:AUTHORED]-(:Author)
+                                // 1. Delete relationships ONLY for authors NOT in the new list
+                                OPTIONAL MATCH (p)<-[r:AUTHORED]-(oldA:Author)
+                                WHERE NOT oldA.authorId IN [x IN $authors | x.id]
                                 DELETE r
+
+                                // 2. Merge (create if missing) incoming authors
                                 WITH p
-                                UNWIND $authors as author
-                                MERGE (a:Author {authorId: author.id})
-                                SET a.name = author.name
+                                UNWIND $authors as authorData
+                                MERGE (a:Author {authorId: authorData.id})
+                                SET a.name = authorData.name
+
+                                // 3. Create relationship only if missing
                                 MERGE (p)<-[:AUTHORED]-(a)
                                 """,
                 Map.of(

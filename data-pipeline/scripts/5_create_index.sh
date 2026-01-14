@@ -73,4 +73,33 @@ docker exec -i mongo1 mongosh "$MONGO_CONN" --eval "
     print(' -> Index adminIndex created.');
 "
 
+echo "2. executing Neo4j constraint operations..."
+
+# Retry loop to ensure Neo4j is ready before applying constraints
+MAX_RETRIES=30
+count=0
+echo "Waiting for Neo4j to be ready..."
+until docker exec -i nexusscholar-neo4j cypher-shell -u "${NEO4J_USER}" -p "${NEO4J_PASSWORD}" "RETURN 1" > /dev/null 2>&1; do
+    sleep 1
+    count=$((count+1))
+    if [ $count -ge $MAX_RETRIES ]; then
+        echo "Neo4j timed out."
+        exit 1
+    fi
+done
+
+# Execute Cypher commands to create constraints and indexes
+docker exec -i nexusscholar-neo4j cypher-shell -u "${NEO4J_USER}" -p "${NEO4J_PASSWORD}" <<EOF
+    // 1. Ensure fast lookups and data integrity for Papers (O(1) MERGE)
+    CREATE CONSTRAINT paper_id_unique IF NOT EXISTS FOR (p:Paper) REQUIRE p.paperID IS UNIQUE;
+
+    // 2. Ensure fast lookups for Authors (O(1) MERGE)
+    CREATE CONSTRAINT author_id_unique IF NOT EXISTS FOR (a:Author) REQUIRE a.authorId IS UNIQUE;
+
+    // 3. Ensure fast lookups for Shortest Path (queries by Name)
+    CREATE INDEX author_name_index IF NOT EXISTS FOR (a:Author) ON (a.name);
+EOF
+
+echo " -> Neo4j Constraints and Indexes created."
+
 echo "Phase 5: Index Creation Complete."
