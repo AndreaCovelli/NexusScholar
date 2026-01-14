@@ -317,6 +317,9 @@ class AuthorServiceImplTest {
     paper.setAuthors(paperAuthors);
 
     when(paperDAO.findById("paper-id-1")).thenReturn(Optional.of(paper));
+
+    when(paperDAO.save(any(Paper.class))).thenReturn(paper);
+
     when(graphDAO.deleteAuthorNode("author-id-1")).thenReturn(true);
     when(graphDAO.savePaperNode(any(PaperDTO.class))).thenReturn(true);
 
