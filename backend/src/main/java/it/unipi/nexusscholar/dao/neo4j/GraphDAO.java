@@ -378,6 +378,7 @@ public class GraphDAO {
    */
   public boolean savePaperNode(PaperDTO p) {
     if (p == null || p.getId() == null) return false;
+    List<String> topics = p.getFieldsOfStudy() != null ? p.getFieldsOfStudy() : new ArrayList<>();
 
     try (Session session = driver.session()) {
       session.executeWriteWithoutResult(
@@ -388,33 +389,53 @@ public class GraphDAO {
             // 3. MERGE new authors and relationships
             tx.run(
                 """
-                                                MERGE (p:Paper {paperID: $paperID})
-                                                SET p.title = $title
+                    // --- 1. Merge Paper (Create or Update) ---
+                    MERGE (p:Paper {paperID: $paperID})
+                    SET p.title = $title
 
-                                                WITH p
-                                                // 1. Delete relationships ONLY for authors NOT in the new list
-                                                OPTIONAL MATCH (p)<-[r:AUTHORED]-(oldA:Author)
-                                                WHERE NOT oldA.authorId IN [x IN $authors | x.id]
-                                                DELETE r
+                    // --- 2. Handle Authors (Sync Relationships) ---
+                    WITH p
+                    // Delete relationships to authors that were removed in this update
+                    OPTIONAL MATCH (p)<-[rA:AUTHORED]-(oldA:Author)
+                    WHERE NOT oldA.authorId IN [x IN $authors | x.id]
+                    DELETE rA
 
-                                                // 2. Merge (create if missing) incoming authors
-                                                WITH p
-                                                UNWIND $authors as authorData
-                                                MERGE (a:Author {authorId: authorData.id})
-                                                SET a.name = authorData.name
+                    // Merge Authors and create new relationships
+                    WITH p
+                    UNWIND $authors as authorData
+                    MERGE (a:Author {authorId: authorData.id})
+                    SET a.name = authorData.name
+                    MERGE (p)<-[:AUTHORED]-(a)
 
-                                                // 3. Create relationship only if missing
-                                                MERGE (p)<-[:AUTHORED]-(a)
-                                                """,
+                    // --- 3. Handle Topics ---
+                    WITH p
+                    // Delete relationships to topics that were removed
+                    OPTIONAL MATCH (p)-[rT:HAS_TOPIC]->(oldT:Topic)
+                    WHERE NOT oldT.name IN $topics
+                    DELETE rT
+
+                    // Merge Topics and create new relationships
+                    WITH p
+                    UNWIND $topics as topicName
+                    // Clean the topic name
+                    WITH p, trim(topicName) as cleanName
+                    WHERE cleanName <> ""
+                    MERGE (t:Topic {name: cleanName})
+                    // Ensure ID exists if it's a new Topic node (using native UUID)
+                    ON CREATE SET t.topicId = randomUUID()
+                    MERGE (p)-[:HAS_TOPIC]->(t)
+                    """,
                 Map.of(
                     "paperID",
                     p.getId(),
                     "title",
-                    p.getTitle(),
+                    p.getTitle() != null ? p.getTitle() : "Untitled",
                     "authors",
                     p.getAuthors().stream()
                         .map(a -> Map.of("id", a.getId(), "name", a.getName()))
-                        .toList()));
+                        .toList(),
+                    "topics",
+                    topics));
           });
 
       return true;
