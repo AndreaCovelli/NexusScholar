@@ -45,8 +45,7 @@ public class GraphService {
    */
   public boolean connect() {
     try {
-      graphDAO.connect();
-      return true;
+      return graphDAO.connect();
     } catch (Exception e) {
       log.error("Failed to connect to GraphDAO", e);
       return false;
