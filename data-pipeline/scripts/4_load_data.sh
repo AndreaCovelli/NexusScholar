@@ -44,7 +44,7 @@ echo "1. Starting MongoDB import into database: ${DB_NAME}..."
 # This approach cleanly mounts the import files and provides network access without needing 'docker cp'.
 
 # Define the connection string
-MONGO_CONN="--uri=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo1:27017,mongo2:27017,mongo3:27017/${DB_NAME}?replicaSet=rs0&authSource=admin"
+MONGO_CONN="--uri=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo1:27017,mongo2:27017,mongo3:27017/${DB_NAME}?replicaSet=rs0&authSource=admin&w=majority"
 
 echo "   Importing Authors..."
 # Mount the local MongoDB import dir to /import inside the temporary container
