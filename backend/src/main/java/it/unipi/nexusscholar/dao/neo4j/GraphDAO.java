@@ -15,16 +15,33 @@ import org.neo4j.driver.Session;
 import org.neo4j.driver.Value;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Data Access Object (DAO) for interacting with the Neo4j database.
+ *
+ * <p>This class is responsible for managing Graph Projections and executing Neo4j Graph Data
+ * Science (GDS) algorithms, including PageRank, Shortest Path, Leiden Community Detection, and
+ * Betweenness Centrality.
+ */
 @Slf4j // Add Lombok annotation
 @Repository
 public class GraphDAO {
 
   private final Driver driver;
 
+  /**
+   * Constructor for injecting the Neo4j driver.
+   *
+   * @param driver The configured Neo4j driver.
+   */
   public GraphDAO(Driver driver) {
     this.driver = driver;
   }
 
+  /**
+   * Verifies connectivity to the Neo4j database.
+   *
+   * @return {@code true} if the connection is established successfully, {@code false} otherwise.
+   */
   public boolean connect() {
     try {
       driver.verifyConnectivity();
@@ -37,6 +54,15 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Executes the PageRank algorithm on the citation graph projection. Creates the 'paperCitations'
+   * projection if it does not exist.
+   *
+   * @param skip Number of results to skip (for pagination).
+   * @param limit Maximum number of results to return.
+   * @return A list of {@link PageRankEntry} containing papers and their scores, ordered by rank
+   *     descending.
+   */
   public List<PageRankEntry> pageRankAlg(int skip, int limit) {
     try (Session session = driver.session()) {
       boolean ex =
@@ -84,6 +110,12 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Counts the total number of nodes in the projection used for PageRank. Useful for calculating
+   * pagination metadata.
+   *
+   * @return The total number of nodes, or -1 in case of error.
+   */
   public int pageRankCount() {
     try (Session session = driver.session()) {
       boolean ex =
@@ -127,6 +159,15 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Calculates the shortest path between two authors. Uses the [:AUTHORED] relationship in an
+   * undirected or bidirectional manner through papers.
+   *
+   * @param author1 Name of the first author.
+   * @param author2 Name of the second author.
+   * @return A {@link ShortestPathAuthors} object representing the path, or {@code null} if not
+   *     found.
+   */
   public ShortestPathAuthors shortestPathAlg(String author1, String author2) {
     if (author1 == null || author1.isEmpty() || author2 == null || author2.isEmpty()) return null;
 
@@ -160,6 +201,14 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Executes the Leiden algorithm for author community detection. Relies on a 'coAuthors'
+   * projection.
+   *
+   * @param skip Number of communities to skip.
+   * @param limit Maximum number of communities to return.
+   * @return A list of {@link LeidenCommunity} containing the community ID and member authors.
+   */
   public List<LeidenCommunity> leidenCommunityAlg(int skip, int limit) {
     try (Session session = driver.session()) {
       ensureCoAuthorsGraph(session);
@@ -196,6 +245,11 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Counts the total number of unique communities identified by the Leiden algorithm.
+   *
+   * @return The count of communities, or -1 in case of error.
+   */
   public int leidenCount() {
     try (Session session = driver.session()) {
       ensureCoAuthorsGraph(session);
@@ -217,6 +271,12 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Ensures that the 'coAuthors' graph projection exists in GDS memory. Projects Author and Paper
+   * nodes with undirected AUTHORED relationships.
+   *
+   * @param session The current Neo4j session.
+   */
   private void ensureCoAuthorsGraph(Session session) {
     boolean exists =
         session.executeRead(
@@ -244,6 +304,14 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Executes the Betweenness Centrality algorithm on the citation projection. Uses sampling for
+   * efficiency on large graphs.
+   *
+   * @param skip Number of results to skip.
+   * @param limit Maximum number of results to return.
+   * @return A list of {@link BetweennessEntry} with papers and their centrality scores.
+   */
   public List<BetweennessEntry> betweennessAlg(int skip, int limit) {
     try (Session session = driver.session()) {
 
@@ -318,6 +386,11 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Counts the total number of nodes considered for Betweenness Centrality.
+   *
+   * @return The node count, or -1 in case of error.
+   */
   public int betweennessCount() {
     try (Session session = driver.session()) {
       boolean ex =
@@ -358,6 +431,12 @@ public class GraphDAO {
     }
   }
 
+  /**
+   * Saves or updates a Paper node and its relationships with Authors in the graph.
+   *
+   * @param p The Paper DTO containing data and authors.
+   * @return {@code true} if the operation is successful, {@code false} otherwise.
+   */
   public boolean savePaperNode(PaperDTO p) {
     if (p == null || p.getId() == null) return false;
 

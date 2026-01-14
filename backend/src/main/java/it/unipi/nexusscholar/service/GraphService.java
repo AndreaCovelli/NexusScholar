@@ -21,6 +21,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service Layer for business logic related to graph analysis.
+ *
+ * <p>This class is responsible for invoking {@link GraphDAO} methods, handling high-level
+ * exceptions, and transforming raw results into paginated DTOs (Data Transfer Objects) ready for
+ * the controller.
+ */
 @Slf4j
 @Service
 public class GraphService {
@@ -31,16 +38,26 @@ public class GraphService {
     this.graphDAO = graphDAO;
   }
 
+  /**
+   * Attempts to establish a connection to the graph database.
+   *
+   * @return {@code true} if the connection succeeds, {@code false} otherwise.
+   */
   public boolean connect() {
     try {
-      graphDAO.connect();
-      return true;
+      return graphDAO.connect();
     } catch (Exception e) {
       log.error("Failed to connect to GraphDAO", e);
       return false;
     }
   }
 
+  /**
+   * Retrieves PageRank algorithm results in a paginated format.
+   *
+   * @param pageable Pagination information (offset and page size).
+   * @return A {@link Page} of {@link PageRankDTO}. Returns an empty page in case of error.
+   */
   public Page<PageRankDTO> pagerank(Pageable pageable) {
     try {
       List<PageRankDTO> cont =
@@ -54,6 +71,14 @@ public class GraphService {
     }
   }
 
+  /**
+   * Finds the shortest collaboration path between two specific authors.
+   *
+   * @param author1 Name of the first author.
+   * @param author2 Name of the second author.
+   * @return {@link ShortestPathDTO} containing nodes and relationships of the path, or {@code null}
+   *     if none exists.
+   */
   public ShortestPathDTO collabPath(String author1, String author2) {
     try {
       ShortestPathAuthors spa = graphDAO.shortestPathAlg(author1, author2);
@@ -67,6 +92,12 @@ public class GraphService {
     }
   }
 
+  /**
+   * Retrieves communities detected via the Leiden algorithm (Hidden Communities).
+   *
+   * @param pageable Pagination information.
+   * @return A {@link Page} of {@link LeidenDTO}.
+   */
   public Page<LeidenDTO> hiddenCommunities(Pageable pageable) {
     try {
       // 1. Calculate pagination parameters
@@ -91,6 +122,12 @@ public class GraphService {
     }
   }
 
+  /**
+   * Retrieves Betweenness Centrality analysis results in a paginated format.
+   *
+   * @param pageable Pagination information.
+   * @return A {@link Page} of {@link BetweennessDTO}.
+   */
   public Page<BetweennessDTO> betweenness(Pageable pageable) {
     try {
       // 1. Pass pagination params to DAO (Database-level slicing)
