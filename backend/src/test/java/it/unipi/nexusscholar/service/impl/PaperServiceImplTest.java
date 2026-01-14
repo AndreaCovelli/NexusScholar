@@ -193,11 +193,10 @@ class PaperServiceImplTest {
 
   @Test
   void savePaper_Update_AddAuthorAlreadyPresentInSummary() {
-    // Simulate authorJane already having this paper in summary (edge case)
+
     testPaperDTO.setId("paper-1");
     testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-jane", "Jane Smith")));
 
-    // Simulate Jane's state
     it.unipi.nexusscholar.model.mongo.PublicationSummary summary =
         new it.unipi.nexusscholar.model.mongo.PublicationSummary();
     summary.setPaperId("paper-1");
@@ -213,11 +212,10 @@ class PaperServiceImplTest {
 
   @Test
   void savePaper_Update_RemoveAuthor_DecrementCount() {
-    // Paper has John. Update to remove John.
-    testPaperDTO.setId("paper-1");
-    testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-jane", "Jane"))); // John removed
 
-    // Setup John to have count > 0
+    testPaperDTO.setId("paper-1");
+    testPaperDTO.setAuthors(List.of(new PaperAuthorDTO("id-jane", "Jane")));
+
     authorJohn.setTotalPublications(5);
 
     when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
@@ -278,7 +276,7 @@ class PaperServiceImplTest {
 
   @Test
   void toPaperDTO_CalledWithNull_ViaSearch() {
-    // Simulate DAO returning a list with a null element to test toPaperDTO(null)
+
     List<Paper> listWithNull = new ArrayList<>();
     listWithNull.add(null);
     Page<Paper> page = new PageImpl<>(listWithNull);
@@ -324,6 +322,8 @@ class PaperServiceImplTest {
   void deletePaper_Success() {
 
     when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
+    // Fix: Stub graphDAO.deletePaperNode to return true
+    when(graphDAO.deletePaperNode("paper-1")).thenReturn(true);
 
     paperService.deletePaper("paper-1");
 
@@ -335,20 +335,18 @@ class PaperServiceImplTest {
 
   @Test
   void deletePaper_RemovesPublicationSummaryFromAuthors() {
-    // Setup
-    when(paperDAO.findById("paper-1"))
-        .thenReturn(Optional.of(testPaper)); // testPaper has authorJohn
 
-    // authorJohn has the summary
+    when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
+    // Fix: Stub graphDAO.deletePaperNode to return true
+    when(graphDAO.deletePaperNode("paper-1")).thenReturn(true);
+
     PublicationSummary summary = new PublicationSummary();
     summary.setPaperId("paper-1");
     authorJohn.setPublicationsSummary(new ArrayList<>(List.of(summary)));
     authorJohn.setTotalPublications(1);
 
-    // Execute
     paperService.deletePaper("paper-1");
 
-    // Assert
     assertEquals(0, authorJohn.getTotalPublications());
     assertTrue(authorJohn.getPublicationsSummary().isEmpty());
     verify(authorDAO).saveAll(any());
@@ -358,6 +356,8 @@ class PaperServiceImplTest {
   void deletePaper_NoAuthors_Success() {
     testPaper.setAuthors(new ArrayList<>());
     when(paperDAO.findById("paper-1")).thenReturn(Optional.of(testPaper));
+    // Fix: Stub graphDAO.deletePaperNode to return true
+    when(graphDAO.deletePaperNode("paper-1")).thenReturn(true);
 
     paperService.deletePaper("paper-1");
 
@@ -392,7 +392,6 @@ class PaperServiceImplTest {
     testPaperDTO.setAuthors(null);
     testPaperDTO.setVenue(null);
 
-    // Need dummy authors list for validation pass
     List<PaperAuthorDTO> dummy = List.of(new PaperAuthorDTO("id-john", "Name"));
     testPaperDTO.setAuthors(dummy);
 

@@ -171,6 +171,10 @@ public class PaperServiceImpl implements PaperService {
         paperToDelete.getAuthors().stream().map(PaperAuthor::getId).collect(Collectors.toSet());
 
     paperDAO.delete(paperToDelete);
+    // Delete from Neo4j (Consistency Fix)
+    if (!graphDAO.deletePaperNode(id)) {
+      throw new DAOException("Failed to delete paper from graph database");
+    }
 
     if (!authorIds.isEmpty()) {
       updateAuthorsRemovePaper(authorIds, paperToDelete);

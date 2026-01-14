@@ -37,7 +37,11 @@ docker exec -i mongo1 mongosh "$MONGO_CONN" --eval "
         { title: 'text', abstract: 'text' },
         { weights: { title: 10, abstract: 3 }, name: 'textPaperIndex' }
     );
-    print(' -> Index textPaperIndex created.');
+    // Ensure DOI and DBLP Key are unique
+    db.papers.createIndex({ doi: 1 }, { name: 'doiIndex', unique: true, sparse: true });
+    db.papers.createIndex({ dblp_key: 1 }, { name: 'dblpKeyIndex', unique: true });
+
+    print(' -> Indexes for papers created.');
 
     // --- 2. Collection: authors ---
     print('Processing collection: authors');
@@ -48,7 +52,10 @@ docker exec -i mongo1 mongosh "$MONGO_CONN" --eval "
         { name: 1 },
         { name: 'authorsIndex' }
     );
-    print(' -> Index authorsIndex created.');
+    // Ensure Semantic Scholar ID is unique
+    db.authors.createIndex({ s2_author_id: 1 }, { name: 's2IdIndex', unique: true, sparse: true });
+
+    print(' -> Indexes for authors created.');
 
     // --- 3. Collection: registeredUsers ---
     print('Processing collection: registeredUsers');
@@ -59,18 +66,25 @@ docker exec -i mongo1 mongosh "$MONGO_CONN" --eval "
         { full_name: 1 },
         { name: 'usersIndex' }
     );
-    print(' -> Index usersIndex created.');
+
+    db.registeredUsers.createIndex({ username: 1 }, { name: 'usersUsernameIndex', unique: true });
+    db.registeredUsers.createIndex({ email: 1 }, { name: 'usersEmailIndex', unique: true });
+    print(' -> Indexes for registeredUsers created.');
 
     // --- 4. Collection: admins ---
-    print('Processing collection: admin');
+    print('Processing collection: admins');
     db.admins.dropIndexes();
 
     // Create ascending index on username
     db.admins.createIndex(
         { username: 1 },
-        { name: 'adminIndex' }
+        { name: 'adminIndex', unique: true }
     );
-    print(' -> Index adminIndex created.');
+    db.admins.createIndex(
+        { email: 1 },
+        { name: 'adminEmailIndex', unique: true }
+    );
+    print(' -> Indexes for admins created.');
 "
 
 echo "2. executing Neo4j constraint operations..."
