@@ -21,7 +21,6 @@ NexusScholar is a platform designed to help researchers, students, and R&D depar
 The system implements a Polyglot Persistence architecture, utilizing the right database for the right data structure.
 
 ![Architecture Diagram](docs/02-Architecture/high-level-architecture.png)
-*(Diagram placeholder: You should create a diagram and link it here)*
 
 - **MongoDB (Document DB):** Stores rich content (papers, author profiles). Configured as a replica set for high availability and read scaling.
 - **Neo4j (Graph DB):** Manages complex relationships (citations, co-authorship) for network analysis.
